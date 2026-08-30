@@ -281,11 +281,11 @@ def test_celery_result_backend_unreachable_fail_fast():
     # Save original connection kwargs
     orig_kwargs = dict(backend.client.connection_pool.connection_kwargs)
     
-    # Configure to point to an unreachable local port
-    backend.client.connection_pool.connection_kwargs["host"] = "localhost"
+    # Configure to point to an unreachable local port using 127.0.0.1 to avoid Windows IPv6 resolution latency
+    backend.client.connection_pool.connection_kwargs["host"] = "127.0.0.1"
     backend.client.connection_pool.connection_kwargs["port"] = 6399
-    backend.client.connection_pool.connection_kwargs["socket_timeout"] = 2.0
-    backend.client.connection_pool.connection_kwargs["socket_connect_timeout"] = 2.0
+    backend.client.connection_pool.connection_kwargs["socket_timeout"] = 1.0
+    backend.client.connection_pool.connection_kwargs["socket_connect_timeout"] = 1.0
     
     # Disconnect any cached connections
     backend.client.connection_pool.disconnect()

@@ -46,13 +46,14 @@ celery.conf.update(
         'interval_step': 0.2,
         'interval_max': 0.5,
     },
-    redis_socket_timeout=REDIS_SOCKET_TIMEOUT,
-    redis_socket_connect_timeout=REDIS_CONNECT_TIMEOUT,
+    redis_socket_timeout=1.0,
+    redis_socket_connect_timeout=1.0,
     result_backend_transport_options={
-        "socket_timeout": REDIS_SOCKET_TIMEOUT,
-        "socket_connect_timeout": REDIS_CONNECT_TIMEOUT,
+        "socket_timeout": 1.0,
+        "socket_connect_timeout": 1.0,
+        "retry_on_timeout": False,
         "retry_policy": {
-            "max_retries": 2
+            "max_retries": 1
         }
     }
 )
