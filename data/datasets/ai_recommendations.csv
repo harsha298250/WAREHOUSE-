@@ -1,0 +1,10 @@
+id,timestamp,warehouse_id,item_id,title,risk_level,action_recommended,confidence_score,input_factors,status,decision_by,decision_time,notes
+1,2026-08-13 17:50:26,WH,BLR,Action on REC-REORDER-WH-BLR-01-ITM-HDD-01,MEDIUM,APPROVED,85,{},APPROVED,admin,2026-08-13 00:00:00,Executed via AI Decision Center
+2,2026-08-13 17:51:04,WH,BLR,Action on REC-REORDER-WH-BLR-01-ITM-RAM-01,MEDIUM,APPROVED,85,{},APPROVED,admin,2026-08-13 00:00:00,Executed via AI Decision Center
+3,2026-08-13 17:55:23,WH,BLR,Action on REC-REORDER-WH-BLR-01-ITM-HDD-01,MEDIUM,APPROVED,85,{},APPROVED,admin,2026-08-13 00:00:00,Executed via AI Decision Center
+4,2026-08-13 18:03:02,WH,BLR,Action on REC-REORDER-WH-BLR-01-ITM-HDD-01,MEDIUM,APPROVED,85,{},APPROVED,admin,2026-08-13 00:00:00,Executed via AI Decision Center
+5,2026-08-13 18:04:10,WH,BLR,Action on REC-REORDER-WH-BLR-01-ITM-HDD-01,MEDIUM,APPROVED,85,{},APPROVED,admin,2026-08-13 00:00:00,Executed via AI Decision Center
+6,2026-08-13 18:04:25,WH,BLR,Action on REC-REORDER-WH-BLR-01-ITM-HDD-01,MEDIUM,APPROVED,85,{},APPROVED,admin,2026-08-13 00:00:00,Executed via AI Decision Center
+7,2026-08-13 18:05:09,WH,BLR,Action on REC-REORDER-WH-BLR-01-ITM-RAM-01,MEDIUM,APPROVED,85,{},APPROVED,admin,2026-08-13 00:00:00,Executed via AI Decision Center
+8,2026-08-13 18:08:54,WH,BLR,Action on REC-REORDER-WH-BLR-01-ITM-HDD-01,MEDIUM,APPROVED,85,{},APPROVED,admin,2026-08-13 18:08:54,Executed via AI Decision Center
+9,2026-08-13 18:26:38,WH,BLR,Action on REC-REORDER-WH-BLR-01-ITM-HDD-01,MEDIUM,APPROVED,85,{},APPROVED,admin,2026-08-13 18:26:38,Executed via AI Decision Center

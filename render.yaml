@@ -1,0 +1,72 @@
+services:
+  - type: web
+    name: warehouse-cloud-platform
+    env: docker
+    plan: free
+    region: singapore
+    dockerfilePath: Dockerfile
+    healthCheckPath: /health
+    envVars:
+      # ---- Application ----
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: 8000
+
+      # ---- Security ----
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false       # Set in Render dashboard: https://your-domain.onrender.com
+
+      # ---- Database (Render Managed PostgreSQL) ----
+      - key: DATABASE_URL
+        fromDatabase:
+          name: warehouse-db-postgres
+          property: connectionString
+
+      # ---- Google OAuth (set in Render dashboard) ----
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false
+
+      # ---- Email Alerts (optional, set in Render dashboard) ----
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: ALERT_EMAIL_TO
+        sync: false
+
+      # ---- Cloud Storage (optional, set in Render dashboard) ----
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        sync: false
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: AWS_ENDPOINT_URL
+        sync: false
+
+# ---- DEPLOYMENT NOTES ----
+# 1. All sync:false variables must be set manually in the Render dashboard
+# 2. seed_demo_data.py is NOT run automatically — run manually if needed:
+#      render run python backend/seed_demo_data.py
+# 3. Health check: GET /health must return 200 for deploy to succeed
+# 4. See DEPLOYMENT.md for full setup instructions
+
+databases:
+  - name: warehouse-db-postgres
+    databaseName: warehouse_db
+    user: warehouse_app
+    plan: free
+    region: singapore

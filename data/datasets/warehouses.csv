@@ -1,0 +1,6 @@
+id,name,location,created_at,latitude,longitude
+WH-BLR-01,Bangalore Fulfillment Center,"Bangalore, Karnataka",2026-08-13 16:11:06,12.9716,77.5946
+WH-BOM-01,Mumbai Container Terminal,"Mumbai, Maharashtra",2026-08-13 16:11:06,19.0761,72.8777
+WH-CCU-01,Kolkata Gateway Depot,"Kolkata, West Bengal",2026-08-13 16:11:06,22.5726,88.3639
+WH-CHN-01,Chennai Port Logistics Hub,"Chennai, Tamil Nadu",2026-08-13 16:11:06,13.0827,80.2707
+WH-DEL-01,Delhi NCR Logistics Park,"Noida, Uttar Pradesh",2026-08-13 16:11:06,28.5355,77.391

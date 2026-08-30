@@ -1,0 +1,21 @@
+{
+  "warehouses": [
+    {
+      "id": "WH-BLR-01",
+      "name": "BLR Hub",
+      "location": "BLR",
+      "city": null,
+      "state": null,
+      "country": null,
+      "latitude": 13.1976048,
+      "longitude": 77.7074856,
+      "created_at": "2026-08-30 05:37:03.376884"
+    }
+  ],
+  "items": [],
+  "stock_movements": [],
+  "shrinkage_flags": [],
+  "audit_ledger": [],
+  "access_log": [],
+  "_exported_at": "2026-08-30T05:38:50.994098"
+}

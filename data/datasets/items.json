@@ -1,0 +1,65 @@
+[
+  {
+    "id":"ITM-CBL-01",
+    "name":"Apple USB-C Braided Cable 2m",
+    "category":"Accessories",
+    "unit_cost":800.0,
+    "lead_time_days":1,
+    "safety_stock":100,
+    "created_at":"2026-08-13T16:11:06.000"
+  },
+  {
+    "id":"ITM-CHG-01",
+    "name":"Anker 100W GaN Wall Charger",
+    "category":"Accessories",
+    "unit_cost":2500.0,
+    "lead_time_days":2,
+    "safety_stock":50,
+    "created_at":"2026-08-13T16:11:06.000"
+  },
+  {
+    "id":"ITM-CPU-01",
+    "name":"AMD Ryzen 9 7900X Processor",
+    "category":"Electronics",
+    "unit_cost":38000.0,
+    "lead_time_days":5,
+    "safety_stock":15,
+    "created_at":"2026-08-13T16:11:06.000"
+  },
+  {
+    "id":"ITM-GPU-01",
+    "name":"Nvidia RTX 4080 Founders Edition",
+    "category":"Electronics",
+    "unit_cost":95000.0,
+    "lead_time_days":7,
+    "safety_stock":10,
+    "created_at":"2026-08-13T16:11:06.000"
+  },
+  {
+    "id":"ITM-HDD-01",
+    "name":"WD Red Pro 8TB NAS Hard Drive",
+    "category":"Storage",
+    "unit_cost":16500.0,
+    "lead_time_days":5,
+    "safety_stock":20,
+    "created_at":"2026-08-13T16:11:06.000"
+  },
+  {
+    "id":"ITM-RAM-01",
+    "name":"Corsair DDR5 32GB 6000MHz RAM",
+    "category":"Electronics",
+    "unit_cost":8500.0,
+    "lead_time_days":4,
+    "safety_stock":25,
+    "created_at":"2026-08-13T16:11:06.000"
+  },
+  {
+    "id":"ITM-SSD-01",
+    "name":"Samsung 990 Pro 2TB NVMe SSD",
+    "category":"Storage",
+    "unit_cost":12000.0,
+    "lead_time_days":3,
+    "safety_stock":30,
+    "created_at":"2026-08-13T16:11:06.000"
+  }
+]

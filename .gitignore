@@ -1,0 +1,82 @@
+# Smart Warehouse Intelligence Platform — .gitignore
+# ============================================================
+
+# ---- Secrets / Environment ----
+.env
+.env.*
+!.env.example
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# ---- Virtual environments ----
+venv/
+.venv/
+env/
+ENV/
+.conda/
+
+# ---- Testing ----
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.coveragerc
+test-results/
+junit.xml
+
+# ---- IDEs ----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Alembic (keep versions, exclude compiled) ----
+alembic/versions/__pycache__/
+
+# ---- Data / temp ----
+data/exports/
+data/raw/
+data/processed/
+*.csv.tmp
+*.xlsx.tmp
+
+# ---- Docker volumes ----
+mysql_data/
+
+# ---- Backup snapshots (never commit project copies) ----
+backup_before_final_cleanup/
+safe_backup_files/
+*_backup/
+*_snapshot/
+scratch/
+
+# ---- Debug screenshots (Playwright failure artifacts) ----
+debug_*.png
+login_failed.png
+system_health_failed.png
+responsive_failed.png
+*_failed.png
+*_failed_*.png
+
+# ---- Local Databases ----
+*.db

@@ -1,0 +1,2570 @@
+[
+  {
+    "id":1,
+    "timestamp":"2026-08-11T14:48:12.000",
+    "event_type":"stock_entry",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"\", \"date\": \"2026-08-11\", \"stock_in\": 20, \"stock_out\": 10, \"entered_by\": \"admin\"}",
+    "prev_hash":"0000000000000000000000000000000000000000000000000000000000000000",
+    "hash":"70454f3eb43bf9a088477042fc113baee76cf93c8b9ee4584004fea3ae6b7fbf"
+  },
+  {
+    "id":2,
+    "timestamp":"2026-08-11T15:39:15.000",
+    "event_type":"shrinkage_scan",
+    "details":"{\"triggered_by\": \"admin\", \"flags_found\": 0}",
+    "prev_hash":"70454f3eb43bf9a088477042fc113baee76cf93c8b9ee4584004fea3ae6b7fbf",
+    "hash":"988b1e95b2e0c3825cd7e4327567ffacd8b115651a5992730f55e823fad124e3"
+  },
+  {
+    "id":3,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"name\": \"Bangalore Fulfillment Center\"}",
+    "prev_hash":"988b1e95b2e0c3825cd7e4327567ffacd8b115651a5992730f55e823fad124e3",
+    "hash":"5a4ed3999419cc9d294847195c8a2b5f3414026c4143b49dc0ce8190cd5e8d99"
+  },
+  {
+    "id":4,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"name\": \"Chennai Port Logistics Hub\"}",
+    "prev_hash":"5a4ed3999419cc9d294847195c8a2b5f3414026c4143b49dc0ce8190cd5e8d99",
+    "hash":"d5adea94bb23ee86568267e0fbccf7d6df228d9117f4fa7cef980ff0a51bb474"
+  },
+  {
+    "id":5,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"name\": \"Mumbai Container Terminal\"}",
+    "prev_hash":"d5adea94bb23ee86568267e0fbccf7d6df228d9117f4fa7cef980ff0a51bb474",
+    "hash":"305711b8c201c58305e54edfe9337405c1d21553ad08e229541ad4cddebf0119"
+  },
+  {
+    "id":6,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"name\": \"Delhi NCR Logistics Park\"}",
+    "prev_hash":"305711b8c201c58305e54edfe9337405c1d21553ad08e229541ad4cddebf0119",
+    "hash":"a911dc41f554cc35de07d0b606b1249ee8ab891ffa0632b3917531f31382b4fa"
+  },
+  {
+    "id":7,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"name\": \"Kolkata Gateway Depot\"}",
+    "prev_hash":"a911dc41f554cc35de07d0b606b1249ee8ab891ffa0632b3917531f31382b4fa",
+    "hash":"8fdfe00757ed0901786bc138788a9fe979c30f372568f0cff42c9aff564a839e"
+  },
+  {
+    "id":8,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CPU-01\", \"name\": \"AMD Ryzen 9 7900X Processor\"}",
+    "prev_hash":"8fdfe00757ed0901786bc138788a9fe979c30f372568f0cff42c9aff564a839e",
+    "hash":"4f9b0514d9da460b337d27610c99b5ce4b32f860a8414c6c9eee779ad9972579"
+  },
+  {
+    "id":9,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-GPU-01\", \"name\": \"Nvidia RTX 4080 Founders Edition\"}",
+    "prev_hash":"4f9b0514d9da460b337d27610c99b5ce4b32f860a8414c6c9eee779ad9972579",
+    "hash":"b730d138905050398f7813a81834b384c2b2cfb6315c462f0915d6e476f884f1"
+  },
+  {
+    "id":10,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-RAM-01\", \"name\": \"Corsair DDR5 32GB 6000MHz RAM\"}",
+    "prev_hash":"b730d138905050398f7813a81834b384c2b2cfb6315c462f0915d6e476f884f1",
+    "hash":"9548c719efdfe4d477aa0abba149263361aafc590797e6338cb26e21c4594234"
+  },
+  {
+    "id":11,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-SSD-01\", \"name\": \"Samsung 990 Pro 2TB NVMe SSD\"}",
+    "prev_hash":"9548c719efdfe4d477aa0abba149263361aafc590797e6338cb26e21c4594234",
+    "hash":"28cc2c8bd622009743b97f626f386280beb6ca1f199445d9f092415ae8afe45e"
+  },
+  {
+    "id":12,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-HDD-01\", \"name\": \"WD Red Pro 8TB NAS Hard Drive\"}",
+    "prev_hash":"28cc2c8bd622009743b97f626f386280beb6ca1f199445d9f092415ae8afe45e",
+    "hash":"85eff1908cf2f2c47992cb696069f41a1723372abc1cb912dcc91203d4837525"
+  },
+  {
+    "id":13,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CHG-01\", \"name\": \"Anker 100W GaN Wall Charger\"}",
+    "prev_hash":"85eff1908cf2f2c47992cb696069f41a1723372abc1cb912dcc91203d4837525",
+    "hash":"d5f1693ff00b9c2df3996121b716e66b8adb2e393a733935e7c96fec23630d2c"
+  },
+  {
+    "id":14,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CBL-01\", \"name\": \"Apple USB-C Braided Cable 2m\"}",
+    "prev_hash":"d5f1693ff00b9c2df3996121b716e66b8adb2e393a733935e7c96fec23630d2c",
+    "hash":"2f3edf37abd6c9ae98f6fa385c91341bd0a074a716f2bb8422d5155aa16815cc"
+  },
+  {
+    "id":15,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-18\"}",
+    "prev_hash":"2f3edf37abd6c9ae98f6fa385c91341bd0a074a716f2bb8422d5155aa16815cc",
+    "hash":"eb8f86a60c23ba838c7957ffd553857ef72dfc0e4c3ff1a1a51ffe10a4e788b7"
+  },
+  {
+    "id":16,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-19\"}",
+    "prev_hash":"eb8f86a60c23ba838c7957ffd553857ef72dfc0e4c3ff1a1a51ffe10a4e788b7",
+    "hash":"5b95e4bec30b872c299704cb77a5dd14fd316c68f246cb809b8a39f0aca32c43"
+  },
+  {
+    "id":17,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-19\"}",
+    "prev_hash":"5b95e4bec30b872c299704cb77a5dd14fd316c68f246cb809b8a39f0aca32c43",
+    "hash":"19ec21997bd27f105a3fe0259ca4c0f7ec9f533ff2696279b89ae67d76c2b49e"
+  },
+  {
+    "id":18,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-22\"}",
+    "prev_hash":"19ec21997bd27f105a3fe0259ca4c0f7ec9f533ff2696279b89ae67d76c2b49e",
+    "hash":"67143d75e91cceb63376a9b17e8f485402f0a16d80946e4732847830efcc26c3"
+  },
+  {
+    "id":19,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-23\"}",
+    "prev_hash":"67143d75e91cceb63376a9b17e8f485402f0a16d80946e4732847830efcc26c3",
+    "hash":"ab98a4f2c3d0a35dbfa5b118902101168251628b11721b272e6873beb299d85a"
+  },
+  {
+    "id":20,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-23\"}",
+    "prev_hash":"ab98a4f2c3d0a35dbfa5b118902101168251628b11721b272e6873beb299d85a",
+    "hash":"4c4c5be02a23879a4bc03ce160bc53b29439b4caeaf603face6a57cfa4c9e731"
+  },
+  {
+    "id":21,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-26\"}",
+    "prev_hash":"4c4c5be02a23879a4bc03ce160bc53b29439b4caeaf603face6a57cfa4c9e731",
+    "hash":"15869f9d0e4cd6b7ab71506fd7b17d1243ac72fd2475737f2e67fd5cad96c29b"
+  },
+  {
+    "id":22,
+    "timestamp":"2026-08-11T16:31:25.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-27\"}",
+    "prev_hash":"15869f9d0e4cd6b7ab71506fd7b17d1243ac72fd2475737f2e67fd5cad96c29b",
+    "hash":"15916f3589eb69c150ddcb79c668159a111833677f815fb11a5ee6605cb55b49"
+  },
+  {
+    "id":23,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-28\"}",
+    "prev_hash":"15916f3589eb69c150ddcb79c668159a111833677f815fb11a5ee6605cb55b49",
+    "hash":"8b28a0f9727c4314a480fc190a644b16eaa518f68adbf6f86b2fdc757f560f46"
+  },
+  {
+    "id":24,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-29\"}",
+    "prev_hash":"8b28a0f9727c4314a480fc190a644b16eaa518f68adbf6f86b2fdc757f560f46",
+    "hash":"66d9d1d576f60858605688e762caffd739778faeae056f2526f4b6a143ff1ddf"
+  },
+  {
+    "id":25,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-29\"}",
+    "prev_hash":"66d9d1d576f60858605688e762caffd739778faeae056f2526f4b6a143ff1ddf",
+    "hash":"84f606348d200a34b82ea253f235a27fb091c342bc96aa7ee6558a3c5cb9bce5"
+  },
+  {
+    "id":26,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-29\"}",
+    "prev_hash":"84f606348d200a34b82ea253f235a27fb091c342bc96aa7ee6558a3c5cb9bce5",
+    "hash":"e5369d20d516ce56513110234b4ea00a9afd4be0e7cac91542c63123ed33321d"
+  },
+  {
+    "id":27,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-30\"}",
+    "prev_hash":"e5369d20d516ce56513110234b4ea00a9afd4be0e7cac91542c63123ed33321d",
+    "hash":"77dfd0cbf83dca8c2e0fbe3e429c8d2255a9151ce52896c53e4114c6751252ba"
+  },
+  {
+    "id":28,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-30\"}",
+    "prev_hash":"77dfd0cbf83dca8c2e0fbe3e429c8d2255a9151ce52896c53e4114c6751252ba",
+    "hash":"7445a21e2195ae2f87cdb26b2f70bac33f4334e3eb9c7ee944e2caeffe555f04"
+  },
+  {
+    "id":29,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-30\"}",
+    "prev_hash":"7445a21e2195ae2f87cdb26b2f70bac33f4334e3eb9c7ee944e2caeffe555f04",
+    "hash":"60b0c22f9afdcf9d790d5cb234836970098d40d366a8ab3cd8d5cff99dbfbedd"
+  },
+  {
+    "id":30,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-31\"}",
+    "prev_hash":"60b0c22f9afdcf9d790d5cb234836970098d40d366a8ab3cd8d5cff99dbfbedd",
+    "hash":"894d2c46dcc05551c0e8ea80398873dc74035161da32a13e66310dc3a5636fe6"
+  },
+  {
+    "id":31,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-08-01\"}",
+    "prev_hash":"894d2c46dcc05551c0e8ea80398873dc74035161da32a13e66310dc3a5636fe6",
+    "hash":"8b56fc33910c87c6a762ff4c276702299b5f5e60e62e157c73fe5ef42f3c787a"
+  },
+  {
+    "id":32,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-03\"}",
+    "prev_hash":"8b56fc33910c87c6a762ff4c276702299b5f5e60e62e157c73fe5ef42f3c787a",
+    "hash":"a77edd628ff1e9c0d0ddc5d8aa586db8d4bd0a6ce9b732219235082eab55e43e"
+  },
+  {
+    "id":33,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-05\"}",
+    "prev_hash":"a77edd628ff1e9c0d0ddc5d8aa586db8d4bd0a6ce9b732219235082eab55e43e",
+    "hash":"a9a55ad3f4d7afe3d2beee09ba211bbf79f57299f53dd79321d51614e021df26"
+  },
+  {
+    "id":34,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-05\"}",
+    "prev_hash":"a9a55ad3f4d7afe3d2beee09ba211bbf79f57299f53dd79321d51614e021df26",
+    "hash":"5fa3b97a3449e2f88df6fc1b6abd1f8cf18da74673b4d33d8c13b781275c96db"
+  },
+  {
+    "id":35,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-06\"}",
+    "prev_hash":"5fa3b97a3449e2f88df6fc1b6abd1f8cf18da74673b4d33d8c13b781275c96db",
+    "hash":"e98abff4a6d91127b966fe46cd42d8536c47247b3d52cc0dd1bb9f6f68081a19"
+  },
+  {
+    "id":36,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-06\"}",
+    "prev_hash":"e98abff4a6d91127b966fe46cd42d8536c47247b3d52cc0dd1bb9f6f68081a19",
+    "hash":"a7eb6319ebe5eb1d1f856b357cec924e19db25adf110f1372ec20db258648199"
+  },
+  {
+    "id":37,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-07\"}",
+    "prev_hash":"a7eb6319ebe5eb1d1f856b357cec924e19db25adf110f1372ec20db258648199",
+    "hash":"f471f58919eb19324d9e019a5b750a613f4a87ea4722e88342c7e223ca140226"
+  },
+  {
+    "id":38,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-08\"}",
+    "prev_hash":"f471f58919eb19324d9e019a5b750a613f4a87ea4722e88342c7e223ca140226",
+    "hash":"5ce5cf28fa5bc0c6da6da23cc1696e0e127f002975c2773c61a4506ab0ebd0aa"
+  },
+  {
+    "id":39,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-08\"}",
+    "prev_hash":"5ce5cf28fa5bc0c6da6da23cc1696e0e127f002975c2773c61a4506ab0ebd0aa",
+    "hash":"61076e30f01c83e3f7cce61bec8f4959f1471ef963d138f9fe7f4b4437928445"
+  },
+  {
+    "id":40,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-09\"}",
+    "prev_hash":"61076e30f01c83e3f7cce61bec8f4959f1471ef963d138f9fe7f4b4437928445",
+    "hash":"ea5b535f7cea198829740c9198ef4cf581603438bc3e4c98d4fcec8a93cd28bc"
+  },
+  {
+    "id":41,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-09\"}",
+    "prev_hash":"ea5b535f7cea198829740c9198ef4cf581603438bc3e4c98d4fcec8a93cd28bc",
+    "hash":"2ab92c01fe2a04424ba632997d7adedf758f62828f3d6ba484270d482a3d718b"
+  },
+  {
+    "id":42,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-09\"}",
+    "prev_hash":"2ab92c01fe2a04424ba632997d7adedf758f62828f3d6ba484270d482a3d718b",
+    "hash":"973a0845dc77cf955b24e4b2e1f32b4741a66b9bbd4ab91cb4767ea47cc06415"
+  },
+  {
+    "id":43,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-09\"}",
+    "prev_hash":"973a0845dc77cf955b24e4b2e1f32b4741a66b9bbd4ab91cb4767ea47cc06415",
+    "hash":"73cc30726a6bdee40f100a90dd86d30f34ce5f750a3dcb5f28c34fbe88bfbf77"
+  },
+  {
+    "id":44,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-10\"}",
+    "prev_hash":"73cc30726a6bdee40f100a90dd86d30f34ce5f750a3dcb5f28c34fbe88bfbf77",
+    "hash":"4556117900b67803a3f90f8c0cfb38446e1411f9c40ef3174b0200678256a1a3"
+  },
+  {
+    "id":45,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"4556117900b67803a3f90f8c0cfb38446e1411f9c40ef3174b0200678256a1a3",
+    "hash":"ddb66c8d27c8e69c2c0b7aebb742996506a96548bc58545429b600f9fd38fb73"
+  },
+  {
+    "id":46,
+    "timestamp":"2026-08-11T16:31:26.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"likely_cause\": \"Damaged during offloading \/ scrap\"}",
+    "prev_hash":"ddb66c8d27c8e69c2c0b7aebb742996506a96548bc58545429b600f9fd38fb73",
+    "hash":"05be816c92a45079f9f6e43c47536dd41f78b52cd64d4e67d55bbaf4b685c903"
+  },
+  {
+    "id":47,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"name\": \"Bangalore Fulfillment Center\"}",
+    "prev_hash":"05be816c92a45079f9f6e43c47536dd41f78b52cd64d4e67d55bbaf4b685c903",
+    "hash":"defb950bf62912accbe6186b60473df9d67391daa3c4842546558c60542070a7"
+  },
+  {
+    "id":48,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"name\": \"Chennai Port Logistics Hub\"}",
+    "prev_hash":"defb950bf62912accbe6186b60473df9d67391daa3c4842546558c60542070a7",
+    "hash":"307fd004b326261acac93c234caeb8a6e1bbe9a326fabab908a510bc176d73a6"
+  },
+  {
+    "id":49,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"name\": \"Mumbai Container Terminal\"}",
+    "prev_hash":"307fd004b326261acac93c234caeb8a6e1bbe9a326fabab908a510bc176d73a6",
+    "hash":"7bc6d8357d1e256ced6828bf4f13b3e45d4ab44351f82ac69a96c4aaa2ce2227"
+  },
+  {
+    "id":50,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"name\": \"Delhi NCR Logistics Park\"}",
+    "prev_hash":"7bc6d8357d1e256ced6828bf4f13b3e45d4ab44351f82ac69a96c4aaa2ce2227",
+    "hash":"a29e3bd33fc7e46fb43ba33caf0f1a24c253568de3b08590bfeb6d740ba862f3"
+  },
+  {
+    "id":51,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"name\": \"Kolkata Gateway Depot\"}",
+    "prev_hash":"a29e3bd33fc7e46fb43ba33caf0f1a24c253568de3b08590bfeb6d740ba862f3",
+    "hash":"6727a7e251f9addc2a89c14d90f6aabf80b2631d85d4546600b44297d19e7953"
+  },
+  {
+    "id":52,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CPU-01\", \"name\": \"AMD Ryzen 9 7900X Processor\"}",
+    "prev_hash":"6727a7e251f9addc2a89c14d90f6aabf80b2631d85d4546600b44297d19e7953",
+    "hash":"b906049801701965deefd590d27b30c7ca28efa5e6c89bf43f82fb5264ca8bd9"
+  },
+  {
+    "id":53,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-GPU-01\", \"name\": \"Nvidia RTX 4080 Founders Edition\"}",
+    "prev_hash":"b906049801701965deefd590d27b30c7ca28efa5e6c89bf43f82fb5264ca8bd9",
+    "hash":"f4dbd4ac9dd0d1591807c31f7c82a22c3e357afacd02accd03ec5fe841e61313"
+  },
+  {
+    "id":54,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-RAM-01\", \"name\": \"Corsair DDR5 32GB 6000MHz RAM\"}",
+    "prev_hash":"f4dbd4ac9dd0d1591807c31f7c82a22c3e357afacd02accd03ec5fe841e61313",
+    "hash":"7fa969d3e9ecc0d8fea89eabd47ba392bdade46966c5ffd009fd3cad0d7b8ce8"
+  },
+  {
+    "id":55,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-SSD-01\", \"name\": \"Samsung 990 Pro 2TB NVMe SSD\"}",
+    "prev_hash":"7fa969d3e9ecc0d8fea89eabd47ba392bdade46966c5ffd009fd3cad0d7b8ce8",
+    "hash":"e2f26056079e096cd6ded63b3b0774930f8a49d4d12ddaf610a7cbb94222bceb"
+  },
+  {
+    "id":56,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-HDD-01\", \"name\": \"WD Red Pro 8TB NAS Hard Drive\"}",
+    "prev_hash":"e2f26056079e096cd6ded63b3b0774930f8a49d4d12ddaf610a7cbb94222bceb",
+    "hash":"a0217e542a9a768b0d4673c81230b7d3d41af8d6a335ef81dd260016d7d9f6b5"
+  },
+  {
+    "id":57,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CHG-01\", \"name\": \"Anker 100W GaN Wall Charger\"}",
+    "prev_hash":"a0217e542a9a768b0d4673c81230b7d3d41af8d6a335ef81dd260016d7d9f6b5",
+    "hash":"fd776db9521a23605f3722e4f6411d75de44c2792b9d3764ba0de4608bc86b25"
+  },
+  {
+    "id":58,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CBL-01\", \"name\": \"Apple USB-C Braided Cable 2m\"}",
+    "prev_hash":"fd776db9521a23605f3722e4f6411d75de44c2792b9d3764ba0de4608bc86b25",
+    "hash":"4b81f2503fa9c6822e9fde9ca1e46a0d0ea58ee2fa4390c7132ca96cb9d77b8c"
+  },
+  {
+    "id":59,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-17\"}",
+    "prev_hash":"4b81f2503fa9c6822e9fde9ca1e46a0d0ea58ee2fa4390c7132ca96cb9d77b8c",
+    "hash":"8fa4bf6d0163583d34cbe7c702738987ea93994bceacfb040984dbf12c413f68"
+  },
+  {
+    "id":60,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-20\"}",
+    "prev_hash":"8fa4bf6d0163583d34cbe7c702738987ea93994bceacfb040984dbf12c413f68",
+    "hash":"533389d39f838b350d51ac87f5ad9435dbe389a69bb9ec372760d4505360cb64"
+  },
+  {
+    "id":61,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-20\"}",
+    "prev_hash":"533389d39f838b350d51ac87f5ad9435dbe389a69bb9ec372760d4505360cb64",
+    "hash":"2a2073209ef189f8949e7789dcc15a682eeef640133e61ef71b997580c3f025f"
+  },
+  {
+    "id":62,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-22\"}",
+    "prev_hash":"2a2073209ef189f8949e7789dcc15a682eeef640133e61ef71b997580c3f025f",
+    "hash":"a3b8f4ddcabcf2ed06cb7ff8d240c286d9adaf80c43621caf4ac448000e2efb3"
+  },
+  {
+    "id":63,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-22\"}",
+    "prev_hash":"a3b8f4ddcabcf2ed06cb7ff8d240c286d9adaf80c43621caf4ac448000e2efb3",
+    "hash":"bb33737f053c3175dfba92545d2ac2459206ab60bfb021675abf57ec725b8c10"
+  },
+  {
+    "id":64,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-25\"}",
+    "prev_hash":"bb33737f053c3175dfba92545d2ac2459206ab60bfb021675abf57ec725b8c10",
+    "hash":"793864df478771f9f4e2709a6aa8a521e4b1e50451196841602f265d8202aa87"
+  },
+  {
+    "id":65,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-25\"}",
+    "prev_hash":"793864df478771f9f4e2709a6aa8a521e4b1e50451196841602f265d8202aa87",
+    "hash":"dfe59a1b91bf3dcd6c0dab91b9ec3a21b6e01487e91b8a87ed0930f4454564c6"
+  },
+  {
+    "id":66,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-26\"}",
+    "prev_hash":"dfe59a1b91bf3dcd6c0dab91b9ec3a21b6e01487e91b8a87ed0930f4454564c6",
+    "hash":"5befe69c84fc359b35dfef03ad7818e663003ccb88e4adb91c78dfb8337248f1"
+  },
+  {
+    "id":67,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-27\"}",
+    "prev_hash":"5befe69c84fc359b35dfef03ad7818e663003ccb88e4adb91c78dfb8337248f1",
+    "hash":"7853fc620f1255132dfadc79ec67914e84511831cd6b02408510c5074f834be2"
+  },
+  {
+    "id":68,
+    "timestamp":"2026-08-11T17:21:16.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-28\"}",
+    "prev_hash":"7853fc620f1255132dfadc79ec67914e84511831cd6b02408510c5074f834be2",
+    "hash":"a7e9c41dea46ee64b7c64dc18042a875ea7bcdae515a43490dc683e49efcd3d7"
+  },
+  {
+    "id":69,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-28\"}",
+    "prev_hash":"a7e9c41dea46ee64b7c64dc18042a875ea7bcdae515a43490dc683e49efcd3d7",
+    "hash":"875252f37b2170fef61fafce135661dfeaeaed1b003cd4f2d89729e079a07547"
+  },
+  {
+    "id":70,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-30\"}",
+    "prev_hash":"875252f37b2170fef61fafce135661dfeaeaed1b003cd4f2d89729e079a07547",
+    "hash":"bbc26b6c155021d23130d727e57d3141996c50262bf5268430348f14d1f71c16"
+  },
+  {
+    "id":71,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-01\"}",
+    "prev_hash":"bbc26b6c155021d23130d727e57d3141996c50262bf5268430348f14d1f71c16",
+    "hash":"12d368ca9402e6503c9950317105821e1a4badad30dafa085fc70b747583d3ef"
+  },
+  {
+    "id":72,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-01\"}",
+    "prev_hash":"12d368ca9402e6503c9950317105821e1a4badad30dafa085fc70b747583d3ef",
+    "hash":"3d3f50541f1c1db430901a52522d0a51f919f8c8cfb66dfb0ec28d44097a03e1"
+  },
+  {
+    "id":73,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-02\"}",
+    "prev_hash":"3d3f50541f1c1db430901a52522d0a51f919f8c8cfb66dfb0ec28d44097a03e1",
+    "hash":"4640d5c113ef2f4d44d2ca016a9cb87f8e5961fa717343b775e1839a8ace1446"
+  },
+  {
+    "id":74,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-02\"}",
+    "prev_hash":"4640d5c113ef2f4d44d2ca016a9cb87f8e5961fa717343b775e1839a8ace1446",
+    "hash":"4a1f2f7369cfe5d4cd4c74fd403c8caec8a15f73d4c5d30e2e6ef0adea8a4180"
+  },
+  {
+    "id":75,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-02\"}",
+    "prev_hash":"4a1f2f7369cfe5d4cd4c74fd403c8caec8a15f73d4c5d30e2e6ef0adea8a4180",
+    "hash":"458faf64edce07fda187bfe302b35fd0a4ef10ca756c18deabf6900a9c660eb3"
+  },
+  {
+    "id":76,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-02\"}",
+    "prev_hash":"458faf64edce07fda187bfe302b35fd0a4ef10ca756c18deabf6900a9c660eb3",
+    "hash":"0f58408b5c4aaa1b105a679ddad82e9c72101bce5439e73873be0a735ff36ec9"
+  },
+  {
+    "id":77,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-03\"}",
+    "prev_hash":"0f58408b5c4aaa1b105a679ddad82e9c72101bce5439e73873be0a735ff36ec9",
+    "hash":"15800dd5524362b189fa6741a5f9afcf9715befdfacab9d12456914c86fb48ce"
+  },
+  {
+    "id":78,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-03\"}",
+    "prev_hash":"15800dd5524362b189fa6741a5f9afcf9715befdfacab9d12456914c86fb48ce",
+    "hash":"ee483452463444843c2ddc7e15015cff7eddb989e9baec9e27f15b8e2e6e98dd"
+  },
+  {
+    "id":79,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-03\"}",
+    "prev_hash":"ee483452463444843c2ddc7e15015cff7eddb989e9baec9e27f15b8e2e6e98dd",
+    "hash":"1deeeadc2e395a3a529c5409c2e1599e1690e63b4dc40ae19ea6f3ca6634fead"
+  },
+  {
+    "id":80,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-03\"}",
+    "prev_hash":"1deeeadc2e395a3a529c5409c2e1599e1690e63b4dc40ae19ea6f3ca6634fead",
+    "hash":"c9f41ff1962971bd6ebd14b50a0eadd7340ae444fcd7ca11f6cc542f0fd5dedc"
+  },
+  {
+    "id":81,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-05\"}",
+    "prev_hash":"c9f41ff1962971bd6ebd14b50a0eadd7340ae444fcd7ca11f6cc542f0fd5dedc",
+    "hash":"46ed62286d94c03d4e6130328029ced8e6decea553a6e4a8e9512281f66f2f7f"
+  },
+  {
+    "id":82,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-06\"}",
+    "prev_hash":"46ed62286d94c03d4e6130328029ced8e6decea553a6e4a8e9512281f66f2f7f",
+    "hash":"e1ee91704b5548ec907b05f928a15d5abe3eab83f05d8d8bb0d64b5a6903f6b5"
+  },
+  {
+    "id":83,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-06\"}",
+    "prev_hash":"e1ee91704b5548ec907b05f928a15d5abe3eab83f05d8d8bb0d64b5a6903f6b5",
+    "hash":"2fde62e88c4fbe7a490bbbb3c943c8c1dcbcc974990be40b6364ec6b5c7628ca"
+  },
+  {
+    "id":84,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-06\"}",
+    "prev_hash":"2fde62e88c4fbe7a490bbbb3c943c8c1dcbcc974990be40b6364ec6b5c7628ca",
+    "hash":"bac03efda719b792eca47a783fc2a1eb4d14527fb8d6f0ce95525089cef43151"
+  },
+  {
+    "id":85,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-07\"}",
+    "prev_hash":"bac03efda719b792eca47a783fc2a1eb4d14527fb8d6f0ce95525089cef43151",
+    "hash":"48989d398525151d9859cf4197f0a7b7d1d8354e0c5c28097e9f729a5e98783b"
+  },
+  {
+    "id":86,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-08\"}",
+    "prev_hash":"48989d398525151d9859cf4197f0a7b7d1d8354e0c5c28097e9f729a5e98783b",
+    "hash":"4947f3d06243b7e7f977f31b3e770a936beb1360626afbff65f3a068711d43f2"
+  },
+  {
+    "id":87,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-08\"}",
+    "prev_hash":"4947f3d06243b7e7f977f31b3e770a936beb1360626afbff65f3a068711d43f2",
+    "hash":"302128ff35803a9ea4ae711e112d86ca9ec866366afb0fef654db30d86c16c90"
+  },
+  {
+    "id":88,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-09\"}",
+    "prev_hash":"302128ff35803a9ea4ae711e112d86ca9ec866366afb0fef654db30d86c16c90",
+    "hash":"d073be4c254ec18d6211f32f63e44f397fa3678e3a543891989aebf007c84351"
+  },
+  {
+    "id":89,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-11\"}",
+    "prev_hash":"d073be4c254ec18d6211f32f63e44f397fa3678e3a543891989aebf007c84351",
+    "hash":"fb45da4b60256771fad06d107a19ae5fda5ff2facd8685acb21ff6515cea12f3"
+  },
+  {
+    "id":90,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-11\"}",
+    "prev_hash":"fb45da4b60256771fad06d107a19ae5fda5ff2facd8685acb21ff6515cea12f3",
+    "hash":"1cfd3410420fab99be47618dbb6d03d0cf694b5eab74d1bc6a1e0fa529ab98c0"
+  },
+  {
+    "id":91,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-11\"}",
+    "prev_hash":"1cfd3410420fab99be47618dbb6d03d0cf694b5eab74d1bc6a1e0fa529ab98c0",
+    "hash":"dfbba20c1e3f39b2b8d4685948b70c4daee3815e00b1790479c141c9c64f5afe"
+  },
+  {
+    "id":92,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-11\"}",
+    "prev_hash":"dfbba20c1e3f39b2b8d4685948b70c4daee3815e00b1790479c141c9c64f5afe",
+    "hash":"d531705fdfdf3571508866f48e5c090db9f5b2a4fc15896cbcc16f50fdc298dd"
+  },
+  {
+    "id":93,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"d531705fdfdf3571508866f48e5c090db9f5b2a4fc15896cbcc16f50fdc298dd",
+    "hash":"8ae3778b2ffaa2e416e3477e13b6f020e295e21cab534d095f31dda25590ab5c"
+  },
+  {
+    "id":94,
+    "timestamp":"2026-08-11T17:21:17.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"likely_cause\": \"Damaged during offloading \/ scrap\"}",
+    "prev_hash":"8ae3778b2ffaa2e416e3477e13b6f020e295e21cab534d095f31dda25590ab5c",
+    "hash":"b32ba014f8dcd44bcf37ebc8b6bf4fa5849aa2ad1783df8703b3631ee687e3b2"
+  },
+  {
+    "id":95,
+    "timestamp":"2026-08-12T06:25:42.000",
+    "event_type":"shrinkage_scan",
+    "details":"{\"triggered_by\": \"admin\", \"flags_found\": 69}",
+    "prev_hash":"b32ba014f8dcd44bcf37ebc8b6bf4fa5849aa2ad1783df8703b3631ee687e3b2",
+    "hash":"4d7efae094a1d002f2cac43bdb577991d50c26cde6ec0e415946532152c7329e"
+  },
+  {
+    "id":96,
+    "timestamp":"2026-08-12T06:25:42.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CBL-01\", \"date\": \"2026-08-05\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"4d7efae094a1d002f2cac43bdb577991d50c26cde6ec0e415946532152c7329e",
+    "hash":"354faeb1764ccc9e590fd901e34709a69ef3ded4ffee2a415aee0c097556c809"
+  },
+  {
+    "id":97,
+    "timestamp":"2026-08-12T06:25:42.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CBL-01\", \"date\": \"2026-08-11\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"354faeb1764ccc9e590fd901e34709a69ef3ded4ffee2a415aee0c097556c809",
+    "hash":"624c97bc20b24f35c80619d24299cf84072255443d84b8d16aa1b5667158681a"
+  },
+  {
+    "id":98,
+    "timestamp":"2026-08-12T06:25:42.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CHG-01\", \"date\": \"2026-07-13\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"624c97bc20b24f35c80619d24299cf84072255443d84b8d16aa1b5667158681a",
+    "hash":"0eb0d86ba2f7e140138bf9119b6d05d564ffd6a9d58ecdbd16a8403d354de2e8"
+  },
+  {
+    "id":99,
+    "timestamp":"2026-08-12T06:25:42.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CHG-01\", \"date\": \"2026-07-31\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"0eb0d86ba2f7e140138bf9119b6d05d564ffd6a9d58ecdbd16a8403d354de2e8",
+    "hash":"41f236793a125ea3693d84131fe4318012006f33d4058efed16eecabe5ff5a93"
+  },
+  {
+    "id":100,
+    "timestamp":"2026-08-12T06:25:42.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CPU-01\", \"date\": \"2026-07-13\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"41f236793a125ea3693d84131fe4318012006f33d4058efed16eecabe5ff5a93",
+    "hash":"2ac0561da964dcd0ce001479d1c86e2e38082d3b88d123c7bcd0b44c32dd5096"
+  },
+  {
+    "id":101,
+    "timestamp":"2026-08-12T06:25:42.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CPU-01\", \"date\": \"2026-07-28\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"2ac0561da964dcd0ce001479d1c86e2e38082d3b88d123c7bcd0b44c32dd5096",
+    "hash":"b0c3dc91eaa1ce796167a1fcc3cbd4f19d45aad32d2dcaa4938e1f3f0496a600"
+  },
+  {
+    "id":102,
+    "timestamp":"2026-08-12T06:26:17.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"date\": \"2026-07-15\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"b0c3dc91eaa1ce796167a1fcc3cbd4f19d45aad32d2dcaa4938e1f3f0496a600",
+    "hash":"ed5fc994d78f6ebb5dcdf23dcf2a3156c8cccc5b2a88f8458ee745b672e16282"
+  },
+  {
+    "id":103,
+    "timestamp":"2026-08-12T06:26:17.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"date\": \"2026-07-23\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"ed5fc994d78f6ebb5dcdf23dcf2a3156c8cccc5b2a88f8458ee745b672e16282",
+    "hash":"09e609aaa0b8108c3fc707005d105b657f902bbe5e024cc2fe4bc56c10bf808b"
+  },
+  {
+    "id":104,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-HDD-01\", \"date\": \"2026-07-18\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"09e609aaa0b8108c3fc707005d105b657f902bbe5e024cc2fe4bc56c10bf808b",
+    "hash":"8af3a17060622947ca318562a927b921194fb42631e367e5167001b01b33d727"
+  },
+  {
+    "id":105,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"date\": \"2026-07-28\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"8af3a17060622947ca318562a927b921194fb42631e367e5167001b01b33d727",
+    "hash":"9036a1333e561764361781bf4d2ae08dfba09d80e6ee9ab34e7bb8d7b5e74ce5"
+  },
+  {
+    "id":106,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"date\": \"2026-08-06\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"9036a1333e561764361781bf4d2ae08dfba09d80e6ee9ab34e7bb8d7b5e74ce5",
+    "hash":"81ff2834bc4cf3bd42e22c4c6cf503382c5c6e0929f473907e7acdfd9d81bbce"
+  },
+  {
+    "id":107,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-SSD-01\", \"date\": \"2026-07-13\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"81ff2834bc4cf3bd42e22c4c6cf503382c5c6e0929f473907e7acdfd9d81bbce",
+    "hash":"be89f0bb939b03964de93664399b9331a7f83809470e088454d39d74e4f91adb"
+  },
+  {
+    "id":108,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-SSD-01\", \"date\": \"2026-07-27\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"be89f0bb939b03964de93664399b9331a7f83809470e088454d39d74e4f91adb",
+    "hash":"75c875562123fecf04857733a2eba62df16352b16d1a6f94febf344ea02297c7"
+  },
+  {
+    "id":109,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CBL-01\", \"date\": \"2026-07-22\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"75c875562123fecf04857733a2eba62df16352b16d1a6f94febf344ea02297c7",
+    "hash":"c2463a0d8dbc9582ffa22fda2f6f67ab5ae52528de8fbc2c005127ba705c2aba"
+  },
+  {
+    "id":110,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CBL-01\", \"date\": \"2026-08-01\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"c2463a0d8dbc9582ffa22fda2f6f67ab5ae52528de8fbc2c005127ba705c2aba",
+    "hash":"5d0ad293ca2b75ed8644bc66bf11103f49987304e175d5c695817efdd51306f3"
+  },
+  {
+    "id":111,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CHG-01\", \"date\": \"2026-07-20\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"5d0ad293ca2b75ed8644bc66bf11103f49987304e175d5c695817efdd51306f3",
+    "hash":"0c7135a436aafe85e6f5aad324a679f1c3b0241e11b8a7119021ac4ae8b94bed"
+  },
+  {
+    "id":112,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CHG-01\", \"date\": \"2026-07-31\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"0c7135a436aafe85e6f5aad324a679f1c3b0241e11b8a7119021ac4ae8b94bed",
+    "hash":"bcec5fe678a49e3247a1077c578b4be606e2831bc055408caccc160e80ce4b09"
+  },
+  {
+    "id":113,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CPU-01\", \"date\": \"2026-07-15\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"bcec5fe678a49e3247a1077c578b4be606e2831bc055408caccc160e80ce4b09",
+    "hash":"b88bf2515a904568f8b7db956df2e86254de718d381ef869506a53e4683fc5ec"
+  },
+  {
+    "id":114,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CPU-01\", \"date\": \"2026-08-03\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"b88bf2515a904568f8b7db956df2e86254de718d381ef869506a53e4683fc5ec",
+    "hash":"1c04befe4b2ff041114deb8b578257cc970df47e33be7522efb1d9f19c0c0238"
+  },
+  {
+    "id":115,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-GPU-01\", \"date\": \"2026-07-17\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"1c04befe4b2ff041114deb8b578257cc970df47e33be7522efb1d9f19c0c0238",
+    "hash":"decac36b923e8a0a647ac22336687a6540a56ca07338647877fe4d281b16b655"
+  },
+  {
+    "id":116,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-GPU-01\", \"date\": \"2026-08-09\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"decac36b923e8a0a647ac22336687a6540a56ca07338647877fe4d281b16b655",
+    "hash":"25058b11824e64b79b97bd4f4f42eb98ad1c9fcc8f24693795b1f2f0da291ec9"
+  },
+  {
+    "id":117,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-HDD-01\", \"date\": \"2026-07-24\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"25058b11824e64b79b97bd4f4f42eb98ad1c9fcc8f24693795b1f2f0da291ec9",
+    "hash":"674339611c56cf61e5df75719b9f21cc451676b84a0f8a68ac2fa781967f3ff2"
+  },
+  {
+    "id":118,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-HDD-01\", \"date\": \"2026-07-31\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"674339611c56cf61e5df75719b9f21cc451676b84a0f8a68ac2fa781967f3ff2",
+    "hash":"6130818a158987a3e88e0333793ace97302b91433d3db3360c087d82b2443dbe"
+  },
+  {
+    "id":119,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"date\": \"2026-07-13\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"6130818a158987a3e88e0333793ace97302b91433d3db3360c087d82b2443dbe",
+    "hash":"741cad6119202a4ddf502d62732d549eb925f910d414297365f8d15da016f448"
+  },
+  {
+    "id":120,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"date\": \"2026-08-04\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"741cad6119202a4ddf502d62732d549eb925f910d414297365f8d15da016f448",
+    "hash":"5f2c6f2fc64bf05933ba9024d91fe68be10bfe488ed508644a9cf7563aceaaf1"
+  },
+  {
+    "id":121,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-SSD-01\", \"date\": \"2026-07-13\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"5f2c6f2fc64bf05933ba9024d91fe68be10bfe488ed508644a9cf7563aceaaf1",
+    "hash":"68773ecec3c0c35be340a631c799d9a1abf6adc0d806d34f5e7f63dcb6984625"
+  },
+  {
+    "id":122,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-SSD-01\", \"date\": \"2026-08-02\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"68773ecec3c0c35be340a631c799d9a1abf6adc0d806d34f5e7f63dcb6984625",
+    "hash":"327651de8b959e95e9ad7378c8e4605bd9c17854b74b21162ffc11a764e97161"
+  },
+  {
+    "id":123,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CBL-01\", \"date\": \"2026-07-13\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"327651de8b959e95e9ad7378c8e4605bd9c17854b74b21162ffc11a764e97161",
+    "hash":"2009988179f81c49783b30db86ef67ecc13a4ebfca26adbd55bc95f14c22f2b6"
+  },
+  {
+    "id":124,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CBL-01\", \"date\": \"2026-07-31\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"2009988179f81c49783b30db86ef67ecc13a4ebfca26adbd55bc95f14c22f2b6",
+    "hash":"39192509aa4dc43153277bda9008b5bc622f5a2342a97a9be997cbfe683e2335"
+  },
+  {
+    "id":125,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CHG-01\", \"date\": \"2026-07-15\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"39192509aa4dc43153277bda9008b5bc622f5a2342a97a9be997cbfe683e2335",
+    "hash":"ee51abace90f9a7e211df9e786b837834370231c89d3f209b1640a9b108d3556"
+  },
+  {
+    "id":126,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CHG-01\", \"date\": \"2026-08-01\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"ee51abace90f9a7e211df9e786b837834370231c89d3f209b1640a9b108d3556",
+    "hash":"e2f6e8ef46bebeccb5c80d3d53c2b8b1a3ea2f2543794ed9e4e2643adba17fab"
+  },
+  {
+    "id":127,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CPU-01\", \"date\": \"2026-07-25\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"e2f6e8ef46bebeccb5c80d3d53c2b8b1a3ea2f2543794ed9e4e2643adba17fab",
+    "hash":"4a819035d024b38947ce4ebb24aaa636953efbe0f930d45a5d682c2f3b7dfd6f"
+  },
+  {
+    "id":128,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CPU-01\", \"date\": \"2026-08-05\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"4a819035d024b38947ce4ebb24aaa636953efbe0f930d45a5d682c2f3b7dfd6f",
+    "hash":"00c38c310ae2f1b48d4c9b99362e0b26a4f40d82544f9c86c59d19ae7c4bd77d"
+  },
+  {
+    "id":129,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-GPU-01\", \"date\": \"2026-07-14\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"00c38c310ae2f1b48d4c9b99362e0b26a4f40d82544f9c86c59d19ae7c4bd77d",
+    "hash":"d624479d6beaceff096932b9fc68c501ae3ab36f49b63e3ed5ba25c3c1abf2a9"
+  },
+  {
+    "id":130,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-GPU-01\", \"date\": \"2026-08-05\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"d624479d6beaceff096932b9fc68c501ae3ab36f49b63e3ed5ba25c3c1abf2a9",
+    "hash":"48b9da30b1d5f843ef247008c5ec08bb497596b0f157e59bdb850fe2b2eb7de3"
+  },
+  {
+    "id":131,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-HDD-01\", \"date\": \"2026-07-17\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"48b9da30b1d5f843ef247008c5ec08bb497596b0f157e59bdb850fe2b2eb7de3",
+    "hash":"a3d79fb41f12cdb72d75bd58f510f101643a57150fffcdb78e97246390f96965"
+  },
+  {
+    "id":132,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-HDD-01\", \"date\": \"2026-08-01\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"a3d79fb41f12cdb72d75bd58f510f101643a57150fffcdb78e97246390f96965",
+    "hash":"d7ce36c4e1b42965a28c92834d7f9005f9c10518b49452d30597a2827949b73b"
+  },
+  {
+    "id":133,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"date\": \"2026-07-16\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"d7ce36c4e1b42965a28c92834d7f9005f9c10518b49452d30597a2827949b73b",
+    "hash":"f38221c492b2babfde306732d01b75b4cdca24a9e9e7133edb546ffbcc700264"
+  },
+  {
+    "id":134,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"date\": \"2026-07-23\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"f38221c492b2babfde306732d01b75b4cdca24a9e9e7133edb546ffbcc700264",
+    "hash":"dfdf5b1df932ba01c92ad21b77008b32467ed942e2c930f2994cee82ac3160ac"
+  },
+  {
+    "id":135,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-SSD-01\", \"date\": \"2026-07-15\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"dfdf5b1df932ba01c92ad21b77008b32467ed942e2c930f2994cee82ac3160ac",
+    "hash":"77af7851508793b72612a7d5008dbe78e036470224b100fcd585802f6afe0800"
+  },
+  {
+    "id":136,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-SSD-01\", \"date\": \"2026-07-21\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"77af7851508793b72612a7d5008dbe78e036470224b100fcd585802f6afe0800",
+    "hash":"fcc56e6f79d10e31e074774d150e8c2fe571f0d2d27027614a6946439eae89d5"
+  },
+  {
+    "id":137,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CBL-01\", \"date\": \"2026-07-20\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"fcc56e6f79d10e31e074774d150e8c2fe571f0d2d27027614a6946439eae89d5",
+    "hash":"bf02b9f0e5a3cb1986011eaff98d214367a3f4956d545ff7965dad7e1666d51b"
+  },
+  {
+    "id":138,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CBL-01\", \"date\": \"2026-08-03\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"bf02b9f0e5a3cb1986011eaff98d214367a3f4956d545ff7965dad7e1666d51b",
+    "hash":"4c557df131eafc53beba2cce9065f3d4199f3c731e01461f7edd0ad626f0a930"
+  },
+  {
+    "id":139,
+    "timestamp":"2026-08-12T06:27:04.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CHG-01\", \"date\": \"2026-07-20\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"4c557df131eafc53beba2cce9065f3d4199f3c731e01461f7edd0ad626f0a930",
+    "hash":"42abbb8e0c7db58c28229d5ad1ee59249d5afb8ba0fedc2cf51d22b742682c9a"
+  },
+  {
+    "id":140,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CHG-01\", \"date\": \"2026-07-26\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"42abbb8e0c7db58c28229d5ad1ee59249d5afb8ba0fedc2cf51d22b742682c9a",
+    "hash":"13ba9c10dadfecb5614c9102a791684ee8e877abd627040fe4225e5709799862"
+  },
+  {
+    "id":141,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"date\": \"2026-07-24\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"13ba9c10dadfecb5614c9102a791684ee8e877abd627040fe4225e5709799862",
+    "hash":"8f1175316ec68a0acde26af90faea98b80d971b025065b11a0ead41b156d23bf"
+  },
+  {
+    "id":142,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"date\": \"2026-07-26\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"8f1175316ec68a0acde26af90faea98b80d971b025065b11a0ead41b156d23bf",
+    "hash":"88953d32876625f2f87c29566e0e1da190698eccabe62eb71b2818df417cd3ef"
+  },
+  {
+    "id":143,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-GPU-01\", \"date\": \"2026-07-19\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"88953d32876625f2f87c29566e0e1da190698eccabe62eb71b2818df417cd3ef",
+    "hash":"b62b01c8bf0f890bbac8dd1cd62a41fa4938631bc9ddab7c91148cb21285bc7e"
+  },
+  {
+    "id":144,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-GPU-01\", \"date\": \"2026-07-25\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"b62b01c8bf0f890bbac8dd1cd62a41fa4938631bc9ddab7c91148cb21285bc7e",
+    "hash":"47ff49c863eb99adbef6c6f3c9e5ac0c3c2c88883aea7d293f9e07aff2bdd862"
+  },
+  {
+    "id":145,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-HDD-01\", \"date\": \"2026-07-29\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"47ff49c863eb99adbef6c6f3c9e5ac0c3c2c88883aea7d293f9e07aff2bdd862",
+    "hash":"397e19deab93401c52590bfdf2a0f4533a007df47f55fd9b9f66db209500595d"
+  },
+  {
+    "id":146,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-HDD-01\", \"date\": \"2026-08-06\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"397e19deab93401c52590bfdf2a0f4533a007df47f55fd9b9f66db209500595d",
+    "hash":"999c2b4dca28d2dd1b2e3b20904deeda1fb9e82c7ca1a3a8b136d62e0a11a6c4"
+  },
+  {
+    "id":147,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"date\": \"2026-08-07\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"999c2b4dca28d2dd1b2e3b20904deeda1fb9e82c7ca1a3a8b136d62e0a11a6c4",
+    "hash":"aba58ad5f22015cab944395cb1ccc707c68b60b12c3c632e0462acde3837fcfe"
+  },
+  {
+    "id":148,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"date\": \"2026-08-11\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"aba58ad5f22015cab944395cb1ccc707c68b60b12c3c632e0462acde3837fcfe",
+    "hash":"34f7c295f7c5927aff444dc9f103af9ae10aaaecce2c28bbbe9f111aca8479fc"
+  },
+  {
+    "id":149,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-SSD-01\", \"date\": \"2026-07-30\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"34f7c295f7c5927aff444dc9f103af9ae10aaaecce2c28bbbe9f111aca8479fc",
+    "hash":"74c87c43bfe8df986d17f05ce1f0eab4bc4e5a2a592e0e1ba5c583fa527662e3"
+  },
+  {
+    "id":150,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-SSD-01\", \"date\": \"2026-08-06\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"74c87c43bfe8df986d17f05ce1f0eab4bc4e5a2a592e0e1ba5c583fa527662e3",
+    "hash":"f9168f9074c50a7b7a49417cf08da11b3927408d2e5f07a9c302c3f7c03eaeb6"
+  },
+  {
+    "id":151,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CBL-01\", \"date\": \"2026-07-30\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"f9168f9074c50a7b7a49417cf08da11b3927408d2e5f07a9c302c3f7c03eaeb6",
+    "hash":"00ec83a70c8dc34acb101e9eb22841dec880c9ed8d341842e4f4e9c238f63c36"
+  },
+  {
+    "id":152,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CBL-01\", \"date\": \"2026-08-10\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"00ec83a70c8dc34acb101e9eb22841dec880c9ed8d341842e4f4e9c238f63c36",
+    "hash":"49dc4808f075e744109ba391fd6589e70d89b189f852ab6b51d74ebd494e4217"
+  },
+  {
+    "id":153,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CHG-01\", \"date\": \"2026-07-13\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"49dc4808f075e744109ba391fd6589e70d89b189f852ab6b51d74ebd494e4217",
+    "hash":"2eefd180de65e39ce63177f4dc2f914b1f4654d1c9cd7447d3b8a5b79e7e2341"
+  },
+  {
+    "id":154,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CHG-01\", \"date\": \"2026-07-19\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"2eefd180de65e39ce63177f4dc2f914b1f4654d1c9cd7447d3b8a5b79e7e2341",
+    "hash":"9116e3f8e3df777c80917c8a3f5b07c713c2b54de79bb7139d923b7d1d12cbfa"
+  },
+  {
+    "id":155,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CPU-01\", \"date\": \"2026-07-19\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"9116e3f8e3df777c80917c8a3f5b07c713c2b54de79bb7139d923b7d1d12cbfa",
+    "hash":"9e8c0dcd210060ad334d13c20f142af4d9e4c48e40d82efc180a95821acbb17e"
+  },
+  {
+    "id":156,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CPU-01\", \"date\": \"2026-07-27\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"9e8c0dcd210060ad334d13c20f142af4d9e4c48e40d82efc180a95821acbb17e",
+    "hash":"42ec6634dbf670429fa03783a3cb59ac673116c7f18d1c38f7d5f40d8b580d2b"
+  },
+  {
+    "id":157,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-GPU-01\", \"date\": \"2026-07-27\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"42ec6634dbf670429fa03783a3cb59ac673116c7f18d1c38f7d5f40d8b580d2b",
+    "hash":"78114a116e97123c1bb895087cb9b1ff25bd4b6f0c4f3426ce9adbd8a79b241d"
+  },
+  {
+    "id":158,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-GPU-01\", \"date\": \"2026-08-07\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"78114a116e97123c1bb895087cb9b1ff25bd4b6f0c4f3426ce9adbd8a79b241d",
+    "hash":"e5d4124681a85752145242a2a83ffe7cdfccc99b4159f72b6c5e4ec5e1ae9081"
+  },
+  {
+    "id":159,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-HDD-01\", \"date\": \"2026-07-25\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"e5d4124681a85752145242a2a83ffe7cdfccc99b4159f72b6c5e4ec5e1ae9081",
+    "hash":"8cab9091be702cd5ebfeabbd5d688f5f55510a11cbcb80fc333b271da123de88"
+  },
+  {
+    "id":160,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-HDD-01\", \"date\": \"2026-08-05\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"8cab9091be702cd5ebfeabbd5d688f5f55510a11cbcb80fc333b271da123de88",
+    "hash":"4c5f74e6302536f9a9b180af2db4e9b7b89af565886da86a58c908bc480af981"
+  },
+  {
+    "id":161,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"date\": \"2026-07-31\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"4c5f74e6302536f9a9b180af2db4e9b7b89af565886da86a58c908bc480af981",
+    "hash":"42fef606a40b8fff166b3fd02cf6d8834936f526ce2a558afd0d1e380e1ff5a7"
+  },
+  {
+    "id":162,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"date\": \"2026-08-08\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"42fef606a40b8fff166b3fd02cf6d8834936f526ce2a558afd0d1e380e1ff5a7",
+    "hash":"515182dab6fd4e53840dc6a7ba4d8330538e0330a5020385d82b4672ed4e7033"
+  },
+  {
+    "id":163,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-SSD-01\", \"date\": \"2026-07-26\", \"likely_cause\": \"Possible damage\/wastage\"}",
+    "prev_hash":"515182dab6fd4e53840dc6a7ba4d8330538e0330a5020385d82b4672ed4e7033",
+    "hash":"9234ae87f176ccac997a729f17acf380105c13251fdabf0e4063dea47dbfcc3b"
+  },
+  {
+    "id":164,
+    "timestamp":"2026-08-12T06:27:05.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-SSD-01\", \"date\": \"2026-08-06\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"9234ae87f176ccac997a729f17acf380105c13251fdabf0e4063dea47dbfcc3b",
+    "hash":"e3648a0fb59a4ee5afb7793e74171d0557ffa62d6a94a9de47b8e0d9c6c0872b"
+  },
+  {
+    "id":165,
+    "timestamp":"2026-08-12T07:09:44.000",
+    "event_type":"cloud_backup",
+    "details":"{\"triggered_by\": \"admin\", \"bucket\": \"Local storage (Fallback)\", \"file_key\": \"data\/backups\/backup-20260812-070944.json\", \"size_kb\": 443.1, \"mode\": \"Local Fallback (Demo)\", \"message\": \"AWS keys unconfigured\/invalid. Saved local backup copy to project: data\/backups\/backup-20260812-070944.json\"}",
+    "prev_hash":"e3648a0fb59a4ee5afb7793e74171d0557ffa62d6a94a9de47b8e0d9c6c0872b",
+    "hash":"1cfbff3d2e7c026da73837cef73b14d3d217baf51f3bdfe5c3639eed36593c94"
+  },
+  {
+    "id":166,
+    "timestamp":"2026-08-12T08:24:59.000",
+    "event_type":"cloud_backup",
+    "details":"{\"triggered_by\": \"admin\", \"bucket\": \"Local storage (Fallback)\", \"file_key\": \"data\/backups\/backup-20260812-082459.json\", \"size_kb\": 443.9, \"mode\": \"Local Fallback (Demo)\", \"message\": \"AWS keys unconfigured\/invalid. Saved local backup copy to project: data\/backups\/backup-20260812-082459.json\"}",
+    "prev_hash":"1cfbff3d2e7c026da73837cef73b14d3d217baf51f3bdfe5c3639eed36593c94",
+    "hash":"c4798a2dee2ae4835b761ec85e420cfd6e753669e71672a1e49e44ad07ce1d09"
+  },
+  {
+    "id":167,
+    "timestamp":"2026-08-12T08:25:27.000",
+    "event_type":"cloud_backup",
+    "details":"{\"triggered_by\": \"admin\", \"bucket\": \"Local storage (Fallback)\", \"file_key\": \"data\/backups\/backup-20260812-082527.json\", \"size_kb\": 444.5, \"mode\": \"Local Fallback (Demo)\", \"message\": \"AWS keys unconfigured\/invalid. Saved local backup copy to project: data\/backups\/backup-20260812-082527.json\"}",
+    "prev_hash":"c4798a2dee2ae4835b761ec85e420cfd6e753669e71672a1e49e44ad07ce1d09",
+    "hash":"8c9d64e69226225c60179559d6f0e122388f68e9e9c8f01c596723f9f49e5be8"
+  },
+  {
+    "id":168,
+    "timestamp":"2026-08-12T14:08:38.000",
+    "event_type":"auto_cloud_backup",
+    "details":"{\"day\": 1, \"bucket\": \"Local storage (Fallback)\", \"file_key\": \"data\/backups\/backup-20260812-140838.json\", \"size_kb\": 446.2, \"mode\": \"Local Fallback (Demo)\", \"message\": \"AWS keys unconfigured\/invalid. Saved local backup copy to project: data\/backups\/backup-20260812-140838.json\"}",
+    "prev_hash":"8c9d64e69226225c60179559d6f0e122388f68e9e9c8f01c596723f9f49e5be8",
+    "hash":"8b13290139b2787afac05d673f8972983f2551a2495c7a7a23604023f0ac1459"
+  },
+  {
+    "id":169,
+    "timestamp":"2026-08-12T14:09:50.000",
+    "event_type":"cloud_backup",
+    "details":"{\"triggered_by\": \"harsha200797@gmail.com\", \"bucket\": \"Local storage (Fallback)\", \"file_key\": \"data\/backups\/backup-20260812-140950.json\", \"size_kb\": 446.8, \"mode\": \"Local Fallback (Demo)\", \"message\": \"AWS keys unconfigured\/invalid. Saved local backup copy to project: data\/backups\/backup-20260812-140950.json\"}",
+    "prev_hash":"8b13290139b2787afac05d673f8972983f2551a2495c7a7a23604023f0ac1459",
+    "hash":"2e0711e7f9fd2373c60d853a86070e38bcedfaf6140cf496880c308ec2b51571"
+  },
+  {
+    "id":170,
+    "timestamp":"2026-08-12T14:18:41.000",
+    "event_type":"cloud_backup",
+    "details":"{\"triggered_by\": \"harsha200797@gmail.com\", \"bucket\": \"Local storage (Fallback)\", \"file_key\": \"data\/backups\/backup-20260812-141841.json\", \"size_kb\": 447.4, \"mode\": \"Local Fallback (Demo)\", \"message\": \"AWS keys unconfigured\/invalid. Saved local backup copy to project: data\/backups\/backup-20260812-141841.json\"}",
+    "prev_hash":"2e0711e7f9fd2373c60d853a86070e38bcedfaf6140cf496880c308ec2b51571",
+    "hash":"8bced518a0441fdeb7801544375b54e12c7677a7271474844cf3c0eb8166649d"
+  },
+  {
+    "id":171,
+    "timestamp":"2026-08-12T14:43:43.000",
+    "event_type":"cloud_backup",
+    "details":"{\"triggered_by\": \"harsha200797@gmail.com\", \"bucket\": \"Local storage (Fallback)\", \"file_key\": \"data\/backups\/backup-20260812-144343.json\", \"size_kb\": 448.0, \"mode\": \"Local Fallback (Demo)\", \"message\": \"AWS keys unconfigured\/invalid. Saved local backup copy to project: data\/backups\/backup-20260812-144343.json\"}",
+    "prev_hash":"8bced518a0441fdeb7801544375b54e12c7677a7271474844cf3c0eb8166649d",
+    "hash":"463b8a64ad741550437effe48d877dcf2f9cab67c780e1153afb5bed470c0ba0"
+  },
+  {
+    "id":172,
+    "timestamp":"2026-08-12T15:24:58.000",
+    "event_type":"cloud_backup",
+    "details":"{\"triggered_by\": \"admin\", \"bucket\": \"harsha-warehouse-backups\", \"file_key\": \"warehouse-backups\/backup-20260812-152450.json\", \"size_kb\": 448.8, \"mode\": \"AWS S3 Cloud\", \"message\": \"Successfully uploaded backup to S3 bucket: s3:\/\/harsha-warehouse-backups\/warehouse-backups\/backup-20260812-152450.json\"}",
+    "prev_hash":"463b8a64ad741550437effe48d877dcf2f9cab67c780e1153afb5bed470c0ba0",
+    "hash":"783220744831a0fb0229e5ad69cd0f95a467aa25072e05f1552577ec7d323df4"
+  },
+  {
+    "id":173,
+    "timestamp":"2026-08-12T15:25:53.000",
+    "event_type":"cloud_backup",
+    "details":"{\"triggered_by\": \"admin\", \"bucket\": \"harsha-warehouse-backups\", \"file_key\": \"warehouse-backups\/backup-20260812-152532.json\", \"size_kb\": 449.4, \"mode\": \"AWS S3 Cloud\", \"message\": \"Successfully uploaded backup to S3 bucket: s3:\/\/harsha-warehouse-backups\/warehouse-backups\/backup-20260812-152532.json\"}",
+    "prev_hash":"783220744831a0fb0229e5ad69cd0f95a467aa25072e05f1552577ec7d323df4",
+    "hash":"90e0e01541b610039b3785e00c87d37b17cf252bb82b520e76e8e873dec91ede"
+  },
+  {
+    "id":174,
+    "timestamp":"2026-08-12T15:27:07.000",
+    "event_type":"cloud_backup",
+    "details":"{\"triggered_by\": \"admin\", \"bucket\": \"harsha-warehouse-backups\", \"file_key\": \"warehouse-backups\/backup-20260812-152648.json\", \"size_kb\": 450.0, \"mode\": \"AWS S3 Cloud\", \"message\": \"Successfully uploaded backup to S3 bucket: s3:\/\/harsha-warehouse-backups\/warehouse-backups\/backup-20260812-152648.json\"}",
+    "prev_hash":"90e0e01541b610039b3785e00c87d37b17cf252bb82b520e76e8e873dec91ede",
+    "hash":"1bf006e44454823561e3a6d6eabe3f2588e83fec91c3a48bbf4d050ad86d433a"
+  },
+  {
+    "id":175,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"name\": \"Bangalore Fulfillment Center\"}",
+    "prev_hash":"1bf006e44454823561e3a6d6eabe3f2588e83fec91c3a48bbf4d050ad86d433a",
+    "hash":"cfae1ffab5dd4d788eb5c406cbefdb2b6ffbc8a6b5ca077483af7b162d51750b"
+  },
+  {
+    "id":176,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"name\": \"Chennai Port Logistics Hub\"}",
+    "prev_hash":"cfae1ffab5dd4d788eb5c406cbefdb2b6ffbc8a6b5ca077483af7b162d51750b",
+    "hash":"a879d63f0079fc1658baed43698a3e872c0e95d208dabe0bbe08907e51cbd0cc"
+  },
+  {
+    "id":177,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"name\": \"Mumbai Container Terminal\"}",
+    "prev_hash":"a879d63f0079fc1658baed43698a3e872c0e95d208dabe0bbe08907e51cbd0cc",
+    "hash":"7b133496565293f91eba475d5fb2d38e7ac9799ba7a0e4bf9a17fb2ac7dacdb3"
+  },
+  {
+    "id":178,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"name\": \"Delhi NCR Logistics Park\"}",
+    "prev_hash":"7b133496565293f91eba475d5fb2d38e7ac9799ba7a0e4bf9a17fb2ac7dacdb3",
+    "hash":"64e4f4d8892e294da34dc1e97a396673466f00f83b99d389c3683cc977996167"
+  },
+  {
+    "id":179,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"name\": \"Kolkata Gateway Depot\"}",
+    "prev_hash":"64e4f4d8892e294da34dc1e97a396673466f00f83b99d389c3683cc977996167",
+    "hash":"14005dbe8425c668dfc4d8a25d2439240704d2bcb2220a47e11783ecf6fdae58"
+  },
+  {
+    "id":180,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CPU-01\", \"name\": \"AMD Ryzen 9 7900X Processor\"}",
+    "prev_hash":"14005dbe8425c668dfc4d8a25d2439240704d2bcb2220a47e11783ecf6fdae58",
+    "hash":"58385ef3127faa831d54e389f621827b2571f2b63f962ea338ab3ea53ffd6389"
+  },
+  {
+    "id":181,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-GPU-01\", \"name\": \"Nvidia RTX 4080 Founders Edition\"}",
+    "prev_hash":"58385ef3127faa831d54e389f621827b2571f2b63f962ea338ab3ea53ffd6389",
+    "hash":"1ba76a2edce4dc19b43744d52efc50dbc6aeaa723864b6da2db2fb9dfba5fd9e"
+  },
+  {
+    "id":182,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-RAM-01\", \"name\": \"Corsair DDR5 32GB 6000MHz RAM\"}",
+    "prev_hash":"1ba76a2edce4dc19b43744d52efc50dbc6aeaa723864b6da2db2fb9dfba5fd9e",
+    "hash":"a4948a485002e7de0968797e204f0355e2ec251d98bb3b79ad5798fb3aa89f8d"
+  },
+  {
+    "id":183,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-SSD-01\", \"name\": \"Samsung 990 Pro 2TB NVMe SSD\"}",
+    "prev_hash":"a4948a485002e7de0968797e204f0355e2ec251d98bb3b79ad5798fb3aa89f8d",
+    "hash":"4dd3392763a1da5dd3b4e3b73dc73d1d90959621694541a211d0edf8cbc739f3"
+  },
+  {
+    "id":184,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-HDD-01\", \"name\": \"WD Red Pro 8TB NAS Hard Drive\"}",
+    "prev_hash":"4dd3392763a1da5dd3b4e3b73dc73d1d90959621694541a211d0edf8cbc739f3",
+    "hash":"701a68d9d0ae22c1eaf7c5bc04a28c686c8820996d43780819bed1bc0fc1dce8"
+  },
+  {
+    "id":185,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CHG-01\", \"name\": \"Anker 100W GaN Wall Charger\"}",
+    "prev_hash":"701a68d9d0ae22c1eaf7c5bc04a28c686c8820996d43780819bed1bc0fc1dce8",
+    "hash":"a11b10e9cc159a1a466d53c33d8499b980c240c45373bf891b4b9cc270edf2d8"
+  },
+  {
+    "id":186,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CBL-01\", \"name\": \"Apple USB-C Braided Cable 2m\"}",
+    "prev_hash":"a11b10e9cc159a1a466d53c33d8499b980c240c45373bf891b4b9cc270edf2d8",
+    "hash":"aec9dce7d1fea3fbfb4a0f04b2d3928f6ff28e3796d0cb21e7c3e1244955e834"
+  },
+  {
+    "id":187,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-19\"}",
+    "prev_hash":"aec9dce7d1fea3fbfb4a0f04b2d3928f6ff28e3796d0cb21e7c3e1244955e834",
+    "hash":"e450e61d9ecaf4199ed3e76b81568ddc1462d1c09692674b702efc0fcaac40fe"
+  },
+  {
+    "id":188,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-19\"}",
+    "prev_hash":"e450e61d9ecaf4199ed3e76b81568ddc1462d1c09692674b702efc0fcaac40fe",
+    "hash":"2e609d5328d4975cac34f3a93c70806992158468e3ad1de2b8c237bec566d15d"
+  },
+  {
+    "id":189,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-21\"}",
+    "prev_hash":"2e609d5328d4975cac34f3a93c70806992158468e3ad1de2b8c237bec566d15d",
+    "hash":"0fd0ceede366f3008b1501f374afe6a6b04c8c7cad43bfa8e1ef17f412991133"
+  },
+  {
+    "id":190,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-22\"}",
+    "prev_hash":"0fd0ceede366f3008b1501f374afe6a6b04c8c7cad43bfa8e1ef17f412991133",
+    "hash":"d639d88fe88497d3b148d1626ea4081fca4ce85a3e4749dd9cca0834534e4be9"
+  },
+  {
+    "id":191,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-24\"}",
+    "prev_hash":"d639d88fe88497d3b148d1626ea4081fca4ce85a3e4749dd9cca0834534e4be9",
+    "hash":"fb5cf38a01be956c787a61fa36659f257f673b61944d664edcadf927cb084ab3"
+  },
+  {
+    "id":192,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-26\"}",
+    "prev_hash":"fb5cf38a01be956c787a61fa36659f257f673b61944d664edcadf927cb084ab3",
+    "hash":"3924add6d567083abbf2c5b6fb0007a565893ce6126a9babaa4bf8d17eb3335b"
+  },
+  {
+    "id":193,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-26\"}",
+    "prev_hash":"3924add6d567083abbf2c5b6fb0007a565893ce6126a9babaa4bf8d17eb3335b",
+    "hash":"142cf1504609957c10050395e67d4ad46832ca36ff1091b04ba05be06056c2a7"
+  },
+  {
+    "id":194,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-27\"}",
+    "prev_hash":"142cf1504609957c10050395e67d4ad46832ca36ff1091b04ba05be06056c2a7",
+    "hash":"26a96269d6d7bda8c0a6d88804f8379a8d45efd53406d852f299398bc308027c"
+  },
+  {
+    "id":195,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-27\"}",
+    "prev_hash":"26a96269d6d7bda8c0a6d88804f8379a8d45efd53406d852f299398bc308027c",
+    "hash":"0b755ff80114b3cc7fc3ca3bc53598f42beac95df76494c913981d147cb6b163"
+  },
+  {
+    "id":196,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-27\"}",
+    "prev_hash":"0b755ff80114b3cc7fc3ca3bc53598f42beac95df76494c913981d147cb6b163",
+    "hash":"a35da825c537a7d8a9dfeedc5c7e0a3f3a1fbf8db104685fe0f8dae301f34d4e"
+  },
+  {
+    "id":197,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-28\"}",
+    "prev_hash":"a35da825c537a7d8a9dfeedc5c7e0a3f3a1fbf8db104685fe0f8dae301f34d4e",
+    "hash":"423f54046193690fd97c01f6c554b18a6d3298a6b2475e842f72dedbff33ca85"
+  },
+  {
+    "id":198,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-29\"}",
+    "prev_hash":"423f54046193690fd97c01f6c554b18a6d3298a6b2475e842f72dedbff33ca85",
+    "hash":"10804b359ab33a5c53b70786303f9b6166d07235d0f20bf0cfaec1c7c6f740b2"
+  },
+  {
+    "id":199,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-29\"}",
+    "prev_hash":"10804b359ab33a5c53b70786303f9b6166d07235d0f20bf0cfaec1c7c6f740b2",
+    "hash":"0ca850367d39598e60f3ac63bdb42f31282c813a442651f8ecb4a58d02257816"
+  },
+  {
+    "id":200,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-07-29\"}",
+    "prev_hash":"0ca850367d39598e60f3ac63bdb42f31282c813a442651f8ecb4a58d02257816",
+    "hash":"985b001bbea6df5d8e456914c7d6bd4c779a59f0a9cf64794f9f1b546fbedbf7"
+  },
+  {
+    "id":201,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-01\"}",
+    "prev_hash":"985b001bbea6df5d8e456914c7d6bd4c779a59f0a9cf64794f9f1b546fbedbf7",
+    "hash":"899f04f4e59999a67dc30e11ab4803321a3117df5873e427863997b83536a350"
+  },
+  {
+    "id":202,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-01\"}",
+    "prev_hash":"899f04f4e59999a67dc30e11ab4803321a3117df5873e427863997b83536a350",
+    "hash":"cb3d6979f158155d4120147389863cd7a205a977eb581dbd3aabbe655373a1f5"
+  },
+  {
+    "id":203,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-02\"}",
+    "prev_hash":"cb3d6979f158155d4120147389863cd7a205a977eb581dbd3aabbe655373a1f5",
+    "hash":"12282a91f9004d965cc6c075f8fcb15f02035a941ce2e08187cf88f71aa63b60"
+  },
+  {
+    "id":204,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-03\"}",
+    "prev_hash":"12282a91f9004d965cc6c075f8fcb15f02035a941ce2e08187cf88f71aa63b60",
+    "hash":"f633dfcdbb15cf97e905145841e0aba32740a8c6fd84d5152faee12de1d2aef0"
+  },
+  {
+    "id":205,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-03\"}",
+    "prev_hash":"f633dfcdbb15cf97e905145841e0aba32740a8c6fd84d5152faee12de1d2aef0",
+    "hash":"bb7e9cf7dcc7b6090e299429906fb585560333561ffff7cd1f4f17e8ad883c4b"
+  },
+  {
+    "id":206,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-03\"}",
+    "prev_hash":"bb7e9cf7dcc7b6090e299429906fb585560333561ffff7cd1f4f17e8ad883c4b",
+    "hash":"613fd0ffeb1c4235db421b25838674428666fef33d9e167b155f6e733eb9cd89"
+  },
+  {
+    "id":207,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-04\"}",
+    "prev_hash":"613fd0ffeb1c4235db421b25838674428666fef33d9e167b155f6e733eb9cd89",
+    "hash":"54fda2bbf8cd1e5c0eb9dd2bfc1713523b3ab0c7795bd9a2a59369965f981c89"
+  },
+  {
+    "id":208,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-04\"}",
+    "prev_hash":"54fda2bbf8cd1e5c0eb9dd2bfc1713523b3ab0c7795bd9a2a59369965f981c89",
+    "hash":"54391ed22184eab16e15357fd57f3f2b8f29485ce6c39add2964b676c2b9fdec"
+  },
+  {
+    "id":209,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-05\"}",
+    "prev_hash":"54391ed22184eab16e15357fd57f3f2b8f29485ce6c39add2964b676c2b9fdec",
+    "hash":"6b7244dea686b918f08a7c7b04df058ac25d6e263ba696e1b2967abd2954d314"
+  },
+  {
+    "id":210,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-05\"}",
+    "prev_hash":"6b7244dea686b918f08a7c7b04df058ac25d6e263ba696e1b2967abd2954d314",
+    "hash":"9ff57ba9186c5855dace4f8b78c95031d94062ac33dfafe9a5c06e76b7c5c8bd"
+  },
+  {
+    "id":211,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-06\"}",
+    "prev_hash":"9ff57ba9186c5855dace4f8b78c95031d94062ac33dfafe9a5c06e76b7c5c8bd",
+    "hash":"3870c10f6ff31aaa88269be640d7cc19ea1cfea33470ba07bfb4b4c14123f0be"
+  },
+  {
+    "id":212,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-06\"}",
+    "prev_hash":"3870c10f6ff31aaa88269be640d7cc19ea1cfea33470ba07bfb4b4c14123f0be",
+    "hash":"aa7e8f8052b6158554efc415080391d1da048b8ffc2dbd25f7dbefbbfcf1be80"
+  },
+  {
+    "id":213,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-06\"}",
+    "prev_hash":"aa7e8f8052b6158554efc415080391d1da048b8ffc2dbd25f7dbefbbfcf1be80",
+    "hash":"a92b30b019968b9cdd841fb7a8c5995a068c11d3a9eebf169089526acb6f66bc"
+  },
+  {
+    "id":214,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-08\"}",
+    "prev_hash":"a92b30b019968b9cdd841fb7a8c5995a068c11d3a9eebf169089526acb6f66bc",
+    "hash":"53b5ee41be72fb63d04cfaf0f9875ee3f8638f2fe21090b1a8be0ea3570541a9"
+  },
+  {
+    "id":215,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-09\"}",
+    "prev_hash":"53b5ee41be72fb63d04cfaf0f9875ee3f8638f2fe21090b1a8be0ea3570541a9",
+    "hash":"c9cd9bae27735c78b45a2dbb065b8fe919344515c09247195f644e9789bde23c"
+  },
+  {
+    "id":216,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-10\"}",
+    "prev_hash":"c9cd9bae27735c78b45a2dbb065b8fe919344515c09247195f644e9789bde23c",
+    "hash":"30faef6dc61b248a8557b81006251cf1c07795a3aa2615faad659e736a3b0399"
+  },
+  {
+    "id":217,
+    "timestamp":"2026-08-13T02:41:13.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-11\"}",
+    "prev_hash":"30faef6dc61b248a8557b81006251cf1c07795a3aa2615faad659e736a3b0399",
+    "hash":"505aa9f30a6483504a9c523d03e232a9d5547ec89cb517e850564c000d55e8ad"
+  },
+  {
+    "id":218,
+    "timestamp":"2026-08-13T02:41:14.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-11\"}",
+    "prev_hash":"505aa9f30a6483504a9c523d03e232a9d5547ec89cb517e850564c000d55e8ad",
+    "hash":"d6c921a13d0b3b5be694e9c22f415fb3e1af6cafd9eb88aa1158674aa238d431"
+  },
+  {
+    "id":219,
+    "timestamp":"2026-08-13T02:41:14.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"d6c921a13d0b3b5be694e9c22f415fb3e1af6cafd9eb88aa1158674aa238d431",
+    "hash":"65d3219916589f22812c9820c6976cb4eb20a2c686b45b9e05701e7cae7ca851"
+  },
+  {
+    "id":220,
+    "timestamp":"2026-08-13T02:41:14.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"likely_cause\": \"Damaged during offloading \/ scrap\"}",
+    "prev_hash":"65d3219916589f22812c9820c6976cb4eb20a2c686b45b9e05701e7cae7ca851",
+    "hash":"5a85d2413564fbd4c4d7ef32f371b1e077e79a1f7d2eb06fdada94365ff3b734"
+  },
+  {
+    "id":221,
+    "timestamp":"2026-08-13T02:42:24.000",
+    "event_type":"auto_cloud_backup",
+    "details":"{\"day\": 2, \"bucket\": \"harsha-warehouse-backups\", \"file_key\": \"warehouse-backups\/backup-20260813-024215.json\", \"size_kb\": 442.5, \"mode\": \"AWS S3 Cloud\", \"message\": \"Successfully uploaded backup to S3 bucket: s3:\/\/harsha-warehouse-backups\/warehouse-backups\/backup-20260813-024215.json\"}",
+    "prev_hash":"5a85d2413564fbd4c4d7ef32f371b1e077e79a1f7d2eb06fdada94365ff3b734",
+    "hash":"e32fd019fa65ccb12eb56e15db56948753df5d9cd9aef9a0db466db1845a3ecb"
+  },
+  {
+    "id":222,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"name\": \"Bangalore Fulfillment Center\"}",
+    "prev_hash":"e32fd019fa65ccb12eb56e15db56948753df5d9cd9aef9a0db466db1845a3ecb",
+    "hash":"b0d7d0fc91746b16c9957fa58634575e0f702f68147ffcc790b547ae63d82356"
+  },
+  {
+    "id":223,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"name\": \"Chennai Port Logistics Hub\"}",
+    "prev_hash":"b0d7d0fc91746b16c9957fa58634575e0f702f68147ffcc790b547ae63d82356",
+    "hash":"02d49de98ccdd40d9ad5da326d4746eb88186e600f3576cc1bf22a3ded050d19"
+  },
+  {
+    "id":224,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"name\": \"Mumbai Container Terminal\"}",
+    "prev_hash":"02d49de98ccdd40d9ad5da326d4746eb88186e600f3576cc1bf22a3ded050d19",
+    "hash":"8deae79de1fb214875af82f3e88b4bfc4f546187bc4d0020fe80423143058e28"
+  },
+  {
+    "id":225,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"name\": \"Delhi NCR Logistics Park\"}",
+    "prev_hash":"8deae79de1fb214875af82f3e88b4bfc4f546187bc4d0020fe80423143058e28",
+    "hash":"442e9f4fde961dcb1c53460d42c0bd7d28ede9cc923fd3780b4fff565eb8d0b0"
+  },
+  {
+    "id":226,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"name\": \"Kolkata Gateway Depot\"}",
+    "prev_hash":"442e9f4fde961dcb1c53460d42c0bd7d28ede9cc923fd3780b4fff565eb8d0b0",
+    "hash":"69c7304a835bffbff0c78cbd72443afee6dcf206c4ea39b7346e471a868b01fb"
+  },
+  {
+    "id":227,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CPU-01\", \"name\": \"AMD Ryzen 9 7900X Processor\"}",
+    "prev_hash":"69c7304a835bffbff0c78cbd72443afee6dcf206c4ea39b7346e471a868b01fb",
+    "hash":"8c831767f55ac2f7813a0d7176b9e7e86a2fab9e31be3bd21f11a4cf96a7ac0c"
+  },
+  {
+    "id":228,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-GPU-01\", \"name\": \"Nvidia RTX 4080 Founders Edition\"}",
+    "prev_hash":"8c831767f55ac2f7813a0d7176b9e7e86a2fab9e31be3bd21f11a4cf96a7ac0c",
+    "hash":"2b3b81942feaaf0df68443786bbf1a42dedc1e5cf29bd4b6fdb7cbad35ba8940"
+  },
+  {
+    "id":229,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-RAM-01\", \"name\": \"Corsair DDR5 32GB 6000MHz RAM\"}",
+    "prev_hash":"2b3b81942feaaf0df68443786bbf1a42dedc1e5cf29bd4b6fdb7cbad35ba8940",
+    "hash":"ae586f90d27d2e1711de1c682dd788e7b8c5c42f8443436270a57cc14ba8a12a"
+  },
+  {
+    "id":230,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-SSD-01\", \"name\": \"Samsung 990 Pro 2TB NVMe SSD\"}",
+    "prev_hash":"ae586f90d27d2e1711de1c682dd788e7b8c5c42f8443436270a57cc14ba8a12a",
+    "hash":"5e5347310f7c83b1216cb56b239143ba6bd6d0e080eda4d00064289e0500d558"
+  },
+  {
+    "id":231,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-HDD-01\", \"name\": \"WD Red Pro 8TB NAS Hard Drive\"}",
+    "prev_hash":"5e5347310f7c83b1216cb56b239143ba6bd6d0e080eda4d00064289e0500d558",
+    "hash":"9771b72b58ef2de324c5acf8edac7afe36ee10581dafccf312d009e44cae5641"
+  },
+  {
+    "id":232,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CHG-01\", \"name\": \"Anker 100W GaN Wall Charger\"}",
+    "prev_hash":"9771b72b58ef2de324c5acf8edac7afe36ee10581dafccf312d009e44cae5641",
+    "hash":"23953ce8147fd95e47281ec343eea1484e4321bbc8f1a4f8a3af219076170e9c"
+  },
+  {
+    "id":233,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CBL-01\", \"name\": \"Apple USB-C Braided Cable 2m\"}",
+    "prev_hash":"23953ce8147fd95e47281ec343eea1484e4321bbc8f1a4f8a3af219076170e9c",
+    "hash":"6b05824522bca1aabe2c0a4dc9ddaa47e962b65ec02f0a7b17197a9f8374f9b4"
+  },
+  {
+    "id":234,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-18\"}",
+    "prev_hash":"6b05824522bca1aabe2c0a4dc9ddaa47e962b65ec02f0a7b17197a9f8374f9b4",
+    "hash":"5c3876902897945c6a3672f8526b8dfaa77794cac24294a6c2e53f8dd851cc14"
+  },
+  {
+    "id":235,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-19\"}",
+    "prev_hash":"5c3876902897945c6a3672f8526b8dfaa77794cac24294a6c2e53f8dd851cc14",
+    "hash":"f3a045e613ac2d8b4cea27e3c1a44edf5f055806dc8c4fd0c2493056046b0ad0"
+  },
+  {
+    "id":236,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-21\"}",
+    "prev_hash":"f3a045e613ac2d8b4cea27e3c1a44edf5f055806dc8c4fd0c2493056046b0ad0",
+    "hash":"fea3e29bf8f7a76d467373e4af5559ff1d5b46c5bd1b090d6c538c7356bff8bd"
+  },
+  {
+    "id":237,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-22\"}",
+    "prev_hash":"fea3e29bf8f7a76d467373e4af5559ff1d5b46c5bd1b090d6c538c7356bff8bd",
+    "hash":"48fe150c2ac10591cb7f0820f0102f2e98c8dee40ff63c04b83c9c491d320a12"
+  },
+  {
+    "id":238,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-22\"}",
+    "prev_hash":"48fe150c2ac10591cb7f0820f0102f2e98c8dee40ff63c04b83c9c491d320a12",
+    "hash":"c5799e578f9b40147c8be3bc1b7969ac83d455d6f93ff145d234199e74366b8c"
+  },
+  {
+    "id":239,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-25\"}",
+    "prev_hash":"c5799e578f9b40147c8be3bc1b7969ac83d455d6f93ff145d234199e74366b8c",
+    "hash":"984398823141ed63ce096cdd14913eb58cf14dc7843850b50881aeece80d2d3f"
+  },
+  {
+    "id":240,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-25\"}",
+    "prev_hash":"984398823141ed63ce096cdd14913eb58cf14dc7843850b50881aeece80d2d3f",
+    "hash":"366c5757faca449d1579026a42961c561871ea65221bf3c8ec491190a5e119f1"
+  },
+  {
+    "id":241,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-26\"}",
+    "prev_hash":"366c5757faca449d1579026a42961c561871ea65221bf3c8ec491190a5e119f1",
+    "hash":"f96655c7286072107b6e863714f03f658ebe551db72e47f81a432a30914e8994"
+  },
+  {
+    "id":242,
+    "timestamp":"2026-08-13T05:25:02.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-26\"}",
+    "prev_hash":"f96655c7286072107b6e863714f03f658ebe551db72e47f81a432a30914e8994",
+    "hash":"17120025a5188af7b726718c7352b44d126e8bba03ba05bf6cc86fb8a3720728"
+  },
+  {
+    "id":243,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-27\"}",
+    "prev_hash":"17120025a5188af7b726718c7352b44d126e8bba03ba05bf6cc86fb8a3720728",
+    "hash":"da809acdd64ff30fc0151ba28b260955d128e2c999a1fce64dc453b4ea5a2af9"
+  },
+  {
+    "id":244,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-28\"}",
+    "prev_hash":"da809acdd64ff30fc0151ba28b260955d128e2c999a1fce64dc453b4ea5a2af9",
+    "hash":"027abbffdb114700473231334053159bc3120ed9fe5b97d1cddd8a02583c56ec"
+  },
+  {
+    "id":245,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-29\"}",
+    "prev_hash":"027abbffdb114700473231334053159bc3120ed9fe5b97d1cddd8a02583c56ec",
+    "hash":"09294f716dab1841bc7d7d7fd1f70341f8a152c635c0ac607b18e48f0b132ec4"
+  },
+  {
+    "id":246,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-31\"}",
+    "prev_hash":"09294f716dab1841bc7d7d7fd1f70341f8a152c635c0ac607b18e48f0b132ec4",
+    "hash":"fea7d2e0ce6819899a1b196674f86d0274c0f4f1a2af3d47c3bd4066e93938b6"
+  },
+  {
+    "id":247,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-02\"}",
+    "prev_hash":"fea7d2e0ce6819899a1b196674f86d0274c0f4f1a2af3d47c3bd4066e93938b6",
+    "hash":"acd005a238ae6a764021369ec16308c3819f758c64324fdb9605679791122348"
+  },
+  {
+    "id":248,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-03\"}",
+    "prev_hash":"acd005a238ae6a764021369ec16308c3819f758c64324fdb9605679791122348",
+    "hash":"a53d7bd2fe134509c5b79edd03920b2c1b532ef928768519e1bd0ce853b73ba5"
+  },
+  {
+    "id":249,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-03\"}",
+    "prev_hash":"a53d7bd2fe134509c5b79edd03920b2c1b532ef928768519e1bd0ce853b73ba5",
+    "hash":"e275c7fd91d110bf318a527082bb759b484de628069d68b7a7e77f18cd946002"
+  },
+  {
+    "id":250,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-04\"}",
+    "prev_hash":"e275c7fd91d110bf318a527082bb759b484de628069d68b7a7e77f18cd946002",
+    "hash":"1c43efef17aad859d5687e38bc3b11b5ae6ab6220eb0c84e22c468675e2f4b13"
+  },
+  {
+    "id":251,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-05\"}",
+    "prev_hash":"1c43efef17aad859d5687e38bc3b11b5ae6ab6220eb0c84e22c468675e2f4b13",
+    "hash":"70b3e364fd3cc9062524606c07c2d1ca1826c1a50c7ba7e83ff3662b4a7ce7ee"
+  },
+  {
+    "id":252,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-05\"}",
+    "prev_hash":"70b3e364fd3cc9062524606c07c2d1ca1826c1a50c7ba7e83ff3662b4a7ce7ee",
+    "hash":"d52e026df2c49b00c3ab4edc217e8b2335089c9e30b1f143fcebe0f7e966b720"
+  },
+  {
+    "id":253,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-05\"}",
+    "prev_hash":"d52e026df2c49b00c3ab4edc217e8b2335089c9e30b1f143fcebe0f7e966b720",
+    "hash":"3811350bfcf4e6364ad15204c212d6d5ef8b76b827b323a3a4d8d0e3a3161063"
+  },
+  {
+    "id":254,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-06\"}",
+    "prev_hash":"3811350bfcf4e6364ad15204c212d6d5ef8b76b827b323a3a4d8d0e3a3161063",
+    "hash":"5d92e41ca8216e0d479d80f5f0771a3f8219ea74d5180dfbdae56159e75d3e76"
+  },
+  {
+    "id":255,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-06\"}",
+    "prev_hash":"5d92e41ca8216e0d479d80f5f0771a3f8219ea74d5180dfbdae56159e75d3e76",
+    "hash":"93331c7aa51709398722d9b30af2506a7379868593ff82d84be12da2604dcd06"
+  },
+  {
+    "id":256,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-06\"}",
+    "prev_hash":"93331c7aa51709398722d9b30af2506a7379868593ff82d84be12da2604dcd06",
+    "hash":"ab0928e16977819595c2ccd5ab8fc5f8c859aec3a2c6c288452ba277662f4eb0"
+  },
+  {
+    "id":257,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-06\"}",
+    "prev_hash":"ab0928e16977819595c2ccd5ab8fc5f8c859aec3a2c6c288452ba277662f4eb0",
+    "hash":"fd502041123475b34de1de555c5457d70c979d7517e25b2946d8dc97d4698bff"
+  },
+  {
+    "id":258,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-06\"}",
+    "prev_hash":"fd502041123475b34de1de555c5457d70c979d7517e25b2946d8dc97d4698bff",
+    "hash":"5a2bffc5c753125c424f2dc7fff741c3ad087540b8ca981a22faa96da98f15b1"
+  },
+  {
+    "id":259,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-07\"}",
+    "prev_hash":"5a2bffc5c753125c424f2dc7fff741c3ad087540b8ca981a22faa96da98f15b1",
+    "hash":"f7f10368ddba8683f6f171d0640f6cefabd43f683308acd1d40926fb57bcc68d"
+  },
+  {
+    "id":260,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-07\"}",
+    "prev_hash":"f7f10368ddba8683f6f171d0640f6cefabd43f683308acd1d40926fb57bcc68d",
+    "hash":"aaed8e708a548e921fefb7be52a6122b78fc154c755d7661f1e9dce06da8505b"
+  },
+  {
+    "id":261,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-08\"}",
+    "prev_hash":"aaed8e708a548e921fefb7be52a6122b78fc154c755d7661f1e9dce06da8505b",
+    "hash":"3391276188d16f580506fde3ea420307c15352ed6dfcee9e12419ac98f966dad"
+  },
+  {
+    "id":262,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-SSD-01\", \"quantity\": 90, \"date\": \"2026-08-09\"}",
+    "prev_hash":"3391276188d16f580506fde3ea420307c15352ed6dfcee9e12419ac98f966dad",
+    "hash":"d5c8fef78defc7348aa04687be57fc23860b29c0ffa451834ad33c1634e85a15"
+  },
+  {
+    "id":263,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-11\"}",
+    "prev_hash":"d5c8fef78defc7348aa04687be57fc23860b29c0ffa451834ad33c1634e85a15",
+    "hash":"4f2fea31e034229dbe01ed6b77523cfe5ff54990ad08a2d06e22bc338ff42a5a"
+  },
+  {
+    "id":264,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-11\"}",
+    "prev_hash":"4f2fea31e034229dbe01ed6b77523cfe5ff54990ad08a2d06e22bc338ff42a5a",
+    "hash":"73f3de990494ec06994f779a073d6bce037418f907a7470e3586128b9963d091"
+  },
+  {
+    "id":265,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-11\"}",
+    "prev_hash":"73f3de990494ec06994f779a073d6bce037418f907a7470e3586128b9963d091",
+    "hash":"5fde47af55508fecb9a90df1768087351c01a6634ae19ee8a66387877e084d01"
+  },
+  {
+    "id":266,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"5fde47af55508fecb9a90df1768087351c01a6634ae19ee8a66387877e084d01",
+    "hash":"1ae7df73f09ebc51e7db9805de898a1d74c4ba0b86b965614647788c4433954d"
+  },
+  {
+    "id":267,
+    "timestamp":"2026-08-13T05:25:03.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"likely_cause\": \"Damaged during offloading \/ scrap\"}",
+    "prev_hash":"1ae7df73f09ebc51e7db9805de898a1d74c4ba0b86b965614647788c4433954d",
+    "hash":"d34a00ef863c542fc2b98d06fa73d74d2c58e544ff32daaa66028b342f95caaa"
+  },
+  {
+    "id":268,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"name\": \"Bangalore Fulfillment Center\"}",
+    "prev_hash":"d34a00ef863c542fc2b98d06fa73d74d2c58e544ff32daaa66028b342f95caaa",
+    "hash":"0ba8f477c7fcd3c119cc38ccbf29a3036f4589f1896935a55b3f633a7a64cf96"
+  },
+  {
+    "id":269,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"name\": \"Chennai Port Logistics Hub\"}",
+    "prev_hash":"0ba8f477c7fcd3c119cc38ccbf29a3036f4589f1896935a55b3f633a7a64cf96",
+    "hash":"941369ef397e1608cac268c8a8910d9e96aad36012edbd10a39dde499651ee05"
+  },
+  {
+    "id":270,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"name\": \"Mumbai Container Terminal\"}",
+    "prev_hash":"941369ef397e1608cac268c8a8910d9e96aad36012edbd10a39dde499651ee05",
+    "hash":"3232917a8000a7e95aa446a1e5f22e213c1db92c40427493f22205806b2e6ced"
+  },
+  {
+    "id":271,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"name\": \"Delhi NCR Logistics Park\"}",
+    "prev_hash":"3232917a8000a7e95aa446a1e5f22e213c1db92c40427493f22205806b2e6ced",
+    "hash":"a176ecf5b7b9fa121fa166ca656792fef351e3a1dda48be2b4d1c438c75657ba"
+  },
+  {
+    "id":272,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"warehouse_created",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"name\": \"Kolkata Gateway Depot\"}",
+    "prev_hash":"a176ecf5b7b9fa121fa166ca656792fef351e3a1dda48be2b4d1c438c75657ba",
+    "hash":"236fea9f92aeb07cccf50ac13f351d482df5d3babcaefda0a1085d34d56f7fcc"
+  },
+  {
+    "id":273,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CPU-01\", \"name\": \"AMD Ryzen 9 7900X Processor\"}",
+    "prev_hash":"236fea9f92aeb07cccf50ac13f351d482df5d3babcaefda0a1085d34d56f7fcc",
+    "hash":"9779f50635d1246ac08103068b5dd0b6d6f999b77bd8b49a9cf492639794937a"
+  },
+  {
+    "id":274,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-GPU-01\", \"name\": \"Nvidia RTX 4080 Founders Edition\"}",
+    "prev_hash":"9779f50635d1246ac08103068b5dd0b6d6f999b77bd8b49a9cf492639794937a",
+    "hash":"70d4b0736b35d77496cd23acbbfb3120c7e7580f7b0bc8d88d2ebc2e96dbec8f"
+  },
+  {
+    "id":275,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-RAM-01\", \"name\": \"Corsair DDR5 32GB 6000MHz RAM\"}",
+    "prev_hash":"70d4b0736b35d77496cd23acbbfb3120c7e7580f7b0bc8d88d2ebc2e96dbec8f",
+    "hash":"f2b930421115e9c59bd98f8e77efa73e350ca70b630a47d02bf2bb9818a1e380"
+  },
+  {
+    "id":276,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-SSD-01\", \"name\": \"Samsung 990 Pro 2TB NVMe SSD\"}",
+    "prev_hash":"f2b930421115e9c59bd98f8e77efa73e350ca70b630a47d02bf2bb9818a1e380",
+    "hash":"e1ca8abf5ea4bdc6e80344ed216c51e94c0e2d6625eb4d1c6bd0b6c6632751c8"
+  },
+  {
+    "id":277,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-HDD-01\", \"name\": \"WD Red Pro 8TB NAS Hard Drive\"}",
+    "prev_hash":"e1ca8abf5ea4bdc6e80344ed216c51e94c0e2d6625eb4d1c6bd0b6c6632751c8",
+    "hash":"78117231498317413ad9bb7ed988de5d8c8dbdca3ab9538e7c26ea3658851d5e"
+  },
+  {
+    "id":278,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CHG-01\", \"name\": \"Anker 100W GaN Wall Charger\"}",
+    "prev_hash":"78117231498317413ad9bb7ed988de5d8c8dbdca3ab9538e7c26ea3658851d5e",
+    "hash":"a3e54552fe7f93985bd18b55f124d90d06f66e4f2eccafeba4cb0286051042a7"
+  },
+  {
+    "id":279,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"item_created",
+    "details":"{\"item_id\": \"ITM-CBL-01\", \"name\": \"Apple USB-C Braided Cable 2m\"}",
+    "prev_hash":"a3e54552fe7f93985bd18b55f124d90d06f66e4f2eccafeba4cb0286051042a7",
+    "hash":"c3b8584c824c4617553fae7d4de36ed8a81969697b4b5a34a298c59b991c7c46"
+  },
+  {
+    "id":280,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-18\"}",
+    "prev_hash":"c3b8584c824c4617553fae7d4de36ed8a81969697b4b5a34a298c59b991c7c46",
+    "hash":"c1a60831ae746d7baed734bc76d511abf46e9ac19734031b9891e7bc40341dd2"
+  },
+  {
+    "id":281,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-19\"}",
+    "prev_hash":"c1a60831ae746d7baed734bc76d511abf46e9ac19734031b9891e7bc40341dd2",
+    "hash":"b20b728dc169b80d3ab8d2f46ec8440f28dd156af739eb18e41cd37b47a41fd0"
+  },
+  {
+    "id":282,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-20\"}",
+    "prev_hash":"b20b728dc169b80d3ab8d2f46ec8440f28dd156af739eb18e41cd37b47a41fd0",
+    "hash":"de754cb4d1a965afb7b4bd699653a643783baecdf6b7dcb69933b558d6e2dc9a"
+  },
+  {
+    "id":283,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-20\"}",
+    "prev_hash":"de754cb4d1a965afb7b4bd699653a643783baecdf6b7dcb69933b558d6e2dc9a",
+    "hash":"552fe8c643bb4f04c6d035a5abf4871653236fefae796be65af042d1b9439829"
+  },
+  {
+    "id":284,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-22\"}",
+    "prev_hash":"552fe8c643bb4f04c6d035a5abf4871653236fefae796be65af042d1b9439829",
+    "hash":"3b7f5235bf22986ab89348b51f9cef52a6dcaa1d6f1da03ff06222f8fa3994f9"
+  },
+  {
+    "id":285,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-26\"}",
+    "prev_hash":"3b7f5235bf22986ab89348b51f9cef52a6dcaa1d6f1da03ff06222f8fa3994f9",
+    "hash":"b4a831a9dd311f1adb62f5153b5460de5d0fced3039dcb49713ddaeb744767ad"
+  },
+  {
+    "id":286,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-27\"}",
+    "prev_hash":"b4a831a9dd311f1adb62f5153b5460de5d0fced3039dcb49713ddaeb744767ad",
+    "hash":"0c660b66283e95f99836ca1bef48af3cfa7e50af2f2832eb0161fa114204f7da"
+  },
+  {
+    "id":287,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-28\"}",
+    "prev_hash":"0c660b66283e95f99836ca1bef48af3cfa7e50af2f2832eb0161fa114204f7da",
+    "hash":"df91bdd6ca14f80ed68db781035a5ff60f05bd442ab96c1a912b50f895f25b9d"
+  },
+  {
+    "id":288,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-07-28\"}",
+    "prev_hash":"df91bdd6ca14f80ed68db781035a5ff60f05bd442ab96c1a912b50f895f25b9d",
+    "hash":"65bc98a8a438e566e52fe9aedf70b9886f9d63134fac5959fd6b605cec8f4c6b"
+  },
+  {
+    "id":289,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-29\"}",
+    "prev_hash":"65bc98a8a438e566e52fe9aedf70b9886f9d63134fac5959fd6b605cec8f4c6b",
+    "hash":"8eb4a37852c07b1e6a14386173f39774a49e063a6fbebf72a07a06bd29d25a5d"
+  },
+  {
+    "id":290,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-29\"}",
+    "prev_hash":"8eb4a37852c07b1e6a14386173f39774a49e063a6fbebf72a07a06bd29d25a5d",
+    "hash":"1ca14e8e67d463fc2756223fe26b0cf430d7d8432223686ca07f04c93339efcd"
+  },
+  {
+    "id":291,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CHG-01\", \"quantity\": 150, \"date\": \"2026-07-29\"}",
+    "prev_hash":"1ca14e8e67d463fc2756223fe26b0cf430d7d8432223686ca07f04c93339efcd",
+    "hash":"a73e29c7737f57346644345be2b7c5031466b38221b0ec036d5e49e6366fdb6a"
+  },
+  {
+    "id":292,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-07-30\"}",
+    "prev_hash":"a73e29c7737f57346644345be2b7c5031466b38221b0ec036d5e49e6366fdb6a",
+    "hash":"739e9a24300f1da7c3361f7eaf4d43117b6e9cca5c025d5a3834d03f78e18b00"
+  },
+  {
+    "id":293,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-07-31\"}",
+    "prev_hash":"739e9a24300f1da7c3361f7eaf4d43117b6e9cca5c025d5a3834d03f78e18b00",
+    "hash":"198519e3db66b813682000429315f8c04e70a5e0c10b299149026cd2e763dc01"
+  },
+  {
+    "id":294,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-02\"}",
+    "prev_hash":"198519e3db66b813682000429315f8c04e70a5e0c10b299149026cd2e763dc01",
+    "hash":"aa8503df812ef9a37b11d736746d96849b3a37d06d9c56d785221ccfc06edffd"
+  },
+  {
+    "id":295,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-03\"}",
+    "prev_hash":"aa8503df812ef9a37b11d736746d96849b3a37d06d9c56d785221ccfc06edffd",
+    "hash":"9fa7bf31c449763222792b28d5353fc40f58ac705d613a32f12d29b6ad3d0f7a"
+  },
+  {
+    "id":296,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-03\"}",
+    "prev_hash":"9fa7bf31c449763222792b28d5353fc40f58ac705d613a32f12d29b6ad3d0f7a",
+    "hash":"e5d61f8ad65b8d7cb1b28c1b81eeb17916b28fc73b3743858929819e8e26b4c0"
+  },
+  {
+    "id":297,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-04\"}",
+    "prev_hash":"e5d61f8ad65b8d7cb1b28c1b81eeb17916b28fc73b3743858929819e8e26b4c0",
+    "hash":"5dc99855cb067a44778ecff0af9ec643d671c8b3fe86894878b278fb418af4e9"
+  },
+  {
+    "id":298,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-04\"}",
+    "prev_hash":"5dc99855cb067a44778ecff0af9ec643d671c8b3fe86894878b278fb418af4e9",
+    "hash":"bf514368fa27f7593acbda76880bb3669db0e3b9cc8a091f32e35d3883c87812"
+  },
+  {
+    "id":299,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-CPU-01\", \"quantity\": 45, \"date\": \"2026-08-04\"}",
+    "prev_hash":"bf514368fa27f7593acbda76880bb3669db0e3b9cc8a091f32e35d3883c87812",
+    "hash":"8cefaf28d0b16536445d0b988e23957daf802e89abd0b278ec3d18d00130223e"
+  },
+  {
+    "id":300,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-04\"}",
+    "prev_hash":"8cefaf28d0b16536445d0b988e23957daf802e89abd0b278ec3d18d00130223e",
+    "hash":"4843c21537e0c5a44816d60d9620d35eec73f1ea82cdd355d2b0cb1469a6e038"
+  },
+  {
+    "id":301,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-05\"}",
+    "prev_hash":"4843c21537e0c5a44816d60d9620d35eec73f1ea82cdd355d2b0cb1469a6e038",
+    "hash":"0fe829ffa6393f66abde67159bc7446fc6641c72e88c3d48bc12d3272adc198b"
+  },
+  {
+    "id":302,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-RAM-01\", \"quantity\": 75, \"date\": \"2026-08-05\"}",
+    "prev_hash":"0fe829ffa6393f66abde67159bc7446fc6641c72e88c3d48bc12d3272adc198b",
+    "hash":"db0dd6144fdca695982572ea36a883b8533b2ea8ad325485142a56605992392a"
+  },
+  {
+    "id":303,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CCU-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-05\"}",
+    "prev_hash":"db0dd6144fdca695982572ea36a883b8533b2ea8ad325485142a56605992392a",
+    "hash":"5b305828a740ddd90b65ad86d2ce7f568304b8b5e98c10851c65c89fcd76f1df"
+  },
+  {
+    "id":304,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-06\"}",
+    "prev_hash":"5b305828a740ddd90b65ad86d2ce7f568304b8b5e98c10851c65c89fcd76f1df",
+    "hash":"875b3dd787d57514fa2f3f209b1fb9717efcd1bb1830240767802be8e665e9c1"
+  },
+  {
+    "id":305,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-BOM-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-06\"}",
+    "prev_hash":"875b3dd787d57514fa2f3f209b1fb9717efcd1bb1830240767802be8e665e9c1",
+    "hash":"2c6ba6b689c6b984cdb732e7904e3a7fc3a1cdb513a96cc5b81713e2a6d13aef"
+  },
+  {
+    "id":306,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-HDD-01\", \"quantity\": 60, \"date\": \"2026-08-08\"}",
+    "prev_hash":"2c6ba6b689c6b984cdb732e7904e3a7fc3a1cdb513a96cc5b81713e2a6d13aef",
+    "hash":"d8777df72dc4aa1c66b99318efd673433efeb46762d79e4971b3df39d9110ce6"
+  },
+  {
+    "id":307,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-GPU-01\", \"quantity\": 30, \"date\": \"2026-08-08\"}",
+    "prev_hash":"d8777df72dc4aa1c66b99318efd673433efeb46762d79e4971b3df39d9110ce6",
+    "hash":"e66ac7ab87ad11fa2d542e851b90b90a6f63f9f553f1e9de0adbfb9790700005"
+  },
+  {
+    "id":308,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"simulated_restock",
+    "details":"{\"warehouse_id\": \"WH-DEL-01\", \"item_id\": \"ITM-CBL-01\", \"quantity\": 300, \"date\": \"2026-08-08\"}",
+    "prev_hash":"e66ac7ab87ad11fa2d542e851b90b90a6f63f9f553f1e9de0adbfb9790700005",
+    "hash":"828f80f1ad71694d82697740b89d213e9132e93f010a0eb7c6baf7e151ad886b"
+  },
+  {
+    "id":309,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-BLR-01\", \"item_id\": \"ITM-GPU-01\", \"likely_cause\": \"Possible shrinkage \/ theft\"}",
+    "prev_hash":"828f80f1ad71694d82697740b89d213e9132e93f010a0eb7c6baf7e151ad886b",
+    "hash":"117cf597f899c4e9f49259084b9dafdb243dd47718938ca008b3c975ada79566"
+  },
+  {
+    "id":310,
+    "timestamp":"2026-08-13T16:11:06.000",
+    "event_type":"shrinkage_flag",
+    "details":"{\"warehouse_id\": \"WH-CHN-01\", \"item_id\": \"ITM-CPU-01\", \"likely_cause\": \"Damaged during offloading \/ scrap\"}",
+    "prev_hash":"117cf597f899c4e9f49259084b9dafdb243dd47718938ca008b3c975ada79566",
+    "hash":"64422ee5d58cf3456e9925f46a407503416279269468e7cd63a61a8445efb11a"
+  },
+  {
+    "id":311,
+    "timestamp":"2026-08-13T16:49:48.000",
+    "event_type":"admin_created",
+    "details":"{\"new_admin_username\": \"abhilash_reddy\", \"full_name\": \"Chintha Abhilash Reddy\", \"created_by\": \"admin\", \"timestamp\": \"2026-08-13\"}",
+    "prev_hash":"64422ee5d58cf3456e9925f46a407503416279269468e7cd63a61a8445efb11a",
+    "hash":"b141b01917f3ce40d47c655cacae7871cfbffb8ef59b35db998daf119dc24e65"
+  },
+  {
+    "id":312,
+    "timestamp":"2026-08-13T16:53:44.000",
+    "event_type":"admin_created",
+    "details":"{\"new_admin_username\": \"abhilash_reddy_test\", \"full_name\": \"Chintha Abhilash Reddy\", \"created_by\": \"admin\", \"timestamp\": \"2026-08-13\"}",
+    "prev_hash":"b141b01917f3ce40d47c655cacae7871cfbffb8ef59b35db998daf119dc24e65",
+    "hash":"057968a4f87a53c6c74bfd8e16eafcbbd4dfbd89dc4b167240ac840136a77a3e"
+  },
+  {
+    "id":313,
+    "timestamp":"2026-08-13T17:50:25.000",
+    "event_type":"ai_recommendation_action",
+    "details":"{\"recommendation_id\": \"REC-REORDER-WH-BLR-01-ITM-HDD-01\", \"action\": \"APPROVED\", \"manager\": \"admin\", \"notes\": \"Executed via AI Decision Center\", \"timestamp\": \"2026-08-13\"}",
+    "prev_hash":"057968a4f87a53c6c74bfd8e16eafcbbd4dfbd89dc4b167240ac840136a77a3e",
+    "hash":"a9a73f470c26641de501b9c9186484f03b2cc4815cfd112b9060f1243dcca5fe"
+  },
+  {
+    "id":314,
+    "timestamp":"2026-08-13T17:51:04.000",
+    "event_type":"ai_recommendation_action",
+    "details":"{\"recommendation_id\": \"REC-REORDER-WH-BLR-01-ITM-RAM-01\", \"action\": \"APPROVED\", \"manager\": \"admin\", \"notes\": \"Executed via AI Decision Center\", \"timestamp\": \"2026-08-13\"}",
+    "prev_hash":"a9a73f470c26641de501b9c9186484f03b2cc4815cfd112b9060f1243dcca5fe",
+    "hash":"7b53d67ae14540b464f09ef8d9a9d1842e27b8f850bde132a5aa57e19d97321d"
+  },
+  {
+    "id":315,
+    "timestamp":"2026-08-13T17:55:22.000",
+    "event_type":"ai_recommendation_action",
+    "details":"{\"recommendation_id\": \"REC-REORDER-WH-BLR-01-ITM-HDD-01\", \"action\": \"APPROVED\", \"manager\": \"admin\", \"notes\": \"Executed via AI Decision Center\", \"timestamp\": \"2026-08-13\"}",
+    "prev_hash":"7b53d67ae14540b464f09ef8d9a9d1842e27b8f850bde132a5aa57e19d97321d",
+    "hash":"8bad89dd8d3ecb8581093a0f957dffdc5ce39b09f1812bea01c6bb597ffd8a8a"
+  },
+  {
+    "id":316,
+    "timestamp":"2026-08-13T18:03:01.000",
+    "event_type":"ai_recommendation_action",
+    "details":"{\"recommendation_id\": \"REC-REORDER-WH-BLR-01-ITM-HDD-01\", \"action\": \"APPROVED\", \"manager\": \"admin\", \"notes\": \"Executed via AI Decision Center\", \"timestamp\": \"2026-08-13\"}",
+    "prev_hash":"8bad89dd8d3ecb8581093a0f957dffdc5ce39b09f1812bea01c6bb597ffd8a8a",
+    "hash":"f3eb34ef0d635a82e771cdcbaf974a8dceaf7708df857a97000d6606b3b160a1"
+  },
+  {
+    "id":317,
+    "timestamp":"2026-08-13T18:04:10.000",
+    "event_type":"ai_recommendation_action",
+    "details":"{\"recommendation_id\": \"REC-REORDER-WH-BLR-01-ITM-HDD-01\", \"action\": \"APPROVED\", \"manager\": \"admin\", \"notes\": \"Executed via AI Decision Center\", \"timestamp\": \"2026-08-13\"}",
+    "prev_hash":"f3eb34ef0d635a82e771cdcbaf974a8dceaf7708df857a97000d6606b3b160a1",
+    "hash":"868405c3eb93d3aac3fea51ba3036629bbd4b242003cbe4a8975001642fd9185"
+  },
+  {
+    "id":318,
+    "timestamp":"2026-08-13T18:04:24.000",
+    "event_type":"ai_recommendation_action",
+    "details":"{\"recommendation_id\": \"REC-REORDER-WH-BLR-01-ITM-HDD-01\", \"action\": \"APPROVED\", \"manager\": \"admin\", \"notes\": \"Executed via AI Decision Center\", \"timestamp\": \"2026-08-13\"}",
+    "prev_hash":"868405c3eb93d3aac3fea51ba3036629bbd4b242003cbe4a8975001642fd9185",
+    "hash":"80060a176c5a4bb642126a1875f8d053958a4854df877ed8ecf534c044b82040"
+  },
+  {
+    "id":319,
+    "timestamp":"2026-08-13T18:05:08.000",
+    "event_type":"ai_recommendation_action",
+    "details":"{\"recommendation_id\": \"REC-REORDER-WH-BLR-01-ITM-RAM-01\", \"action\": \"APPROVED\", \"manager\": \"admin\", \"notes\": \"Executed via AI Decision Center\", \"timestamp\": \"2026-08-13\"}",
+    "prev_hash":"80060a176c5a4bb642126a1875f8d053958a4854df877ed8ecf534c044b82040",
+    "hash":"5f9a85eefb0eec8a9afc9fe4536dcf266ff83dd3e997a33b3e63bccd793cbf61"
+  },
+  {
+    "id":320,
+    "timestamp":"2026-08-13T18:08:53.000",
+    "event_type":"ai_recommendation_action",
+    "details":"{\"recommendation_id\": \"REC-REORDER-WH-BLR-01-ITM-HDD-01\", \"action\": \"APPROVED\", \"manager\": \"admin\", \"notes\": \"Executed via AI Decision Center\", \"timestamp\": \"2026-08-13\"}",
+    "prev_hash":"5f9a85eefb0eec8a9afc9fe4536dcf266ff83dd3e997a33b3e63bccd793cbf61",
+    "hash":"4b846b4a7c2ec80f3ed159c5bd4daa213eedf25c5f6268952aed2522895158d7"
+  },
+  {
+    "id":321,
+    "timestamp":"2026-08-13T18:26:37.000",
+    "event_type":"ai_recommendation_action",
+    "details":"{\"recommendation_id\": \"REC-REORDER-WH-BLR-01-ITM-HDD-01\", \"action\": \"APPROVED\", \"manager\": \"admin\", \"notes\": \"Executed via AI Decision Center\", \"timestamp\": \"2026-08-13\"}",
+    "prev_hash":"4b846b4a7c2ec80f3ed159c5bd4daa213eedf25c5f6268952aed2522895158d7",
+    "hash":"30af2c40117a970a4a7dbe53e07d98b0e179fad102b8ba1612537b8557a87348"
+  }
+]

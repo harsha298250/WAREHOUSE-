@@ -1,0 +1,112 @@
+{
+    "m5": {
+        "dataset_name": "M5 Forecasting / Walmart",
+        "official_source": "Kaggle",
+        "source_url": "https://www.kaggle.com/c/m5-forecasting-accuracy",
+        "version": "1.0",
+        "access_download_date": "2026-08-21",
+        "license": "Kaggle Competition Rules",
+        "doi": "N/A",
+        "publisher": "Walmart / Kaggle",
+        "description": "Historical sales and demand forecasting research dataset from Walmart stores across multiple states (CA, TX, WI). Represents items, stores, calendar event indicators, and sell prices.",
+        "intended_use": "Outbound sales/demand forecasting model research and walk-forward validation.",
+        "known_limitations": "Aggregated daily-level sales by department/store; does not represent live smart warehouse bin movements.",
+        "expected_files": [
+            "calendar.csv",
+            "sales_train_validation.csv",
+            "sell_prices.csv"
+        ],
+        "local_raw_path": "C:\\Users\\harsh\\Downloads\\warehouse_project_v3\\warehouse_v3\\data\\raw\\m5",
+        "local_processed_path": "C:\\Users\\harsh\\Downloads\\warehouse_project_v3\\warehouse_v3\\data\\processed\\m5",
+        "file_checksums": {}
+    },
+    "online_retail_ii": {
+        "dataset_name": "UCI Online Retail II",
+        "official_source": "UCI Machine Learning Repository",
+        "source_url": "https://archive.ics.uci.edu/ml/datasets/Online+Retail+II",
+        "version": "1.0",
+        "access_download_date": "2026-08-21",
+        "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+        "doi": "10.24432/C5CG6D",
+        "publisher": "UCI Machine Learning Repository",
+        "description": "Real transaction-level data containing all transactions occurring between 01/12/2009 and 09/12/2011 for a UK-based and registered non-store online retail.",
+        "intended_use": "Customer transactions analysis, SKU pricing profiling, and ABC inventory optimization profiling.",
+        "known_limitations": "Contains cancelled orders (denoted by Invoice codes starting with 'C'), missing CustomerIDs, and unit price adjustments.",
+        "expected_files": [
+            "online_retail_II.csv"
+        ],
+        "local_raw_path": "C:\\Users\\harsh\\Downloads\\warehouse_project_v3\\warehouse_v3\\data\\raw\\online_retail_ii",
+        "local_processed_path": "C:\\Users\\harsh\\Downloads\\warehouse_project_v3\\warehouse_v3\\data\\processed\\online_retail_ii",
+        "file_checksums": {
+            "online_retail_II.csv": "c161f3e453e8f6d6ea864258742f472c21cb53400c0bac8da2d09985ab56f98e"
+        }
+    },
+    "store_sales_forecasting": {
+        "dataset_name": "Store Sales Time Series Forecasting / NeuroCipher",
+        "official_source": "Kaggle",
+        "source_url": "https://www.kaggle.com/datasets/neurocipher/store-sales-time-series-forcasting",
+        "version": "1.0",
+        "access_download_date": "2026-08-21",
+        "license": "Apache 2.0",
+        "doi": "N/A",
+        "publisher": "NeuroCipher / Kaggle",
+        "description": "Store sales historical demand dataset from a Brazilian retailer. Features stores, transactions, oil prices, holiday event flags, and daily product family sales.",
+        "intended_use": "Multi-store time series demand forecasting model research and product family analysis.",
+        "known_limitations": "Protects retailer identity via masked sales values; subject to gaps in daily oil price reports.",
+        "expected_files": [
+            "train.csv",
+            "test.csv",
+            "stores.csv",
+            "transactions.csv",
+            "oil.csv",
+            "holidays_events.csv",
+            "sample_submission.csv"
+        ],
+        "local_raw_path": "C:\\Users\\harsh\\Downloads\\warehouse_project_v3\\warehouse_v3\\data\\raw\\store_sales_forecasting",
+        "local_processed_path": "C:\\Users\\harsh\\Downloads\\warehouse_project_v3\\warehouse_v3\\data\\processed\\store_sales_forecasting",
+        "file_checksums": {
+            "train.csv": "99a1b7f4241821df10fa71f23abdd71c634f71f901e3cab1400c0f0c583f862c",
+            "test.csv": "087ec1ecec76dbba9ea2adb48b8b2fd527c7c59adb82b0dfb9f6f82739400d26",
+            "stores.csv": "af503b2bce11d7906d249f81cc0598f10e2addcc9f6c59aa2d95c9f2652c296b",
+            "transactions.csv": "e116384a6981af74932832436aa2f6a43121f77ca81accc44e3a5160158ca03c",
+            "oil.csv": "944b23b857580f9d804399346fd3ed69bffcb7facfd98c55fdb408b8d057cca7",
+            "holidays_events.csv": "81a183d6c4d691b57f84a0fde6bbf734a5b3c36a74b97378bf33a592648e2999",
+            "sample_submission.csv": "17505ec561d9bc64a3c10c3eb00474becf162d9053cebf014a58a6c82ed530c4"
+        }
+    },
+    "retail_sales_forecasting": {
+        "dataset_name": "MLZC Compet '24 / Retail Demand Forecast",
+        "official_source": "Kaggle",
+        "source_url": "https://www.kaggle.com/datasets",
+        "version": "2024",
+        "access_download_date": "2026-08-21",
+        "license": "CC BY-NC-SA 4.0",
+        "doi": "N/A",
+        "publisher": "MLZC / Kaggle",
+        "description": "Historical multi-store retail sales, price changes, and discount histories used for demand forecasting models.",
+        "intended_use": "Demand forecasting, price sensitivity analysis.",
+        "known_limitations": "Anonymized items and store formats.",
+        "expected_files": [
+            "sales.csv",
+            "online.csv",
+            "stores.csv",
+            "price_history.csv",
+            "discounts_history.csv",
+            "markdowns.csv",
+            "catalog.csv",
+            "actual_matrix.csv"
+        ],
+        "local_raw_path": "C:\\Users\\harsh\\Downloads\\warehouse_project_v3\\warehouse_v3\\data\\raw\\retail_sales_forecasting",
+        "local_processed_path": "C:\\Users\\harsh\\Downloads\\warehouse_project_v3\\warehouse_v3\\data\\processed\\retail_sales_forecasting",
+        "file_checksums": {
+            "sales.csv": "8e7d21b0f9b4b654ed91a635d0ca49a9edaa425d6ebe813155a7ea3622dd8c20",
+            "online.csv": "98f739bdd839a161235dbdc55370e15b1ef02a69c147d2fe8f108fa6db4380ae",
+            "stores.csv": "a8bbdf76038f3d6316a49349a195fd8e82124b51e5490c0a3fd358f1d0e6d2a0",
+            "price_history.csv": "4c8c7d6169c29227c9aa9709dd00b431fbbdd310758fe237dcc7d73df414ee20",
+            "discounts_history.csv": "ef0fdc89e778db71fc8ce5a1736742c9d5b36af9793af7d9654750de3cc868c4",
+            "markdowns.csv": "b98fe7e761a238f90fee7ed036ee48cfc6f381b94694508645f02fe2781cf1fd",
+            "catalog.csv": "dbaa4ac7b37e299fcd16a4807db75574f2380a0088195066fbab0ef013e8e33f",
+            "actual_matrix.csv": "8a44885bfe1cf0bb29de44ab4809b0c7a51661cdff315dff801612757dac3a05"
+        }
+    }
+}

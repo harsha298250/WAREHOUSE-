@@ -1,0 +1,479 @@
+{
+  "warehouses": [
+    {
+      "id": "WH-BLR-01",
+      "name": "BLR Hub",
+      "location": "BLR",
+      "latitude": null,
+      "longitude": null,
+      "created_at": "2026-08-23 18:08:13.133516"
+    },
+    {
+      "id": "WH-STRESS-01",
+      "name": "Wh 1",
+      "location": "Zone A",
+      "latitude": null,
+      "longitude": null,
+      "created_at": "2026-08-23 18:09:37.202262"
+    },
+    {
+      "id": "WH-STRESS-02",
+      "name": "Wh 2",
+      "location": "Zone B",
+      "latitude": null,
+      "longitude": null,
+      "created_at": "2026-08-23 18:09:37.202262"
+    },
+    {
+      "id": "WH-RES-01",
+      "name": "Resilience Warehouse",
+      "location": "Loc 1",
+      "latitude": null,
+      "longitude": null,
+      "created_at": "2026-08-23 18:10:07.578833"
+    }
+  ],
+  "items": [
+    {
+      "id": "ITM-RES-01",
+      "name": "Resilient Widget",
+      "category": "WIDGET",
+      "unit_cost": 20.0,
+      "lead_time_days": 3,
+      "safety_stock": 10,
+      "sku": "ITM-RES-01",
+      "description": null,
+      "unit": "units",
+      "weight_kg": 0.0,
+      "dimensions": "",
+      "barcode": null,
+      "is_active": 1,
+      "reorder_threshold": 20,
+      "preferred_storage_type": "STORAGE",
+      "created_at": "2026-08-23 18:10:07.578321"
+    }
+  ],
+  "stock_movements": [],
+  "shrinkage_flags": [],
+  "audit_ledger": [
+    {
+      "id": 1,
+      "timestamp": "2026-08-23 18:09:37.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-F87SJULI\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "hash": "b7df82ade05900f8c457fd59547ade60ab086decb927f82aa5a16f00f4e03695"
+    },
+    {
+      "id": 2,
+      "timestamp": "2026-08-23 18:09:38.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-41D6SZ3U\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "b7df82ade05900f8c457fd59547ade60ab086decb927f82aa5a16f00f4e03695",
+      "hash": "6e63e27538c2ab1f7465348428911c1fcc51b519a5fadd0d9e7035bd7e5f261b"
+    },
+    {
+      "id": 3,
+      "timestamp": "2026-08-23 18:09:38.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-CXGTOUL1\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "6e63e27538c2ab1f7465348428911c1fcc51b519a5fadd0d9e7035bd7e5f261b",
+      "hash": "1e791877765255207e8f20d1c080398384030457bf84a17f391cfe103fa917a7"
+    },
+    {
+      "id": 4,
+      "timestamp": "2026-08-23 18:09:38.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-AKJAAQUO\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "1e791877765255207e8f20d1c080398384030457bf84a17f391cfe103fa917a7",
+      "hash": "3133eb10484792b6f653428f3e2e68d6b538235ff1eb32b31e87f6da3ed0d09a"
+    },
+    {
+      "id": 5,
+      "timestamp": "2026-08-23 18:09:38.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-KB3MCJ1N\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "3133eb10484792b6f653428f3e2e68d6b538235ff1eb32b31e87f6da3ed0d09a",
+      "hash": "b753914b0fbec3b02ad88d57233fb6065cfb6f0d81e77a38d30e0075f1a8255a"
+    },
+    {
+      "id": 6,
+      "timestamp": "2026-08-23 18:09:38.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-U73OO5X9\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "b753914b0fbec3b02ad88d57233fb6065cfb6f0d81e77a38d30e0075f1a8255a",
+      "hash": "888adc6227d4b488065a2fd19752a4817bcfa39d870ae9697254c217ed548809"
+    },
+    {
+      "id": 7,
+      "timestamp": "2026-08-23 18:09:38.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-F7MMOW6C\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "hash": "9a55e51befc7bc2b0bb7dcde12ebf9b799040e6315ca15b111094453d7f1acb9"
+    },
+    {
+      "id": 8,
+      "timestamp": "2026-08-23 18:09:38.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-BKAIJMQK\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "9a55e51befc7bc2b0bb7dcde12ebf9b799040e6315ca15b111094453d7f1acb9",
+      "hash": "14012de419339ad41207281249e334f3abce5b36d62d08b73b39a0a65e344c0f"
+    },
+    {
+      "id": 9,
+      "timestamp": "2026-08-23 18:09:38.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-RCBC7JUS\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "14012de419339ad41207281249e334f3abce5b36d62d08b73b39a0a65e344c0f",
+      "hash": "610c84150ef0489dd781286f188fa174475b456c46bcbc11585d2a84215d9bc9"
+    },
+    {
+      "id": 10,
+      "timestamp": "2026-08-23 18:09:39.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-Q8NS4G9C\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "610c84150ef0489dd781286f188fa174475b456c46bcbc11585d2a84215d9bc9",
+      "hash": "9b1ae7a69dc2eb78bd22398413fe4fb66d0c6931d93e2195fb962653a8825f91"
+    },
+    {
+      "id": 11,
+      "timestamp": "2026-08-23 18:09:39.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-9ZEEJWOJ\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "9b1ae7a69dc2eb78bd22398413fe4fb66d0c6931d93e2195fb962653a8825f91",
+      "hash": "6e4cec2fa145675d040edfe414f1a53cdc2cfe190a7cbabdf8af5de3be75b448"
+    },
+    {
+      "id": 12,
+      "timestamp": "2026-08-23 18:09:39.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-GFXXGL8I\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "6e4cec2fa145675d040edfe414f1a53cdc2cfe190a7cbabdf8af5de3be75b448",
+      "hash": "6c2a327425a117574f256f9c4f840f2be40c4f2540dbfffb1f8786ba7a7834f1"
+    },
+    {
+      "id": 13,
+      "timestamp": "2026-08-23 18:09:39.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-N3U1CDPB\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "6e4cec2fa145675d040edfe414f1a53cdc2cfe190a7cbabdf8af5de3be75b448",
+      "hash": "9f438e907e42dcb14b504b4152da7c81b1b4cf187ca677c4adab8ba53760c0dc"
+    },
+    {
+      "id": 14,
+      "timestamp": "2026-08-23 18:09:39.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-RGFOU2JX\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "9f438e907e42dcb14b504b4152da7c81b1b4cf187ca677c4adab8ba53760c0dc",
+      "hash": "4d2609c73c51aa85bfb53ac7d9ba96beacb1c67210fa5e35a849678b19cef880"
+    },
+    {
+      "id": 15,
+      "timestamp": "2026-08-23 18:09:39.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-STRESS-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-QJ3K0L99\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 5}",
+      "prev_hash": "4d2609c73c51aa85bfb53ac7d9ba96beacb1c67210fa5e35a849678b19cef880",
+      "hash": "22d20782a71079f9c4c431fe6fa2c273dc0c23a342b838e654fb5bb2b58e8885"
+    },
+    {
+      "id": 16,
+      "timestamp": "2026-08-23 18:09:39.000000",
+      "event_type": "user_login",
+      "details": "{\"username\": \"smoke_admin\", \"role\": \"admin\", \"method\": \"password\", \"ip\": \"testclient\", \"time\": \"2026-08-23T18:09:39.990267\"}",
+      "prev_hash": "22d20782a71079f9c4c431fe6fa2c273dc0c23a342b838e654fb5bb2b58e8885",
+      "hash": "a6aa898a08b9279e31aadd07b59dfc71d8fa570bcc0176f05bd1ccfaa49b6104"
+    },
+    {
+      "id": 17,
+      "timestamp": "2026-08-23 18:09:39.000000",
+      "event_type": "login_success",
+      "details": "{\"actor\": \"smoke_admin\", \"target\": null, \"target_username\": null, \"changed_by\": \"smoke_admin\", \"severity\": \"INFO\", \"status\": \"SUCCESS\", \"method\": \"password\", \"old_value\": null, \"new_value\": null, \"ip\": \"testclient\", \"device\": \"Desktop\", \"browser\": \"Unknown Browser\", \"os\": \"Unknown\", \"security_event_id\": 30}",
+      "prev_hash": "a6aa898a08b9279e31aadd07b59dfc71d8fa570bcc0176f05bd1ccfaa49b6104",
+      "hash": "02110d760077316036bc4022326cf20f6503555b69884d02dad7d5198f7022dc"
+    },
+    {
+      "id": 18,
+      "timestamp": "2026-08-23 18:09:40.000000",
+      "event_type": "NOTIF_PUBLISHED_USER_LOGIN",
+      "details": "{\"event_type\": \"USER_LOGIN\", \"warehouse_id\": null, \"severity\": \"INFO\", \"source_entity_id\": \"6\", \"source_entity_type\": \"USER\", \"recipients_count\": 3}",
+      "prev_hash": "02110d760077316036bc4022326cf20f6503555b69884d02dad7d5198f7022dc",
+      "hash": "78f109dd0375deb19dcfa7d8fbfc7e2fa09aac49f7f300ff5bda7d71c825d09f"
+    },
+    {
+      "id": 19,
+      "timestamp": "2026-08-23 18:09:41.000000",
+      "event_type": "user_login",
+      "details": "{\"username\": \"smoke_admin\", \"role\": \"admin\", \"method\": \"password\", \"ip\": \"testclient\", \"time\": \"2026-08-23T18:09:41.959880\"}",
+      "prev_hash": "78f109dd0375deb19dcfa7d8fbfc7e2fa09aac49f7f300ff5bda7d71c825d09f",
+      "hash": "14d015181902651eda6cef2a1f2535c0ab0c3ccab6c5caee313f955ca11920b4"
+    },
+    {
+      "id": 20,
+      "timestamp": "2026-08-23 18:09:41.000000",
+      "event_type": "login_success",
+      "details": "{\"actor\": \"smoke_admin\", \"target\": null, \"target_username\": null, \"changed_by\": \"smoke_admin\", \"severity\": \"INFO\", \"status\": \"SUCCESS\", \"method\": \"password\", \"old_value\": null, \"new_value\": null, \"ip\": \"testclient\", \"device\": \"Desktop\", \"browser\": \"Unknown Browser\", \"os\": \"Unknown\", \"security_event_id\": 31}",
+      "prev_hash": "14d015181902651eda6cef2a1f2535c0ab0c3ccab6c5caee313f955ca11920b4",
+      "hash": "22e024c9b3d4277339bc6ee5e3a337c08142fb5d2b9507d48053c3b4359fbd66"
+    },
+    {
+      "id": 21,
+      "timestamp": "2026-08-23 18:09:41.000000",
+      "event_type": "NOTIF_PUBLISHED_USER_LOGIN",
+      "details": "{\"event_type\": \"USER_LOGIN\", \"warehouse_id\": null, \"severity\": \"INFO\", \"source_entity_id\": \"6\", \"source_entity_type\": \"USER\", \"recipients_count\": 3}",
+      "prev_hash": "22e024c9b3d4277339bc6ee5e3a337c08142fb5d2b9507d48053c3b4359fbd66",
+      "hash": "a2acce0bcb5bacbda05f4bfde8603c52bc754acb198274ea8d3997635f1a82da"
+    },
+    {
+      "id": 22,
+      "timestamp": "2026-08-23 18:09:43.000000",
+      "event_type": "user_login",
+      "details": "{\"username\": \"smoke_admin\", \"role\": \"admin\", \"method\": \"password\", \"ip\": \"testclient\", \"time\": \"2026-08-23T18:09:43.940256\"}",
+      "prev_hash": "a2acce0bcb5bacbda05f4bfde8603c52bc754acb198274ea8d3997635f1a82da",
+      "hash": "d9b8a57b1262d2d075a6adc7ce5e113109e71e4ff4f4b433b0c8daaf8be69926"
+    },
+    {
+      "id": 23,
+      "timestamp": "2026-08-23 18:09:43.000000",
+      "event_type": "login_success",
+      "details": "{\"actor\": \"smoke_admin\", \"target\": null, \"target_username\": null, \"changed_by\": \"smoke_admin\", \"severity\": \"INFO\", \"status\": \"SUCCESS\", \"method\": \"password\", \"old_value\": null, \"new_value\": null, \"ip\": \"testclient\", \"device\": \"Desktop\", \"browser\": \"Unknown Browser\", \"os\": \"Unknown\", \"security_event_id\": 32}",
+      "prev_hash": "d9b8a57b1262d2d075a6adc7ce5e113109e71e4ff4f4b433b0c8daaf8be69926",
+      "hash": "4a0a911f0eead4b0e6f659b3cc8588d4a28363142d6f1bbb06df29d57e2fc9e5"
+    },
+    {
+      "id": 24,
+      "timestamp": "2026-08-23 18:09:43.000000",
+      "event_type": "NOTIF_PUBLISHED_USER_LOGIN",
+      "details": "{\"event_type\": \"USER_LOGIN\", \"warehouse_id\": null, \"severity\": \"INFO\", \"source_entity_id\": \"6\", \"source_entity_type\": \"USER\", \"recipients_count\": 3}",
+      "prev_hash": "4a0a911f0eead4b0e6f659b3cc8588d4a28363142d6f1bbb06df29d57e2fc9e5",
+      "hash": "74d41a48d77748212bfe77a7c3fc40fe62ae9f61f5fed4f32474712e922622ba"
+    },
+    {
+      "id": 25,
+      "timestamp": "2026-08-23 18:09:45.000000",
+      "event_type": "user_login",
+      "details": "{\"username\": \"smoke_admin\", \"role\": \"admin\", \"method\": \"password\", \"ip\": \"testclient\", \"time\": \"2026-08-23T18:09:45.923180\"}",
+      "prev_hash": "74d41a48d77748212bfe77a7c3fc40fe62ae9f61f5fed4f32474712e922622ba",
+      "hash": "bd1d4ca58b1285b27bc3ca87027dc438e3ad40a545543e9e43972648bb274fe9"
+    },
+    {
+      "id": 26,
+      "timestamp": "2026-08-23 18:09:45.000000",
+      "event_type": "login_success",
+      "details": "{\"actor\": \"smoke_admin\", \"target\": null, \"target_username\": null, \"changed_by\": \"smoke_admin\", \"severity\": \"INFO\", \"status\": \"SUCCESS\", \"method\": \"password\", \"old_value\": null, \"new_value\": null, \"ip\": \"testclient\", \"device\": \"Desktop\", \"browser\": \"Unknown Browser\", \"os\": \"Unknown\", \"security_event_id\": 33}",
+      "prev_hash": "bd1d4ca58b1285b27bc3ca87027dc438e3ad40a545543e9e43972648bb274fe9",
+      "hash": "d4d731dbfe96bfca56a6a62c6c31f2990a6690984ceebbdd1ecc834ba0144800"
+    },
+    {
+      "id": 27,
+      "timestamp": "2026-08-23 18:09:45.000000",
+      "event_type": "NOTIF_PUBLISHED_USER_LOGIN",
+      "details": "{\"event_type\": \"USER_LOGIN\", \"warehouse_id\": null, \"severity\": \"INFO\", \"source_entity_id\": \"6\", \"source_entity_type\": \"USER\", \"recipients_count\": 3}",
+      "prev_hash": "d4d731dbfe96bfca56a6a62c6c31f2990a6690984ceebbdd1ecc834ba0144800",
+      "hash": "6d16223c88edbdc9e2b3c390b131c2a3bf6b5f64fbd78da255a3fac85e3a5ecb"
+    },
+    {
+      "id": 28,
+      "timestamp": "2026-08-23 18:09:46.000000",
+      "event_type": "AI_ASSISTANT_QUERY",
+      "details": "{\"user\": \"smoke_admin\", \"query\": \"Show me the warehouse layout\", \"warehouse_id\": null}",
+      "prev_hash": "6d16223c88edbdc9e2b3c390b131c2a3bf6b5f64fbd78da255a3fac85e3a5ecb",
+      "hash": "7691b7e2a75821c990a5a09f705bab1ad248097bbf2e4814d39b2bb44f6460ab"
+    },
+    {
+      "id": 29,
+      "timestamp": "2026-08-23 18:09:50.000000",
+      "event_type": "user_login",
+      "details": "{\"username\": \"smoke_admin\", \"role\": \"admin\", \"method\": \"password\", \"ip\": \"testclient\", \"time\": \"2026-08-23T18:09:50.597082\"}",
+      "prev_hash": "7691b7e2a75821c990a5a09f705bab1ad248097bbf2e4814d39b2bb44f6460ab",
+      "hash": "7b2dd52d215395a12bf4983fc489d81f412ebaf362d25bbb2b94483fb81a9957"
+    },
+    {
+      "id": 30,
+      "timestamp": "2026-08-23 18:09:50.000000",
+      "event_type": "login_success",
+      "details": "{\"actor\": \"smoke_admin\", \"target\": null, \"target_username\": null, \"changed_by\": \"smoke_admin\", \"severity\": \"INFO\", \"status\": \"SUCCESS\", \"method\": \"password\", \"old_value\": null, \"new_value\": null, \"ip\": \"testclient\", \"device\": \"Desktop\", \"browser\": \"Unknown Browser\", \"os\": \"Unknown\", \"security_event_id\": 34}",
+      "prev_hash": "7b2dd52d215395a12bf4983fc489d81f412ebaf362d25bbb2b94483fb81a9957",
+      "hash": "89b4bce210dadef06561b56b540e7541ee08f1b2b464e0fdc64e39410114b473"
+    },
+    {
+      "id": 31,
+      "timestamp": "2026-08-23 18:09:50.000000",
+      "event_type": "NOTIF_PUBLISHED_USER_LOGIN",
+      "details": "{\"event_type\": \"USER_LOGIN\", \"warehouse_id\": null, \"severity\": \"INFO\", \"source_entity_id\": \"6\", \"source_entity_type\": \"USER\", \"recipients_count\": 3}",
+      "prev_hash": "89b4bce210dadef06561b56b540e7541ee08f1b2b464e0fdc64e39410114b473",
+      "hash": "41d7b79edad46a196b324cd31d80d8891972eb26535b33513d23196bd8330dfb"
+    },
+    {
+      "id": 32,
+      "timestamp": "2026-08-23 18:09:54.000000",
+      "event_type": "user_login",
+      "details": "{\"username\": \"final_admin\", \"role\": \"admin\", \"method\": \"password\", \"ip\": \"testclient\", \"time\": \"2026-08-23T18:09:54.032443\"}",
+      "prev_hash": "41d7b79edad46a196b324cd31d80d8891972eb26535b33513d23196bd8330dfb",
+      "hash": "5ff12454a1cdbd927fbfdc8c1af90c2308d2b9fb191db4f397092aa780dac728"
+    },
+    {
+      "id": 33,
+      "timestamp": "2026-08-23 18:09:54.000000",
+      "event_type": "login_success",
+      "details": "{\"actor\": \"final_admin\", \"target\": null, \"target_username\": null, \"changed_by\": \"final_admin\", \"severity\": \"INFO\", \"status\": \"SUCCESS\", \"method\": \"password\", \"old_value\": null, \"new_value\": null, \"ip\": \"testclient\", \"device\": \"Desktop\", \"browser\": \"Unknown Browser\", \"os\": \"Unknown\", \"security_event_id\": 35}",
+      "prev_hash": "5ff12454a1cdbd927fbfdc8c1af90c2308d2b9fb191db4f397092aa780dac728",
+      "hash": "00e4dee47ac40c4a1d998367309d852e79da40c2d4c60e57aa1b32ceb4c1fe57"
+    },
+    {
+      "id": 34,
+      "timestamp": "2026-08-23 18:09:54.000000",
+      "event_type": "NOTIF_PUBLISHED_USER_LOGIN",
+      "details": "{\"event_type\": \"USER_LOGIN\", \"warehouse_id\": null, \"severity\": \"INFO\", \"source_entity_id\": \"7\", \"source_entity_type\": \"USER\", \"recipients_count\": 4}",
+      "prev_hash": "00e4dee47ac40c4a1d998367309d852e79da40c2d4c60e57aa1b32ceb4c1fe57",
+      "hash": "03924c0be7028e62118628591a0f05e193cd59d1e1a3ba9ff607d97fdd18f8a1"
+    },
+    {
+      "id": 35,
+      "timestamp": "2026-08-23 18:09:56.000000",
+      "event_type": "user_login",
+      "details": "{\"username\": \"final_admin\", \"role\": \"admin\", \"method\": \"password\", \"ip\": \"testclient\", \"time\": \"2026-08-23T18:09:56.318416\"}",
+      "prev_hash": "03924c0be7028e62118628591a0f05e193cd59d1e1a3ba9ff607d97fdd18f8a1",
+      "hash": "1f6e58cdfd3298ab371b532b2b207408693ee219b9b6efe729c37c349ec5d09e"
+    },
+    {
+      "id": 36,
+      "timestamp": "2026-08-23 18:09:56.000000",
+      "event_type": "login_success",
+      "details": "{\"actor\": \"final_admin\", \"target\": null, \"target_username\": null, \"changed_by\": \"final_admin\", \"severity\": \"INFO\", \"status\": \"SUCCESS\", \"method\": \"password\", \"old_value\": null, \"new_value\": null, \"ip\": \"testclient\", \"device\": \"Desktop\", \"browser\": \"Unknown Browser\", \"os\": \"Unknown\", \"security_event_id\": 36}",
+      "prev_hash": "1f6e58cdfd3298ab371b532b2b207408693ee219b9b6efe729c37c349ec5d09e",
+      "hash": "54075cae4feb999a5630e57cc47ff3479017d1db526070bb0430de0ca4b3c5c2"
+    },
+    {
+      "id": 37,
+      "timestamp": "2026-08-23 18:09:56.000000",
+      "event_type": "NOTIF_PUBLISHED_USER_LOGIN",
+      "details": "{\"event_type\": \"USER_LOGIN\", \"warehouse_id\": null, \"severity\": \"INFO\", \"source_entity_id\": \"7\", \"source_entity_type\": \"USER\", \"recipients_count\": 4}",
+      "prev_hash": "54075cae4feb999a5630e57cc47ff3479017d1db526070bb0430de0ca4b3c5c2",
+      "hash": "fd74480d6959597a64972a3a96bb3c0df164d9b453938ab4d827d6c4ab36e046"
+    },
+    {
+      "id": 38,
+      "timestamp": "2026-08-23 18:09:56.000000",
+      "event_type": "AI_ASSISTANT_QUERY",
+      "details": "{\"user\": \"final_admin\", \"query\": \"What is our low stock count?\", \"warehouse_id\": null}",
+      "prev_hash": "fd74480d6959597a64972a3a96bb3c0df164d9b453938ab4d827d6c4ab36e046",
+      "hash": "4bcbbe17afdaabe60478885ad8da09ba8c4ccd9e1889b9dbf4a9507c6501df65"
+    },
+    {
+      "id": 39,
+      "timestamp": "2026-08-23 18:10:01.000000",
+      "event_type": "user_login",
+      "details": "{\"username\": \"final_admin\", \"role\": \"admin\", \"method\": \"password\", \"ip\": \"testclient\", \"time\": \"2026-08-23T18:10:01.256988\"}",
+      "prev_hash": "4bcbbe17afdaabe60478885ad8da09ba8c4ccd9e1889b9dbf4a9507c6501df65",
+      "hash": "7b9db1bc06e60e16003ec199bd238032c5aff0853472999a4c8fa1a51dc49d29"
+    },
+    {
+      "id": 40,
+      "timestamp": "2026-08-23 18:10:01.000000",
+      "event_type": "login_success",
+      "details": "{\"actor\": \"final_admin\", \"target\": null, \"target_username\": null, \"changed_by\": \"final_admin\", \"severity\": \"INFO\", \"status\": \"SUCCESS\", \"method\": \"password\", \"old_value\": null, \"new_value\": null, \"ip\": \"testclient\", \"device\": \"Desktop\", \"browser\": \"Unknown Browser\", \"os\": \"Unknown\", \"security_event_id\": 36}",
+      "prev_hash": "7b9db1bc06e60e16003ec199bd238032c5aff0853472999a4c8fa1a51dc49d29",
+      "hash": "8dde20c4c7050b01681d1ccf30cfe8298a617a988903c9dcb52745a05af1b379"
+    },
+    {
+      "id": 41,
+      "timestamp": "2026-08-23 18:10:01.000000",
+      "event_type": "NOTIF_PUBLISHED_USER_LOGIN",
+      "details": "{\"event_type\": \"USER_LOGIN\", \"warehouse_id\": null, \"severity\": \"INFO\", \"source_entity_id\": \"7\", \"source_entity_type\": \"USER\", \"recipients_count\": 4}",
+      "prev_hash": "8dde20c4c7050b01681d1ccf30cfe8298a617a988903c9dcb52745a05af1b379",
+      "hash": "81c087e5ab0d05e57bfdc48f0a0f158dcf59b10ba764b88623a2d404a86cbb52"
+    },
+    {
+      "id": 42,
+      "timestamp": "2026-08-23 18:10:07.000000",
+      "event_type": "INVENTORY_RESERVED",
+      "details": "{\"order_id\": \"ORD-6J91TTWU\", \"item_id\": \"ITM-RES-01\", \"reserved_qty\": 2, \"by\": \"test_admin\"}",
+      "prev_hash": "81c087e5ab0d05e57bfdc48f0a0f158dcf59b10ba764b88623a2d404a86cbb52",
+      "hash": "c765260a7a900f148928162cdefe97736d9b6b4d71e1e8e92d7ad939718fc287"
+    },
+    {
+      "id": 43,
+      "timestamp": "2026-08-23 18:10:07.000000",
+      "event_type": "ORDER_CREATED",
+      "details": "{\"order_id\": \"ORD-6J91TTWU\", \"customer_ref\": \"Resilient Cust Celery\", \"warehouse_id\": \"WH-RES-01\", \"status\": \"RESERVED\", \"total_items\": 2, \"by\": \"test_admin\", \"shortage_items\": []}",
+      "prev_hash": "c765260a7a900f148928162cdefe97736d9b6b4d71e1e8e92d7ad939718fc287",
+      "hash": "ede45fcac3c4ef8ba797777a13141a90c60261f8dc510731236d03d064f1b021"
+    },
+    {
+      "id": 44,
+      "timestamp": "2026-08-23 18:10:08.000000",
+      "event_type": "NOTIF_PUBLISHED_ORDER_CREATED",
+      "details": "{\"event_type\": \"ORDER_CREATED\", \"warehouse_id\": \"WH-RES-01\", \"severity\": \"INFO\", \"source_entity_id\": \"ORD-6J91TTWU\", \"source_entity_type\": \"ORDER\", \"recipients_count\": 4}",
+      "prev_hash": "ede45fcac3c4ef8ba797777a13141a90c60261f8dc510731236d03d064f1b021",
+      "hash": "0814c03598aa4023c96466c3694626d70114d691650de2f2775338ec8bed456c"
+    }
+  ],
+  "access_log": [
+    {
+      "id": 1,
+      "timestamp": "2026-08-23 18:09:39.986264",
+      "username": "smoke_admin",
+      "warehouse_id": "",
+      "action": "login",
+      "ip_address": "testclient"
+    },
+    {
+      "id": 2,
+      "timestamp": "2026-08-23 18:09:41.958887",
+      "username": "smoke_admin",
+      "warehouse_id": "",
+      "action": "login",
+      "ip_address": "testclient"
+    },
+    {
+      "id": 3,
+      "timestamp": "2026-08-23 18:09:43.938254",
+      "username": "smoke_admin",
+      "warehouse_id": "",
+      "action": "login",
+      "ip_address": "testclient"
+    },
+    {
+      "id": 4,
+      "timestamp": "2026-08-23 18:09:45.920600",
+      "username": "smoke_admin",
+      "warehouse_id": "",
+      "action": "login",
+      "ip_address": "testclient"
+    },
+    {
+      "id": 5,
+      "timestamp": "2026-08-23 18:09:50.596086",
+      "username": "smoke_admin",
+      "warehouse_id": "",
+      "action": "login",
+      "ip_address": "testclient"
+    },
+    {
+      "id": 6,
+      "timestamp": "2026-08-23 18:09:54.029441",
+      "username": "final_admin",
+      "warehouse_id": "",
+      "action": "login",
+      "ip_address": "testclient"
+    },
+    {
+      "id": 7,
+      "timestamp": "2026-08-23 18:09:56.312685",
+      "username": "final_admin",
+      "warehouse_id": "",
+      "action": "login",
+      "ip_address": "testclient"
+    },
+    {
+      "id": 8,
+      "timestamp": "2026-08-23 18:10:01.254983",
+      "username": "final_admin",
+      "warehouse_id": "",
+      "action": "login",
+      "ip_address": "testclient"
+    }
+  ],
+  "_exported_at": "2026-08-23T18:10:19.759498"
+}

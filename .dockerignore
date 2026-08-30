@@ -1,0 +1,38 @@
+.git/
+.github/
+.idea/
+.vscode/
+.env
+.env.*
+!.env.example
+venv/
+.venv/
+env/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+data/exports/
+data/backups/
+logs/
+mysql_data/
+pg_data/
+prometheus_data/
+grafana_data/
+
+# ---- Backup snapshots ----
+backup_before_final_cleanup/
+safe_backup_files/
+scratch/
+
+# ---- Debug screenshots ----
+debug_*.png
+*_failed.png
+*_failed_*.png
+
+# ---- Local Databases ----
+*.db

@@ -1,0 +1,22 @@
+[
+  {
+    "id":78,
+    "date":"2026-08-05T00:00:00.000",
+    "warehouse_id":"WH-BLR-01",
+    "item_id":"ITM-GPU-01",
+    "item_name":"Nvidia RTX 4080 Founders Edition",
+    "deviation_score":4.8,
+    "likely_cause":"Possible shrinkage \/ theft",
+    "explanation":"Sudden unrecorded drop of 10 units (Valued at \u20b99,50,000) occurred outside regular stock-out operations."
+  },
+  {
+    "id":79,
+    "date":"2026-07-25T00:00:00.000",
+    "warehouse_id":"WH-CHN-01",
+    "item_id":"ITM-CPU-01",
+    "item_name":"AMD Ryzen 9 7900X Processor",
+    "deviation_score":3.5,
+    "likely_cause":"Damaged during offloading \/ scrap",
+    "explanation":"Discrepancy of 15 units (Valued at \u20b95,70,000) reported at the dock. Unrecorded scraping suspected."
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "warehouses": [
+    {
+      "id": "WH-BLR-01",
+      "name": "BLR Test Wh",
+      "location": "BLR",
+      "latitude": null,
+      "longitude": null,
+      "created_at": "2026-08-22 16:57:39.799845"
+    }
+  ],
+  "items": [],
+  "stock_movements": [],
+  "shrinkage_flags": [],
+  "audit_ledger": [],
+  "access_log": [],
+  "_exported_at": "2026-08-22T16:58:09.197321"
+}
