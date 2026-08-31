@@ -3,6 +3,7 @@ import io
 import logging
 from datetime import datetime, UTC
 from typing import Optional
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -468,16 +469,20 @@ def run_abc_classification(
     import pandas as pd
 
     if source == "wms":
-        # Load from WMS Items + StockMovements
-        from backend.models import Item, StockMovement
+        # Load from WMS Items + StockMovements + Inventory on_hand
+        from backend.models import Item, StockMovement, Inventory
         from sqlalchemy import func
         items = db.query(Item).all()
         data_list = []
         for it in items:
             q_sum = db.query(func.sum(StockMovement.stock_out)).filter(StockMovement.item_id == it.id)
+            inv_q = db.query(func.sum(Inventory.on_hand)).filter(Inventory.item_id == it.id)
             if warehouse_id:
                 q_sum = q_sum.filter(StockMovement.warehouse_id == warehouse_id)
-            qty = float(q_sum.scalar() or 0.0)
+                inv_q = inv_q.filter(Inventory.warehouse_id == warehouse_id)
+            stock_out_qty = float(q_sum.scalar() or 0.0)
+            on_hand_qty = float(inv_q.scalar() or 0.0)
+            qty = stock_out_qty if stock_out_qty > 0 else on_hand_qty
             data_list.append({
                 "item_id": it.id,
                 "item_name": it.name,
@@ -486,7 +491,7 @@ def run_abc_classification(
             })
         df = pd.DataFrame(data_list)
         clf = ABCClassifier(threshold_a, threshold_b)
-        if not df.empty and df["qty"].sum() > 0:
+        if not df.empty:
             clf.fit(df, item_col="item_id", qty_col="qty", value_col="unit_cost", item_name_col="item_name")
         else:
             clf.fit(pd.DataFrame(), "item_id", "qty", "unit_cost")
@@ -654,7 +659,7 @@ def get_demand_anomalies(
     
     if warehouse_id:
         check_warehouse_access(db, current_user, warehouse_id)
-        query = query.filter(AnomalyResult.warehouse_id == warehouse_id)
+        query = query.filter(sa.or_(AnomalyResult.warehouse_id == warehouse_id, AnomalyResult.warehouse_id.is_(None)))
     elif current_user.role != "admin":
         from backend.models import UserWarehouseAccess
         allowed_whs = [a.warehouse_id for a in db.query(UserWarehouseAccess).filter(UserWarehouseAccess.user_id == current_user.id).all()]
@@ -742,4 +747,216 @@ def get_replenishment_recommendations(
         "data_provenance": data_provenance,
         "results": results
     }
+
+class ReplenishmentRejectSchema(BaseModel):
+    reason: Optional[str] = None
+
+@router.post("/replenishment/{recommendation_id}/approve", summary="Approve replenishment recommendation and create task")
+def approve_replenishment_endpoint(
+    recommendation_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role not in ("admin", "manager"):
+        raise HTTPException(status_code=403, detail="Insufficient privileges to approve replenishment.")
+    from backend.services.smart_replenishment import approve_replenishment_recommendation
+    return approve_replenishment_recommendation(
+        db=db,
+        recommendation_id=recommendation_id,
+        user_id=current_user.id,
+        username=current_user.username
+    )
+
+@router.post("/replenishment/{recommendation_id}/reject", summary="Reject replenishment recommendation")
+def reject_replenishment_endpoint(
+    recommendation_id: int,
+    payload: Optional[ReplenishmentRejectSchema] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role not in ("admin", "manager"):
+        raise HTTPException(status_code=403, detail="Insufficient privileges to reject replenishment.")
+    from backend.services.smart_replenishment import reject_replenishment_recommendation
+    reason_str = payload.reason if payload else None
+    return reject_replenishment_recommendation(
+        db=db,
+        recommendation_id=recommendation_id,
+        user_id=current_user.id,
+        username=current_user.username,
+        reason=reason_str
+    )
+
+
+@router.get("/operational", summary="Get Phase 9 operational warehouse analytics (tasks, robots, routing, bottlenecks, risks)")
+def get_analytics_overview(
+    warehouse_id: Optional[str] = Query(None),
+    period: str = Query("30d"),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if warehouse_id:
+        check_warehouse_access(db, current_user, warehouse_id)
+    start, end = engine.get_date_range(period, start_date, end_date)
+    orders = engine.compute_order_analytics(db, warehouse_id, start, end)
+    inventory = engine.compute_inventory_analytics(db, warehouse_id, start, end)
+    tasks = engine.compute_task_analytics(db, warehouse_id, start, end)
+    robots = engine.compute_robot_analytics(db, warehouse_id, start, end)
+    routing = engine.compute_routing_analytics(db, warehouse_id, start, end)
+    bottlenecks = engine.compute_bottleneck_analytics(db, warehouse_id)
+    risks = engine.compute_risk_indicators(db, warehouse_id)
+    return {
+        "period": period,
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+        "warehouse_id": warehouse_id,
+        "orders": orders,
+        "inventory": inventory,
+        "tasks": tasks,
+        "robots": robots,
+        "routing": routing,
+        "bottlenecks": bottlenecks,
+        "risks": risks
+    }
+
+
+
+@router.get("/routing", summary="Get operational routing analytics (A* vs Dijkstra)")
+def get_routing_analytics(
+    warehouse_id: Optional[str] = Query(None),
+    period: str = Query("30d"),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if warehouse_id:
+        check_warehouse_access(db, current_user, warehouse_id)
+    start, end = engine.get_date_range(period, start_date, end_date)
+    return engine.compute_routing_analytics(db, warehouse_id, start, end)
+
+
+@router.get("/bottlenecks", summary="Detect operational bottlenecks with WHAT/WHY/IMPACT explanations")
+def get_bottleneck_analytics(
+    warehouse_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if warehouse_id and warehouse_id != "ALL":
+        check_warehouse_access(db, current_user, warehouse_id)
+    return engine.compute_explainable_bottlenecks(db, warehouse_id=warehouse_id)
+
+
+@router.get("/risks", summary="Get operational risk indicators")
+def get_risk_indicators(
+    warehouse_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if warehouse_id and warehouse_id != "ALL":
+        check_warehouse_access(db, current_user, warehouse_id)
+    return engine.compute_risk_indicators(db, warehouse_id)
+
+
+# ---------------------------------------------------------------------------
+# PHASE 9: EXPLAINABLE ANALYTICS & ADVANCED OPERATIONAL INSIGHTS ENDPOINTS
+# ---------------------------------------------------------------------------
+@router.get("/explainable-overview", summary="Get consolidated 8-category Explainable Analytics overview")
+def get_explainable_overview(
+    warehouse_id: Optional[str] = Query(None, description="Optional warehouse ID filter"),
+    period: str = Query("30d", description="Time period filter: today, 7d, 30d, 90d, custom"),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieve consolidated 8-category Explainable Analytics, top operational insights, period comparison, and bottleneck rankings."""
+    if warehouse_id and warehouse_id != "ALL":
+        check_warehouse_access(db, current_user, warehouse_id)
+    return engine.compute_explainable_overview(db, warehouse_id=warehouse_id, period=period, start_date=start_date, end_date=end_date)
+
+
+@router.get("/trends", summary="Get period-over-period trend comparison")
+def get_analytics_trends(
+    warehouse_id: Optional[str] = Query(None),
+    period: str = Query("30d"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieve Current Period vs Previous Period comparison metrics and trend classifications."""
+    if warehouse_id and warehouse_id != "ALL":
+        check_warehouse_access(db, current_user, warehouse_id)
+    return engine.compute_period_comparison(db, warehouse_id=warehouse_id, period=period)
+
+
+@router.get("/explainable-bottlenecks", summary="Get rank-ordered bottlenecks with WHAT/WHY/IMPACT explanations")
+def get_explainable_bottlenecks(
+    warehouse_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieve rank-ordered operational bottlenecks with structured WHAT, WHY, and IMPACT explanations."""
+    if warehouse_id and warehouse_id != "ALL":
+        check_warehouse_access(db, current_user, warehouse_id)
+    return engine.compute_explainable_bottlenecks(db, warehouse_id=warehouse_id)
+
+
+@router.get("/pathfinding-comparison", summary="Get factual A* vs Dijkstra pathfinding comparison")
+def get_pathfinding_factual_comparison(
+    warehouse_id: Optional[str] = Query(None),
+    period: str = Query("30d"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieve factual, data-driven comparison of A* vs Dijkstra execution metrics without algorithm bias."""
+    if warehouse_id and warehouse_id != "ALL":
+        check_warehouse_access(db, current_user, warehouse_id)
+    return engine.compute_pathfinding_factual_comparison(db, warehouse_id=warehouse_id, period=period)
+
+
+@router.get("/decision-explanation/{decision_id}", summary="Explain underlying data metrics behind a decision record")
+def explain_decision_metrics(
+    decision_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieve exact underlying data metrics behind a Phase 8 Decision Intelligence record."""
+    res = engine.explain_decision_metrics(db, decision_id=decision_id)
+    if "status" in res and res["status"] == 404:
+        raise HTTPException(status_code=404, detail=res["error"])
+    return res
+
+
+@router.get("/export/csv", summary="Export explainable analytics snapshot to CSV")
+def export_analytics_csv(
+    warehouse_id: Optional[str] = Query(None),
+    period: str = Query("30d"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Exports explainable operational analytics summary to CSV format."""
+    if warehouse_id and warehouse_id != "ALL":
+        check_warehouse_access(db, current_user, warehouse_id)
+    
+    overview = engine.compute_explainable_overview(db, warehouse_id=warehouse_id, period=period)
+    
+    rows = []
+    for kpi_cat, metrics in overview.get("kpis", {}).items():
+        if isinstance(metrics, dict):
+            for metric_name, m_val in metrics.items():
+                if isinstance(m_val, dict) and "value" in m_val:
+                    rows.append({
+                        "category": kpi_cat,
+                        "metric": metric_name,
+                        "value": str(m_val.get("value")),
+                        "unit": m_val.get("unit", ""),
+                        "data_quality": m_val.get("data_quality", "")
+                    })
+    
+    headers = ["Category", "Metric", "Value", "Unit", "Data Quality"]
+    return list_to_csv_response(rows, headers, f"analytics_export_{period}_{warehouse_id or 'all'}.csv")
+
+
+
 

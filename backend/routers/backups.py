@@ -108,12 +108,13 @@ def run_backup(
     
     if celery_enabled:
         try:
-            from backend.celery_app import execute_async_backup
-            task = execute_async_backup.delay(backup_type, current_user.username)
+            from backend.celery_app import execute_async_backup, safe_task_dispatch
+            task = safe_task_dispatch(execute_async_backup, backup_type, current_user.username)
+            task_id = getattr(task, "id", None)
             return {
                 "status": "QUEUED",
                 "message": "Logical database dump queued successfully in Celery task worker.",
-                "task_id": task.id
+                "task_id": task_id
             }
         except Exception as e:
             logger.error("Failed to queue backup in Celery worker: %s. Falling back to background thread.", e)
@@ -176,12 +177,13 @@ def verify_backup(
     
     if celery_enabled:
         try:
-            from backend.celery_app import execute_async_verification
-            task = execute_async_verification.delay(backup_id)
+            from backend.celery_app import execute_async_verification, safe_task_dispatch
+            task = safe_task_dispatch(execute_async_verification, backup_id)
+            task_id = getattr(task, "id", None)
             return {
                 "status": "QUEUED",
                 "message": "Integrity checksum verification queued successfully in Celery task worker.",
-                "task_id": task.id
+                "task_id": task_id
             }
         except Exception as e:
             logger.error("Failed to queue verification in Celery: %s", e)
@@ -234,12 +236,13 @@ def run_restore_test(
     
     if celery_enabled:
         try:
-            from backend.celery_app import execute_async_restore_test
-            task = execute_async_restore_test.delay(backup_id)
+            from backend.celery_app import execute_async_restore_test, safe_task_dispatch
+            task = safe_task_dispatch(execute_async_restore_test, backup_id)
+            task_id = getattr(task, "id", None)
             return {
                 "status": "QUEUED",
                 "message": "Restore dry-run validation queued successfully in Celery task worker.",
-                "task_id": task.id
+                "task_id": task_id
             }
         except Exception as e:
             logger.error("Failed to queue restore-test in Celery: %s", e)

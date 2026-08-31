@@ -40,6 +40,24 @@ class ItemCreate(BaseModel):
     unit_cost: float = 0.0
     lead_time_days: int = 3
     safety_stock: int = 10
+    reorder_threshold: Optional[int] = 20
+    sku: Optional[str] = None
+    unit: Optional[str] = "units"
+    warehouse_id: Optional[str] = None
+    initial_stock: Optional[int] = 0
+
+
+class ItemUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = None
+    unit_cost: Optional[float] = None
+    lead_time_days: Optional[int] = None
+    safety_stock: Optional[int] = None
+    reorder_threshold: Optional[int] = None
+    sku: Optional[str] = None
+    unit: Optional[str] = None
+    current_stock: Optional[int] = None
+    warehouse_id: Optional[str] = None
 
 
 class StockMovementCreate(BaseModel):

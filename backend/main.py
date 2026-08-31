@@ -30,7 +30,7 @@ from backend import cloud_storage
 # Import Routers
 from backend.sentry import init_sentry
 
-from backend.routers import auth, warehouses, ai, apps, reports, health, wms, tasks, robots, pathfinding, digital_twin, security, notifications, metrics, ai_assistant, or_tools_scheduler, backups, analytics, scenarios, simulation, settings
+from backend.routers import auth, warehouses, ai, apps, reports, health, wms, tasks, robots, pathfinding, digital_twin, security, notifications, metrics, ai_assistant, or_tools_scheduler, backups, analytics, scenarios, simulation, settings, decision_support
 
 # Re-export state variables for tests compatibility
 from backend.routers.auth import _login_attempts, _pending_password_changes
@@ -600,6 +600,7 @@ app.include_router(analytics.router) # Phase 12: Analytics, KPI & Performance In
 app.include_router(scenarios.router) # Phase 13: Scenario Lab & Algorithm Experiments
 app.include_router(simulation.router)
 app.include_router(settings.router)
+app.include_router(decision_support.router)
 
 
 

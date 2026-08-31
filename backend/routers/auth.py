@@ -10,6 +10,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, BackgroundTasks
 from pydantic import BaseModel
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from backend.timeout_policy import OAUTH_TIMEOUT
@@ -503,7 +504,7 @@ def google_signin(payload: GoogleSignInTokenRequest, request: Request, backgroun
 
     google_client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
     if not google_client_id:
-        raise HTTPException(status_code=400, detail="Google Sign-In is not configured on the server.")
+        raise HTTPException(status_code=400, detail="Google OAuth is not configured on this server")
 
     try:
         tokeninfo_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}"
@@ -522,47 +523,81 @@ def google_signin(payload: GoogleSignInTokenRequest, request: Request, backgroun
     if google_client_id and aud != google_client_id:
         raise HTTPException(status_code=401, detail="Google token audience mismatch")
 
-    email = token_data.get("email", "")
+    raw_email = token_data.get("email", "")
     email_verified = token_data.get("email_verified", False)
     if isinstance(email_verified, str):
         email_verified = email_verified.lower() == "true"
 
-    if not email or not email_verified:
+    if not raw_email or not email_verified:
         raise HTTPException(status_code=401, detail="Google account email is missing or unverified")
 
+    email = raw_email
     sub = token_data.get("sub", "")
     full_name = token_data.get("name", email.split("@")[0].capitalize())
-    ip = request.client.host if request and request.client else ""
 
-    user = db.query(User).filter((User.google_subject_id == sub) | (User.username == email)).first()
+    ip = request.client.host if request and request.client else ""
+    ua = request.headers.get("user-agent", "") if request else ""
+    normalized_email = email.strip().lower()
+
+    # Query PostgreSQL Users table using case-normalized email & sub
+    conditions = [
+        func.lower(User.email) == normalized_email,
+        func.lower(User.username) == normalized_email,
+    ]
+    if sub:
+        conditions.append(User.google_subject_id == sub)
+
+    user = db.query(User).filter(or_(*conditions)).first()
+
+    # Reject login if Google email is not registered in PostgreSQL
     if not user:
-        user = User(
-            username=email,
-            email=email,
-            password_hash=hash_password(secrets.token_hex(16)),
-            role="viewer",
-            full_name=full_name,
-            google_subject_id=sub,
-            is_active=True,
-            is_verified=True,
-            email_verified_at=datetime.now(UTC).replace(tzinfo=None),
+        logger.warning("Unauthorized Google Sign-In attempt for unregistered email: %s", normalized_email)
+        security_service.create_security_event(
+            db=db,
+            event_type="OAUTH_LOGIN_UNAUTHORIZED",
+            severity="WARNING",
+            status="BLOCKED",
+            actor_username=normalized_email,
+            authentication_method="google_oauth",
+            ip_address=ip,
+            user_agent=ua,
+            extra_details={"reason": "Email not registered in database", "email": normalized_email}
         )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        logger.info("Created new user via Google Sign-In: %s with safe role VIEWER", email)
-    else:
-        if not user.google_subject_id:
-            user.google_subject_id = sub
-        if not user.is_active:
-            raise HTTPException(status_code=403, detail="Account is deactivated. Please contact your administrator.")
-        # Update login audit fields
-        user.last_login_at = datetime.now(UTC).replace(tzinfo=None)
-        user.last_login_ip = ip
-        user.login_method = "google_oauth"
-        if not user.email:
-            user.email = email
-        db.commit()
+        raise HTTPException(
+            status_code=403,
+            detail="Google account is not authorized for this application. Please contact an administrator."
+        )
+
+    # Check user account status
+    if not user.is_active:
+        logger.warning("Google Sign-In attempt for deactivated account: %s", user.username)
+        security_service.create_security_event(
+            db=db,
+            event_type="OAUTH_LOGIN_DISABLED",
+            severity="WARNING",
+            status="BLOCKED",
+            actor_user_id=user.id,
+            actor_username=user.username,
+            authentication_method="google_oauth",
+            role_at_event=user.role,
+            ip_address=ip,
+            user_agent=ua,
+            extra_details={"reason": "User account deactivated", "email": normalized_email}
+        )
+        raise HTTPException(
+            status_code=403,
+            detail="Account is deactivated or disabled. Please contact your administrator."
+        )
+
+    # Link subject ID and update login metadata while preserving user.role
+    if sub and not user.google_subject_id:
+        user.google_subject_id = sub
+    user.last_login_at = datetime.now(UTC).replace(tzinfo=None)
+    user.last_login_ip = ip
+    user.login_method = "google_oauth"
+    if not user.email:
+        user.email = normalized_email
+    db.commit()
 
     token = create_access_token({"sub": user.username, "role": user.role})
     log_access(db, user.username, "google_oauth_login", request=request)
@@ -633,6 +668,12 @@ def google_signin(payload: GoogleSignInTokenRequest, request: Request, backgroun
         "username": user.username,
         "role": user.role,
         "full_name": user.full_name or user.username,
+        "user": {
+            "username": user.username,
+            "role": user.role,
+            "email": user.email,
+            "full_name": user.full_name or user.username,
+        },
         "auth_mode": "google_oauth_2.0"
     }
 
@@ -885,6 +926,29 @@ def list_users(
         }
         for u in users
     ]
+
+@router.get("/users/operators")
+def list_active_operators(
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    """List all active OPERATOR users for task assignment."""
+    operators = db.query(User).filter(
+        func.lower(User.role).in_(["operator", "staff"]),
+        User.is_active == True
+    ).order_by(User.username.asc()).all()
+    return [
+        {
+            "id": u.id,
+            "username": u.username,
+            "email": u.email or u.username,
+            "full_name": u.full_name or u.username,
+            "role": u.role,
+            "is_active": u.is_active if hasattr(u, "is_active") else True,
+        }
+        for u in operators
+    ]
+
 
 
 @router.get("/users/{user_id}")

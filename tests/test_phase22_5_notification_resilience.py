@@ -194,7 +194,8 @@ def test_broker_unavailable_does_not_block_wms(client, db, admin_token, setup_wm
             # The email notification created during this run should be QUEUED or FAILED, not SENT/DELIVERED
             notifs = db.query(Notification).filter(
                 Notification.event_type == "ORDER_CREATED",
-                Notification.channel == "EMAIL"
+                Notification.channel == "EMAIL",
+                Notification.warehouse_id == "WH-RES-01"
             ).all()
             for n in notifs:
                 assert n.status in ("QUEUED", "FAILED")
@@ -245,10 +246,11 @@ def test_celery_broker_unreachable_fail_fast():
     
     t0 = time.time()
     try:
-        # Dispatch a task. It should fail fast rather than hang
-        send_resend_email_task.delay("Subject", "Body", "test@example.com", 999)
+        # Dispatch a task using safe_task_dispatch. It should fail fast (raise exception in < 6s) rather than hang
+        from backend.celery_app import safe_task_dispatch
+        safe_task_dispatch(send_resend_email_task, "Subject", "Body", "test@example.com", 999, timeout=2.5)
         pytest.fail("Should have failed on unreachable broker connection")
-    except (kombu.exceptions.OperationalError, Exception) as e:
+    except Exception as e:
         # Expected connection failure
         assert time.time() - t0 < 6.0, f"Unreachable broker caused long delay: {time.time() - t0}s"
     finally:

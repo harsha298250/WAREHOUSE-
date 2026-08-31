@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from backend.database import get_db, engine
-from backend.models import Warehouse, Item, StockMovement
-from backend.schemas import WarehouseCreate, ItemCreate, StockMovementCreate, WarehouseUpdate
+from backend.models import Warehouse, Item, StockMovement, Inventory, OrderItem, Task, Order
+from backend.schemas import WarehouseCreate, ItemCreate, StockMovementCreate, WarehouseUpdate, ItemUpdate
 from backend.auth import get_current_user, require_admin, log_access
 from backend import notifications
 from backend import audit_ledger as ledger
@@ -49,37 +49,27 @@ def create_warehouse(payload: WarehouseCreate, request: Request, db: Session = D
             warning_msg = "Location could not be automatically resolved. Please enter coordinates or select the location on the map."
             
     w = Warehouse(
-        id=payload.id,
-        name=payload.name,
-        location=resolved_addr if resolved_addr else payload.location,
-        city=payload.city,
-        state=payload.state,
-        country=payload.country,
-        latitude=lat,
-        longitude=lon
+        id=payload.id, name=payload.name, location=payload.location,
+        city=payload.city or "", state=payload.state or "", country=payload.country or "",
+        latitude=lat, longitude=lon
     )
     db.add(w)
     db.commit()
-    log_access(db, user.username, "add_warehouse", warehouse_id=payload.id, request=request)
-    logger.info("Warehouse created: id=%s name=%s by=%s", payload.id, payload.name, user.username)
+    log_access(db, user.username, "add_warehouse", warehouse_id=w.id, request=request)
+    logger.info("Warehouse created: id=%s name=%s by=%s", w.id, w.name, user.username)
     
-    # Audit logging
-    ledger.append_entry(db, "warehouse_created", {
-        "actor": user.username,
-        "warehouse_id": w.id,
-        "latitude": w.latitude,
-        "longitude": w.longitude
-    })
-    
-    notifications.send_change_alert("New Warehouse Registered", {
+    notifications.send_change_alert("New Warehouse Added", {
         "warehouse_id": w.id,
         "name": w.name,
-        "location": w.location,
-        "coordinates": f"{w.latitude}, {w.longitude}",
+        "location": f"{w.city}, {w.country}" if w.city else w.location,
+        "coordinates": f"{w.latitude}, {w.longitude}" if w.latitude else "Pending",
         "created_by": user.username
     })
     
-    return {"status": "created", "id": w.id, "warning": warning_msg}
+    res = {"status": "created", "id": w.id, "latitude": lat, "longitude": lon}
+    if warning_msg:
+        res["warning"] = warning_msg
+    return res
 
 
 @router.get("/warehouses/{id}")
@@ -103,50 +93,32 @@ def get_warehouse(id: str, db: Session = Depends(get_db), user=Depends(get_curre
 def update_warehouse(id: str, payload: WarehouseUpdate, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
     w = db.query(Warehouse).filter(Warehouse.id == id).first()
     if not w:
-        raise HTTPException(status_code=404, detail="Warehouse not found")
-    
-    old_lat = w.latitude
-    old_lng = w.longitude
-    
-    lat = payload.latitude
-    lon = payload.longitude
-    resolved_addr = None
-    warning_msg = None
-    
-    # Geocoding fallback sequence if coordinates are not manually entered
-    if lat is None or lon is None:
-        lat, lon, resolved_addr = geocode_address(
-            payload.name, payload.city, payload.state, payload.country, payload.location
-        )
-        if lat is None or lon is None:
-            warning_msg = "Location could not be automatically resolved. Please enter coordinates or select the location on the map."
-            
+        raise HTTPException(404, "Warehouse not found")
     w.name = payload.name
-    w.location = resolved_addr if resolved_addr else payload.location
-    w.city = payload.city
-    w.state = payload.state
-    w.country = payload.country
-    w.latitude = lat
-    w.longitude = lon
-    
+    w.location = payload.location
+    w.city = payload.city or ""
+    w.state = payload.state or ""
+    w.country = payload.country or ""
+    w.latitude = payload.latitude
+    w.longitude = payload.longitude
     db.commit()
-    log_access(db, user.username, "update_warehouse", warehouse_id=id, request=request)
-    logger.info("Warehouse updated: id=%s name=%s by=%s", id, payload.name, user.username)
-    
-    # Audit logging
-    ledger.append_entry(db, "warehouse_updated", {
-        "actor": user.username,
-        "warehouse_id": id,
-        "old_latitude": old_lat,
-        "old_longitude": old_lng,
-        "new_latitude": lat,
-        "new_longitude": lon
-    })
-    
-    return {"status": "updated", "id": id, "warning": warning_msg}
+    log_access(db, user.username, "update_warehouse", warehouse_id=w.id, request=request)
+    return {"status": "updated", "id": w.id}
+
+
+@router.delete("/warehouses/{id}")
+def delete_warehouse(id: str, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
+    w = db.query(Warehouse).filter(Warehouse.id == id).first()
+    if not w:
+        raise HTTPException(404, "Warehouse not found")
+    db.delete(w)
+    db.commit()
+    log_access(db, user.username, "delete_warehouse", warehouse_id=id, request=request)
+    return {"status": "deleted", "id": id}
 
 
 @router.patch("/warehouses/{id}/location")
+@router.put("/warehouses/{id}/location")
 def update_warehouse_location_coords(id: str, payload: CoordinatesUpdate, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
     w = db.query(Warehouse).filter(Warehouse.id == id).first()
     if not w:
@@ -184,40 +156,46 @@ def update_warehouse_location_coords(id: str, payload: CoordinatesUpdate, reques
 
 
 @router.put("/warehouses/{id}/coordinates")
-def update_coordinates(id: str, payload: CoordinatesUpdate, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
+def update_warehouse_coordinates(id: str, payload: CoordinatesUpdate, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
     w = db.query(Warehouse).filter(Warehouse.id == id).first()
     if not w:
-        raise HTTPException(status_code=404, detail="Warehouse not found")
+        raise HTTPException(404, "Warehouse not found")
     
     old_lat = w.latitude
-    old_lng = w.longitude
+    old_lon = w.longitude
     w.latitude = payload.latitude
     w.longitude = payload.longitude
+    
+    # Trigger reverse geocoding to enrich location metadata
+    reverse_res = reverse_geocode(payload.latitude, payload.longitude)
+    if reverse_res:
+        if reverse_res.get("city"):
+            w.city = reverse_res["city"]
+        if reverse_res.get("state"):
+            w.state = reverse_res["state"]
+        if reverse_res.get("country"):
+            w.country = reverse_res["country"]
+            
     db.commit()
+    log_access(db, user.username, "update_coordinates", warehouse_id=w.id, request=request)
     
-    log_access(db, user.username, "update_coordinates", warehouse_id=id, request=request)
-    logger.info("Warehouse coordinates updated: id=%s lat=%s lng=%s by=%s", id, payload.latitude, payload.longitude, user.username)
-    
-    # Audit logging
-    ledger.append_entry(db, "warehouse_location_changed", {
-        "actor": user.username,
-        "warehouse_id": id,
-        "old_latitude": old_lat,
-        "old_longitude": old_lng,
-        "new_latitude": payload.latitude,
-        "new_longitude": payload.longitude
-    })
-    
-    notifications.send_change_alert("Warehouse Location Coordinates Locked", {
-        "warehouse_id": id,
+    notifications.send_change_alert("Warehouse Coordinates Updated", {
+        "warehouse_id": w.id,
         "name": w.name,
-        "location": w.location,
-        "previous_coordinates": f"{old_lat}, {old_lng}",
-        "new_coordinates": f"{payload.latitude}, {payload.longitude}",
+        "old_coords": f"{old_lat}, {old_lon}",
+        "new_coords": f"{w.latitude}, {w.longitude}",
         "updated_by": user.username
     })
     
-    return {"status": "updated", "id": id, "latitude": w.latitude, "longitude": w.longitude}
+    return {
+        "status": "updated",
+        "id": w.id,
+        "latitude": w.latitude,
+        "longitude": w.longitude,
+        "city": w.city,
+        "state": w.state,
+        "country": w.country
+    }
 
 
 @router.get("/warehouses/{id}/weather")
@@ -238,20 +216,90 @@ def get_warehouse_weather_endpoint(id: str, db: Session = Depends(get_db), user=
 @router.get("/items")
 def list_items(db: Session = Depends(get_db), user=Depends(get_current_user)):
     return [{"id": i.id, "name": i.name, "category": i.category, "unit_cost": i.unit_cost,
-             "lead_time_days": i.lead_time_days, "safety_stock": i.safety_stock} for i in db.query(Item).all()]
+             "lead_time_days": i.lead_time_days, "safety_stock": i.safety_stock,
+             "reorder_threshold": i.reorder_threshold, "sku": i.sku, "unit": i.unit, "is_active": i.is_active}
+            for i in db.query(Item).filter(Item.is_active == True).all()]
+
+
+@router.get("/items/{item_id}")
+def get_item(item_id: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    i = db.query(Item).filter(Item.id == item_id).first()
+    if not i:
+        raise HTTPException(404, f"Item '{item_id}' not found")
+    inv_records = db.query(Inventory).filter(Inventory.item_id == item_id).all()
+    return {
+        "id": i.id, "name": i.name, "category": i.category, "unit_cost": i.unit_cost,
+        "lead_time_days": i.lead_time_days, "safety_stock": i.safety_stock,
+        "reorder_threshold": i.reorder_threshold, "sku": i.sku, "unit": i.unit,
+        "is_active": i.is_active,
+        "inventory": [{"warehouse_id": inv.warehouse_id, "on_hand": inv.on_hand, "reserved": inv.reserved, "available": inv.available} for inv in inv_records]
+    }
 
 
 @router.post("/items")
 def create_item(payload: ItemCreate, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
     if db.query(Item).filter(Item.id == payload.id).first():
         raise HTTPException(400, "Item ID already exists")
-    i = Item(id=payload.id, name=payload.name, category=payload.category, unit_cost=payload.unit_cost,
-              lead_time_days=payload.lead_time_days, safety_stock=payload.safety_stock)
+    if payload.sku and db.query(Item).filter(Item.sku == payload.sku).first():
+        raise HTTPException(400, "Item SKU already exists")
+
+    sku_val = payload.sku if payload.sku else f"SKU-{payload.id}"
+    i = Item(
+        id=payload.id,
+        name=payload.name,
+        category=payload.category or "General",
+        unit_cost=payload.unit_cost or 0.0,
+        lead_time_days=payload.lead_time_days or 3,
+        safety_stock=payload.safety_stock or 10,
+        reorder_threshold=payload.reorder_threshold or 20,
+        sku=sku_val,
+        unit=payload.unit or "units",
+        is_active=True
+    )
     db.add(i)
+    db.flush()
+
+    target_wh = payload.warehouse_id
+    if not target_wh:
+        wh_row = db.query(Warehouse).first()
+        target_wh = wh_row.id if wh_row else "WH-BLR-01"
+
+    init_qty = payload.initial_stock or 0
+    inv = db.query(Inventory).filter(
+        Inventory.warehouse_id == target_wh,
+        Inventory.item_id == i.id
+    ).first()
+    if not inv:
+        inv = Inventory(
+            warehouse_id=target_wh,
+            item_id=i.id,
+            on_hand=init_qty,
+            reserved=0,
+            available=init_qty
+        )
+        db.add(inv)
+
+    if init_qty > 0:
+        from datetime import date
+        today = date.today()
+        db.add(StockMovement(
+            date=today,
+            warehouse_id=target_wh,
+            item_id=i.id,
+            stock_in=init_qty,
+            stock_out=0,
+            closing_stock=init_qty,
+            entry_source="initial_creation",
+            entered_by=user.username
+        ))
+
     db.commit()
-    log_access(db, user.username, "add_item", request=request)
-    logger.info("Item created: id=%s name=%s by=%s", payload.id, payload.name, user.username)
-    
+    log_access(db, user.username, "add_item", warehouse_id=target_wh, request=request)
+    ledger.append_entry(db, "INVENTORY_ITEM_CREATED", {
+        "item_id": i.id, "name": i.name, "warehouse_id": target_wh,
+        "initial_stock": init_qty, "created_by": user.username
+    })
+
     notifications.send_change_alert("New Item/SKU Added", {
         "item_id": i.id,
         "name": i.name,
@@ -260,8 +308,75 @@ def create_item(payload: ItemCreate, request: Request, db: Session = Depends(get
         "safety_stock": i.safety_stock,
         "created_by": user.username
     })
-    
-    return {"status": "created", "id": i.id}
+
+    return {"status": "created", "id": i.id, "warehouse_id": target_wh, "initial_stock": init_qty}
+
+
+@router.patch("/items/{item_id}")
+def update_item(item_id: str, payload: ItemUpdate, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
+    i = db.query(Item).filter(Item.id == item_id).first()
+    if not i:
+        raise HTTPException(404, f"Item '{item_id}' not found")
+
+    upd_dict = payload.model_dump(exclude_unset=True)
+    curr_stock = upd_dict.pop("current_stock", None)
+    target_wh = upd_dict.pop("warehouse_id", None)
+
+    for k, v in upd_dict.items():
+        if hasattr(i, k) and v is not None:
+            setattr(i, k, v)
+
+    if curr_stock is not None:
+        wh_id = target_wh or "WH-BLR-01"
+        inv = db.query(Inventory).filter(Inventory.warehouse_id == wh_id, Inventory.item_id == item_id).first()
+        if not inv:
+            inv = Inventory(warehouse_id=wh_id, item_id=item_id, on_hand=curr_stock, reserved=0, available=curr_stock)
+            db.add(inv)
+        else:
+            inv.on_hand = curr_stock
+            inv.available = max(0, curr_stock - inv.reserved)
+
+        from datetime import date
+        today = date.today()
+        sm = db.query(StockMovement).filter(StockMovement.warehouse_id == wh_id, StockMovement.item_id == item_id, StockMovement.date == today).first()
+        if sm:
+            sm.closing_stock = curr_stock
+        else:
+            db.add(StockMovement(
+                date=today, warehouse_id=wh_id, item_id=item_id,
+                stock_in=0, stock_out=0, closing_stock=curr_stock,
+                entry_source="manual_update", entered_by=user.username
+            ))
+
+    db.commit()
+    log_access(db, user.username, "update_item", warehouse_id=target_wh or "", request=request)
+    ledger.append_entry(db, "INVENTORY_ITEM_UPDATED", {
+        "item_id": i.id, "updated_by": user.username, "changes": [k for k in upd_dict.keys()]
+    })
+    return {"status": "updated", "id": i.id}
+
+
+@router.delete("/items/{item_id}")
+def delete_item(item_id: str, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
+    i = db.query(Item).filter(Item.id == item_id).first()
+    if not i:
+        raise HTTPException(404, f"Item '{item_id}' not found")
+
+    has_orders = db.query(OrderItem).filter(OrderItem.item_id == item_id).first() is not None
+    has_tasks = db.query(Task).filter(Task.product_id == item_id).first() is not None
+    has_movements = db.query(StockMovement).filter(StockMovement.item_id == item_id).first() is not None
+
+    if has_orders or has_tasks or has_movements:
+        i.is_active = False
+        db.commit()
+        ledger.append_entry(db, "INVENTORY_ITEM_ARCHIVED", {"item_id": i.id, "archived_by": user.username, "reason": "Operational history exists"})
+        return {"status": "archived", "id": i.id, "message": f"Item '{item_id}' has historical operations and was safely soft-archived."}
+    else:
+        db.query(Inventory).filter(Inventory.item_id == item_id).delete(synchronize_session=False)
+        db.delete(i)
+        db.commit()
+        ledger.append_entry(db, "INVENTORY_ITEM_DELETED", {"item_id": item_id, "deleted_by": user.username})
+        return {"status": "deleted", "id": item_id, "message": f"Item '{item_id}' deleted successfully."}
 
 
 @router.post("/stock-movements")
@@ -273,11 +388,8 @@ def record_stock_movement(payload: StockMovementCreate, request: Request, db: Se
     if not db.query(Item).filter(Item.id == payload.item_id).first():
         raise HTTPException(404, "Item not found")
 
-    prev = (db.query(StockMovement)
-            .filter(StockMovement.warehouse_id == payload.warehouse_id, StockMovement.item_id == payload.item_id,
-                    StockMovement.date < payload.date)
-            .order_by(StockMovement.date.desc()).first())
-    prev_closing = prev.closing_stock if prev else 0
+    inv = db.query(Inventory).filter(Inventory.warehouse_id == payload.warehouse_id, Inventory.item_id == payload.item_id).first()
+    prev_closing = inv.on_hand if inv else 0
     closing = max(0, prev_closing - payload.stock_out + payload.stock_in)
 
     existing = (db.query(StockMovement)
@@ -294,6 +406,19 @@ def record_stock_movement(payload: StockMovementCreate, request: Request, db: Se
             stock_in=payload.stock_in, stock_out=payload.stock_out, closing_stock=closing,
             entry_source="manual", entered_by=user.username,
         ))
+
+    # Keep inventory table in sync
+    inv = db.query(Inventory).filter(Inventory.warehouse_id == payload.warehouse_id, Inventory.item_id == payload.item_id).first()
+    if not inv:
+        inv = Inventory(
+            warehouse_id=payload.warehouse_id, item_id=payload.item_id,
+            on_hand=closing, reserved=0, available=closing
+        )
+        db.add(inv)
+    else:
+        inv.on_hand = closing
+        inv.available = max(0, closing - inv.reserved)
+
     db.commit()
     log_access(db, user.username, "add_stock", warehouse_id=payload.warehouse_id, request=request)
     ledger.append_entry(db, "stock_entry", {
@@ -326,14 +451,31 @@ def list_stock_movements(warehouse_id: str, limit: int = 100, db: Session = Depe
 @router.get("/inventory/{warehouse_id}")
 def get_inventory(warehouse_id: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
     df = pd.read_sql(text("""
-        SELECT sm.item_id, i.name AS item_name, i.category, sm.closing_stock AS current_stock,
-               i.safety_stock, i.unit_cost
-        FROM stock_movements sm
-        JOIN items i ON sm.item_id = i.id
-        JOIN (SELECT warehouse_id, item_id, MAX(date) md FROM stock_movements
-              WHERE warehouse_id = :wh GROUP BY warehouse_id, item_id) latest
-        ON sm.warehouse_id = latest.warehouse_id AND sm.item_id = latest.item_id AND sm.date = latest.md
-        WHERE sm.warehouse_id = :wh
+        SELECT 
+            i.id AS item_id,
+            i.name AS item_name,
+            i.category,
+            COALESCE(inv.on_hand, sm.closing_stock, 0) AS current_stock,
+            COALESCE(i.safety_stock, 10) AS safety_stock,
+            COALESCE(i.unit_cost, 0.0) AS unit_cost,
+            COALESCE(i.reorder_threshold, 20) AS reorder_threshold,
+            COALESCE(inv.available, inv.on_hand, sm.closing_stock, 0) AS available_stock,
+            COALESCE(inv.reserved, 0) AS reserved_stock
+        FROM items i
+        LEFT JOIN inventory inv ON i.id = inv.item_id AND inv.warehouse_id = :wh
+        LEFT JOIN (
+            SELECT sm_inner.warehouse_id, sm_inner.item_id, sm_inner.closing_stock
+            FROM stock_movements sm_inner
+            JOIN (
+                SELECT warehouse_id, item_id, MAX(date) md 
+                FROM stock_movements 
+                WHERE warehouse_id = :wh 
+                GROUP BY warehouse_id, item_id
+            ) latest ON sm_inner.warehouse_id = latest.warehouse_id 
+                   AND sm_inner.item_id = latest.item_id 
+                   AND sm_inner.date = latest.md
+        ) sm ON i.id = sm.item_id
+        WHERE i.is_active = TRUE OR i.is_active IS NULL
     """), engine, params={"wh": warehouse_id})
     return df.to_dict(orient="records")
 

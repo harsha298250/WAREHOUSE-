@@ -201,6 +201,8 @@ def _build_state(db: Session, warehouse_id: str, sim: DigitalTwinSimulation = No
         raise HTTPException(404, f"Warehouse '{warehouse_id}' not found.")
 
     # Grid cells
+    from backend.routers.pathfinding import initialize_warehouse_grid_if_empty
+    initialize_warehouse_grid_if_empty(db, warehouse_id)
     cells = db.query(WarehouseGridCell).filter(WarehouseGridCell.warehouse_id == warehouse_id).all()
     grid = [
         {"x": c.x, "y": c.y, "type": c.cell_type, "traversable": c.traversable,
@@ -342,6 +344,77 @@ def _build_state(db: Session, warehouse_id: str, sim: DigitalTwinSimulation = No
         for r in routes
     ]
 
+    # Replenishment recommendations summary
+    from backend.models import ReplenishmentRecommendation
+    rep_recs = db.query(ReplenishmentRecommendation).filter(
+        ReplenishmentRecommendation.warehouse_id == warehouse_id
+    ).all()
+    rep_items = [
+        {
+            "id": r.id,
+            "item_id": r.item_id,
+            "item_name": r.item_name,
+            "current_stock": r.current_stock,
+            "reorder_point": r.reorder_point,
+            "recommended_qty": r.recommended_qty,
+            "urgency": r.urgency,
+            "status": r.status,
+            "reason": r.reason
+        }
+        for r in rep_recs
+    ]
+    replenishment_summary = {
+        "total_recommended": sum(1 for r in rep_recs if r.urgency in ("REORDER_RECOMMENDED", "URGENT_REORDER")),
+        "urgent_count": sum(1 for r in rep_recs if r.urgency == "URGENT_REORDER"),
+        "approved_count": sum(1 for r in rep_recs if r.status == "APPROVED"),
+        "completed_count": sum(1 for r in rep_recs if r.status == "COMPLETED"),
+        "items": rep_items[:20]
+    }
+
+    # Operational Alerts
+    alerts = []
+    for r in robot_list:
+        if r["battery_level"] is not None and r["battery_level"] < 20.0:
+            alerts.append({
+                "severity": "CRITICAL" if r["battery_level"] < 15.0 else "WARNING",
+                "category": "BATTERY",
+                "message": f"Robot {r['robot_code']} battery low ({r['battery_level']:.1f}%)"
+            })
+    for o in obstacle_list:
+        if o["active"]:
+            alerts.append({
+                "severity": "WARNING",
+                "category": "OBSTACLE",
+                "message": f"Active obstacle at ({o['x']}, {o['y']}) severity {o['severity']}"
+            })
+    for loc_id, inv_info in location_inventory.items():
+        if inv_info["health_status"] in ("CRITICAL", "OUT_OF_STOCK"):
+            alerts.append({
+                "severity": "CRITICAL" if inv_info["health_status"] == "OUT_OF_STOCK" else "WARNING",
+                "category": "INVENTORY",
+                "message": f"Item {inv_info['item_name']} at location {loc_id} is {inv_info['health_status']}"
+            })
+    for t in task_list:
+        if t["priority"] in ("CRITICAL", "HIGH") and not t["assigned_robot_id"]:
+            alerts.append({
+                "severity": "WARNING",
+                "category": "TASK",
+                "message": f"Unassigned high-priority task {t['task_number']} ({t['priority']})"
+            })
+
+    # KPIs
+    kpi_summary = {
+        "active_robots": sum(1 for r in robot_list if r["status"] in ("MOVING", "PICKING", "RETURNING")),
+        "available_robots": sum(1 for r in robot_list if r["status"] == "AVAILABLE"),
+        "active_tasks": sum(1 for t in task_list if t["status"] in ("ASSIGNED", "IN_PROGRESS")),
+        "pending_tasks": sum(1 for t in task_list if t["status"] in ("QUEUED", "PRIORITIZED")),
+        "completed_tasks": db.query(Task).filter(Task.warehouse_id == warehouse_id, Task.status == "COMPLETED").count(),
+        "low_stock_items": sum(1 for inv in location_inventory.values() if inv["health_status"] in ("CRITICAL", "OUT_OF_STOCK", "LOW")),
+        "replenishment_pending": replenishment_summary["total_recommended"] + replenishment_summary["approved_count"],
+        "active_routes": len(route_list),
+        "blocked_routes": sum(1 for o in obstacle_list if o["active"])
+    }
+
     # Simulation
     sim_data = None
     if sim:
@@ -363,6 +436,7 @@ def _build_state(db: Session, warehouse_id: str, sim: DigitalTwinSimulation = No
         "warehouse_name": wh.name,
         "data_mode": "SIMULATION STATE" if sim and sim.simulation_status == "RUNNING" else "OBSERVATION STATE",
         "telemetry_mode": "SIMULATED TELEMETRY",
+        "is_live": not (sim and sim.simulation_status == "RUNNING"),
         "timestamp": datetime.now(UTC).replace(tzinfo=None).isoformat(),
         "simulation": sim_data,
         "grid": grid,
@@ -371,6 +445,9 @@ def _build_state(db: Session, warehouse_id: str, sim: DigitalTwinSimulation = No
         "obstacles": obstacle_list,
         "routes": route_list,
         "location_inventory": location_inventory,
+        "replenishment_summary": replenishment_summary,
+        "operational_alerts": alerts,
+        "kpis": kpi_summary,
         "fleet_summary": {
             "total": len(robot_list),
             "available": sum(1 for r in robot_list if r["status"] == "AVAILABLE"),
@@ -382,6 +459,7 @@ def _build_state(db: Session, warehouse_id: str, sim: DigitalTwinSimulation = No
             "failed": sum(1 for r in robot_list if r["status"] == "FAILED"),
         }
     }
+
 
 
 from fastapi.responses import StreamingResponse
@@ -500,25 +578,51 @@ async def sync_dt_state(
     })
 
 
-@router.get("/{warehouse_id}/state", summary="Get current Digital Twin state")
-def get_dt_state(
-    warehouse_id: str,
+@router.get("/state", summary="Get current Digital Twin state via query param")
+def get_dt_state_query(
+    warehouse_id: str = Query("WH-BLR-01"),
     db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
-    """
-    Returns the full Digital Twin state:
-    Layer 1 (grid) + Layer 2 (inventory) + Layer 3 (robots) +
-    Layer 4 (obstacles + routes) + Layer 5 (simulation) + Layer 6 (fleet KPIs).
-    State is SIMULATION STATE when a simulation is RUNNING, otherwise OBSERVATION STATE.
-    """
-    # Find any active simulation for this warehouse
+    if user.role != "admin":
+        from backend.models import UserWarehouseAccess
+        access = db.query(UserWarehouseAccess).filter(
+            UserWarehouseAccess.user_id == user.id,
+            UserWarehouseAccess.warehouse_id == warehouse_id
+        ).first()
+        if not access:
+            raise HTTPException(403, f"Access to warehouse '{warehouse_id}' is restricted.")
+
     sim = db.query(DigitalTwinSimulation).filter(
         DigitalTwinSimulation.warehouse_id == warehouse_id,
         DigitalTwinSimulation.simulation_status.in_(["RUNNING", "PAUSED", "READY"])
     ).order_by(DigitalTwinSimulation.id.desc()).first()
 
     return _build_state(db, warehouse_id, sim)
+
+
+@router.get("/{warehouse_id}/state", summary="Get current Digital Twin state")
+def get_dt_state(
+    warehouse_id: str,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    if user.role != "admin":
+        from backend.models import UserWarehouseAccess
+        access = db.query(UserWarehouseAccess).filter(
+            UserWarehouseAccess.user_id == user.id,
+            UserWarehouseAccess.warehouse_id == warehouse_id
+        ).first()
+        if not access:
+            raise HTTPException(403, f"Access to warehouse '{warehouse_id}' is restricted.")
+
+    sim = db.query(DigitalTwinSimulation).filter(
+        DigitalTwinSimulation.warehouse_id == warehouse_id,
+        DigitalTwinSimulation.simulation_status.in_(["RUNNING", "PAUSED", "READY"])
+    ).order_by(DigitalTwinSimulation.id.desc()).first()
+
+    return _build_state(db, warehouse_id, sim)
+
 
 
 @router.get("/{warehouse_id}/events", summary="Get Digital Twin event stream")

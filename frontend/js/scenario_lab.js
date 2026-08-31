@@ -11,8 +11,9 @@
     clearInterval(pollInterval);
 
     el.innerHTML = `
-      <div class="analytics-tabs" style="margin-bottom:20px;display:flex;gap:10px;">
+      <div class="analytics-tabs" style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn ${activeTab === 'scenarios' ? 'btn-primary' : 'btn-secondary'}" id="tab-scenarios">📋 Manage Scenarios</button>
+        <button class="btn ${activeTab === 'whatif' ? 'btn-primary' : 'btn-secondary'}" id="tab-whatif">⚡ What-If Simulator & Impact Analysis</button>
         <button class="btn ${activeTab === 'experiments' ? 'btn-primary' : 'btn-secondary'}" id="tab-experiments">🔬 Run Experiments & History</button>
         <button class="btn ${activeTab === 'packing' ? 'btn-primary' : 'btn-secondary'}" id="tab-packing">📦 Packing Station Simulator</button>
         <button class="btn ${activeTab === 'simpy' ? 'btn-primary' : 'btn-secondary'}" id="tab-simpy">🤖 SimPy Simulation Lab</button>
@@ -23,6 +24,10 @@
     document.getElementById("tab-scenarios").addEventListener("click", () => {
       activeTab = "scenarios";
       renderScenarioLabWorkspace(el, "scenarios");
+    });
+    document.getElementById("tab-whatif").addEventListener("click", () => {
+      activeTab = "whatif";
+      renderScenarioLabWorkspace(el, "whatif");
     });
     document.getElementById("tab-experiments").addEventListener("click", () => {
       activeTab = "experiments";
@@ -40,6 +45,8 @@
     const bodyEl = document.getElementById("scenario-lab-body");
     if (activeTab === "scenarios") {
       await renderScenariosTab(bodyEl);
+    } else if (activeTab === "whatif") {
+      await renderWhatIfTab(bodyEl);
     } else if (activeTab === "experiments") {
       await renderExperimentsTab(bodyEl);
     } else if (activeTab === "packing") {
@@ -1121,6 +1128,188 @@
         panel.innerHTML = `<div class="login-error">${esc(err.message)}</div>`;
       }
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // TAB: WHAT-IF SIMULATION & IMPACT ANALYSIS
+  // ---------------------------------------------------------------------------
+  async function renderWhatIfTab(el) {
+    el.innerHTML = `
+      <div class="grid-2" style="gap:20px;align-items:start;">
+        <div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">⚡ What-If Scenario Configuration</div>
+              <div class="panel-desc">Simulate hypothetical warehouse conditions safely in-memory without mutating production data.</div>
+            </div>
+            <form id="whatif-form" style="display:flex;flex-direction:column;gap:12px;">
+              <div class="field">
+                <label>Scenario Type *</label>
+                <select id="whatif-scenario-type">
+                  <option value="ROBOT_UNAVAILABLE" selected>🤖 Robot Unavailability ("What if N robots fail?")</option>
+                  <option value="DEMAND_INCREASE">📈 Order Demand Surge ("What if demand increases by X%?")</option>
+                  <option value="AISLE_BLOCKAGE">🚧 Aisle / Route Blockage ("What if an aisle is blocked?")</option>
+                  <option value="REPLENISHMENT_DELAY">🚚 Replenishment Delay ("What if supplier is delayed?")</option>
+                  <option value="TASK_LOAD_INCREASE">📋 Increased Task Load ("What if task volume spikes?")</option>
+                </select>
+              </div>
+
+              <!-- Scenario Parameter Inputs -->
+              <div id="whatif-params-container" class="panel" style="padding:12px;margin:0;background:var(--bg-subtle);">
+                <!-- Dynamic Controls inserted by JS -->
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block">🚀 Run What-If Impact Simulation</button>
+            </form>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel" id="whatif-results-panel">
+            <div class="panel-header">
+              <div class="panel-title">📊 Scenario Impact & Baseline Comparison</div>
+            </div>
+            <div class="empty-state">Select a scenario type and run simulation to view impact analysis results.</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const typeSelect = document.getElementById("whatif-scenario-type");
+    const paramsContainer = document.getElementById("whatif-params-container");
+
+    const updateParamsForm = () => {
+      const type = typeSelect.value;
+      if (type === "ROBOT_UNAVAILABLE") {
+        paramsContainer.innerHTML = `
+          <div class="field">
+            <label>Unavailable Robot Count (0 to 10)</label>
+            <input type="number" id="param-disabled-robots" value="2" min="0" max="10" required />
+          </div>
+        `;
+      } else if (type === "DEMAND_INCREASE") {
+        paramsContainer.innerHTML = `
+          <div class="field">
+            <label>Demand Surge Percentage (%)</label>
+            <input type="number" id="param-demand-surge" value="20" min="0" max="100" required />
+          </div>
+        `;
+      } else if (type === "AISLE_BLOCKAGE") {
+        paramsContainer.innerHTML = `
+          <div class="field">
+            <label>Blocked Zone Identifier</label>
+            <input type="text" id="param-blocked-zone" value="Zone A" required />
+          </div>
+          <div class="field" style="margin-top:8px;">
+            <label>Blocked Locations Count</label>
+            <input type="number" id="param-blocked-count" value="3" min="1" max="20" required />
+          </div>
+        `;
+      } else if (type === "REPLENISHMENT_DELAY") {
+        paramsContainer.innerHTML = `
+          <div class="field">
+            <label>Supplier Lead Time Delay (Days)</label>
+            <input type="number" id="param-delay-days" value="5" min="0" max="30" required />
+          </div>
+        `;
+      } else if (type === "TASK_LOAD_INCREASE") {
+        paramsContainer.innerHTML = `
+          <div class="field">
+            <label>Task Load Multiplier (1.0x to 2.0x)</label>
+            <input type="number" id="param-task-multiplier" value="1.25" step="0.05" min="1.0" max="2.0" required />
+          </div>
+        `;
+      }
+    };
+
+    typeSelect.addEventListener("change", updateParamsForm);
+    updateParamsForm();
+
+    document.getElementById("whatif-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const resultsPanel = document.getElementById("whatif-results-panel");
+      resultsPanel.innerHTML = '<div class="empty-state">Running scenario impact analysis...</div>';
+
+      const type = typeSelect.value;
+      const params = { warehouse_id: window.currentWarehouse || "WH-BLR-01" };
+
+      if (type === "ROBOT_UNAVAILABLE") {
+        params.disabled_robots_count = parseInt(document.getElementById("param-disabled-robots").value || 2);
+      } else if (type === "DEMAND_INCREASE") {
+        params.demand_surge_percent = parseFloat(document.getElementById("param-demand-surge").value || 20);
+      } else if (type === "AISLE_BLOCKAGE") {
+        params.blocked_zone = document.getElementById("param-blocked-zone").value || "Zone A";
+        params.blocked_locations_count = parseInt(document.getElementById("param-blocked-count").value || 3);
+      } else if (type === "REPLENISHMENT_DELAY") {
+        params.lead_time_delay_days = parseFloat(document.getElementById("param-delay-days").value || 5);
+      } else if (type === "TASK_LOAD_INCREASE") {
+        params.task_load_multiplier = parseFloat(document.getElementById("param-task-multiplier").value || 1.25);
+      }
+
+      try {
+        const res = await Api.runWhatIfScenario({
+          scenario_type: type,
+          warehouse_id: params.warehouse_id,
+          parameters: params
+        });
+
+        const badgeClass = res.impact_severity === 'CRITICAL' ? 'badge-danger' :
+                           (res.impact_severity === 'HIGH' ? 'badge-danger' :
+                           (res.impact_severity === 'MEDIUM' ? 'badge-warning' : 'badge-success'));
+
+        resultsPanel.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+              <strong style="font-size:16px;">${res.scenario} Impact Analysis</strong>
+              <div style="font-size:11px;color:var(--text-faint);">Warehouse: ${res.warehouse_id} | Mode: ${res.data_mode}</div>
+            </div>
+            <span class="badge ${badgeClass}" style="font-size:13px;padding:4px 10px;">${res.impact_severity} IMPACT</span>
+          </div>
+
+          <div class="panel" style="margin-bottom:16px;background:var(--bg-subtle);">
+            <strong>💡 Explanation:</strong>
+            <p style="font-size:12.5px;margin:6px 0 0 0;color:var(--text-muted);">${esc(res.explanation)}</p>
+          </div>
+
+          <div class="table-scroll" style="margin-bottom:16px;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Metric Name</th>
+                  <th>Baseline</th>
+                  <th>Simulated Scenario</th>
+                  <th>Delta Difference</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.keys(res.baseline).map(m => {
+                  const b = res.baseline[m];
+                  const s = res.scenario_result[m];
+                  const d = res.deltas[m];
+                  const deltaColor = d > 0 ? 'var(--danger)' : (d < 0 ? 'var(--success)' : 'var(--text-faint)');
+                  const deltaSign = d > 0 ? `+${d}` : `${d}`;
+                  return `
+                    <tr>
+                      <td><strong>${m.replace(/_/g, ' ')}</strong></td>
+                      <td>${b}</td>
+                      <td class="mono" style="font-weight:700;">${s}</td>
+                      <td class="mono" style="color:${deltaColor};font-weight:700;">${deltaSign}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel" style="border-left:4px solid var(--primary);margin:0;">
+            <strong>🎯 Advisory Decision-Support Recommendation:</strong>
+            <p style="font-size:12.5px;margin:6px 0 0 0;color:var(--text-muted);">${esc(res.recommendation)}</p>
+          </div>
+        `;
+      } catch (err) {
+        resultsPanel.innerHTML = `<div class="login-error">What-If Simulation Failed: ${esc(err.message)}</div>`;
+      }
+    });
   }
 
   // Export globally

@@ -316,8 +316,8 @@ def _send_security_email(subject: str, html_body: str, recipient: str) -> bool:
         celery_enabled = os.getenv("CELERY_ENABLED", "false").lower() == "true"
         if celery_enabled:
             try:
-                from backend.celery_app import send_generic_email_task
-                send_generic_email_task.delay(subject, html_body, recipient)
+                from backend.celery_app import send_generic_email_task, safe_task_dispatch
+                safe_task_dispatch(send_generic_email_task, subject, html_body, recipient)
                 logger.info("Security email queued in Celery successfully.")
                 return True
             except Exception as celery_err:

@@ -142,11 +142,21 @@ class SimulationEngine:
                 for h in range(o.height):
                     self.obstacles.add((o.x + w, o.y + h))
 
-        # 4. Load/Configure Robots
+        # 4. Load/Configure Robots & Settings Fallbacks
+        from backend.settings import get_settings
+        db_settings = get_settings(self.db)
+
         robot_params = self.config.get("robots", {})
-        robot_count = robot_params.get("robot_count", 3)
-        initial_battery = robot_params.get("initial_battery_pct", 100.0)
-        robot_speed = robot_params.get("robot_speed", 1.0)
+        robot_count = robot_params.get("robot_count", db_settings.get("default_robot_count", 3))
+        initial_battery = float(robot_params.get("initial_battery_pct", db_settings.get("battery_capacity", 100.0)))
+        robot_speed = float(robot_params.get("robot_speed") if robot_params.get("robot_speed") is not None else db_settings.get("robot_speed", 1.2))
+        low_battery_thresh = float(robot_params.get("low_battery_thresh") if robot_params.get("low_battery_thresh") is not None else db_settings.get("low_battery_thresh", 20.0))
+        pathfinding_alg = self.config.get("pathfinding_alg", db_settings.get("pathfinding_alg", "A_STAR"))
+
+        # Save active simulation settings on engine instance
+        self.effective_robot_speed = robot_speed
+        self.effective_low_battery_thresh = low_battery_thresh
+        self.effective_pathfinding_alg = pathfinding_alg
 
         # Fetch real robots from db as template to maintain matching counts or codes if preferred
         real_robots = self.db.query(Robot).filter(Robot.warehouse_id == self.warehouse_id, Robot.enabled == True).all()

@@ -57,6 +57,8 @@ alembic/versions/__pycache__/
 data/exports/
 data/raw/
 data/processed/
+data/backups/
+code_only.zip
 *.csv.tmp
 *.xlsx.tmp
 

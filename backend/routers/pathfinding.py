@@ -29,7 +29,17 @@ class PathfindingPlanRequest(BaseModel):
     robot_id: Optional[int] = None
     algorithm: Optional[str] = "A_STAR" # A_STAR | DIJKSTRA | COMPARE
 
+class TaskRouteRequest(BaseModel):
+    task_id: int
+    robot_code: Optional[str] = None
+    algorithm: Optional[str] = "A_STAR" # A_STAR | DIJKSTRA | COMPARE
+
+class RerouteRequest(BaseModel):
+    robot_code: str
+    algorithm: Optional[str] = "A_STAR"
+
 class ObstacleCreateRequest(BaseModel):
+
     warehouse_id: str
     obstacle_type: str = "TEMPORARY_BLOCK" # RACK | WALL | EQUIPMENT | TEMPORARY_BLOCK | RESTRICTED_ZONE
     x: int
@@ -59,12 +69,16 @@ def initialize_warehouse_grid_if_empty(db: Session, warehouse_id: str):
             # Map the exact layout of coordinates matching UI
             if row == 5 and col in (1, 2):
                 cell_type = "RECEIVING"
+            elif row == 5 and col in (3, 4):
+                cell_type = "PACKING"
             elif row == 5 and col in (11, 12):
                 cell_type = "CHARGING"
             elif (row in (1, 3)) and col >= 2 and col <= 11:
                 cell_type = "RACK"
                 traversable = False
                 cost = 999.0 # Racks are non-traversable
+            else:
+                cell_type = "AISLE"
             
             cells.append(WarehouseGridCell(
                 warehouse_id=warehouse_id,
@@ -167,6 +181,17 @@ def run_a_star_verbose(start, goal, grid_map, obstacles=None, allow_diagonal=Fal
             if obstacles and neighbor in obstacles:
                 continue
 
+            # Prevent diagonal corner-cutting through wall/rack cells or obstacles
+            dx = neighbor[0] - x
+            dy = neighbor[1] - y
+            if dx != 0 and dy != 0:
+                side1 = (x + dx, y)
+                side2 = (x, y + dy)
+                if side1 not in grid_map or not grid_map[side1]["traversable"] or (obstacles and side1 in obstacles):
+                    continue
+                if side2 not in grid_map or not grid_map[side2]["traversable"] or (obstacles and side2 in obstacles):
+                    continue
+
             step_cost = grid_map[neighbor]["cost"] * move_weight
             tentative_g = g_score[current] + step_cost
             edge_relaxations += 1
@@ -266,6 +291,17 @@ def run_dijkstra_verbose(start, goal, grid_map, obstacles=None, allow_diagonal=F
             if obstacles and neighbor in obstacles:
                 continue
 
+            # Prevent diagonal corner-cutting through wall/rack cells or obstacles
+            dx = neighbor[0] - x
+            dy = neighbor[1] - y
+            if dx != 0 and dy != 0:
+                side1 = (x + dx, y)
+                side2 = (x, y + dy)
+                if side1 not in grid_map or not grid_map[side1]["traversable"] or (obstacles and side1 in obstacles):
+                    continue
+                if side2 not in grid_map or not grid_map[side2]["traversable"] or (obstacles and side2 in obstacles):
+                    continue
+
             step_cost = grid_map[neighbor]["cost"] * move_weight
             tentative_g = g_score[current] + step_cost
             edge_relaxations += 1
@@ -317,6 +353,13 @@ def validate_path(path, grid_map, obstacles=None, allow_diagonal=False):
             if allow_diagonal:
                 if dx > 1 or dy > 1 or (dx == 0 and dy == 0):
                     return False, f"Non-consecutive path jump from {prev} to {cell}."
+                if dx == 1 and dy == 1:
+                    side1 = (prev[0] + (cell[0] - prev[0]), prev[1])
+                    side2 = (prev[0], prev[1] + (cell[1] - prev[1]))
+                    if side1 not in grid_map or not grid_map[side1]["traversable"] or (obstacles and side1 in obstacles):
+                        return False, f"Path cuts through non-traversable corner cell at {side1}."
+                    if side2 not in grid_map or not grid_map[side2]["traversable"] or (obstacles and side2 in obstacles):
+                        return False, f"Path cuts through non-traversable corner cell at {side2}."
             else:
                 if (dx + dy) != 1:
                     return False, f"Non-consecutive path jump from {prev} to {cell}."
@@ -452,6 +495,50 @@ def plan_path(
         "explored_nodes": [{"x": p[0], "y": p[1]} for p in explored_list],
         "edge_relaxations": edge_rel
     }
+
+@router.post("/task-route", summary="Generate operational route for a task (Robot -> Pickup -> Destination)")
+def plan_task_route_endpoint(
+    payload: TaskRouteRequest,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    from backend.services.operational_pathfinding import get_operational_task_route
+    return get_operational_task_route(
+        db=db,
+        task_id=payload.task_id,
+        robot_identifier=payload.robot_code,
+        algorithm=payload.algorithm or "A_STAR"
+    )
+
+@router.get("/task-route/{task_id}", summary="Get operational route for a task by task_id")
+def get_task_route_by_id(
+    task_id: int,
+    robot_code: Optional[str] = None,
+    algorithm: Optional[str] = "A_STAR",
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    from backend.services.operational_pathfinding import get_operational_task_route
+    return get_operational_task_route(
+        db=db,
+        task_id=task_id,
+        robot_identifier=robot_code,
+        algorithm=algorithm or "A_STAR"
+    )
+
+@router.post("/reroute", summary="Validate active robot route against obstacles and recalculate if blocked")
+def reroute_robot_endpoint(
+    payload: RerouteRequest,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    from backend.services.operational_pathfinding import validate_and_reroute_robot_path
+    return validate_and_reroute_robot_path(
+        db=db,
+        robot_code=payload.robot_code,
+        algorithm=payload.algorithm or "A_STAR"
+    )
+
 
 @router.get("/warehouse/{warehouse_id}/grid", summary="Retrieve grid matrix layout and active obstacles")
 def get_warehouse_grid(
@@ -648,8 +735,13 @@ def update_grid_cell(
         raise HTTPException(404, "Grid cell not found")
 
     cell.cell_type = payload.cell_type
-    cell.traversable = payload.traversable
-    cell.cost = payload.cost
+    # Enforce untraversable rules for RACK and WALL
+    if payload.cell_type in ("RACK", "WALL"):
+        cell.traversable = False
+        cell.cost = 999.0
+    else:
+        cell.traversable = payload.traversable
+        cell.cost = payload.cost
     db.commit()
 
     # Log audit entry

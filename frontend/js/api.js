@@ -62,6 +62,7 @@ const Api = {
 
   // ---- Phase 9: User Management ----
   listUsers() { return this.get("/users"); },
+  listOperators() { return this.get("/users/operators"); },
   getUser(id) { return this.get(`/users/${id}`); },
   updateUserRole(id, role, reason = "", confirmPassword = "") { return this.request("PUT", `/users/${id}/role`, { role, reason, confirm_password: confirmPassword }); },
   activateUser(id) { return this.request("PUT", `/users/${id}/activate`, {}); },
@@ -108,7 +109,10 @@ const Api = {
   patchWarehouseLocation(id, lat, lng) { return this.patch(`/warehouses/${encodeURIComponent(id)}/location`, { latitude: lat, longitude: lng }); },
   warehouseWeather(id) { return this.get(`/warehouses/${encodeURIComponent(id)}/weather`); },
   items() { return this.get("/items"); },
+  getItem(id) { return this.get(`/items/${encodeURIComponent(id)}`); },
   createItem(payload) { return this.post("/items", payload); },
+  updateItem(id, payload) { return this.patch(`/items/${encodeURIComponent(id)}`, payload); },
+  deleteItem(id) { return this.delete(`/items/${encodeURIComponent(id)}`); },
   recordStock(payload) { return this.post("/stock-movements", payload); },
   stockHistory(wh) { return this.get(`/stock-movements/${wh}`); },
 
@@ -120,6 +124,19 @@ const Api = {
   aiDecisionHistory(limit = 50) { return this.get(`/ai/decision-history?limit=${limit}`); },
   digitalTwin(wh) { return this.get(`/apps/digital-twin/${wh}`); },
   simulateScenario(payload) { return this.post("/ai/simulate-scenario", payload); },
+  runWhatIfScenario(payload) { return this.post("/decision-support/what-if", payload); },
+  getDecisions(wh, category) {
+    let q = [];
+    if (wh) q.push(`warehouse_id=${encodeURIComponent(wh)}`);
+    if (category) q.push(`category=${encodeURIComponent(category)}`);
+    return this.get(`/decision-support/decisions` + (q.length ? '?' + q.join('&') : ''));
+  },
+  getTopActions(wh, limit = 5) {
+    return this.get(`/decision-support/top-actions?limit=${limit}` + (wh ? `&warehouse_id=${encodeURIComponent(wh)}` : ''));
+  },
+  acknowledgeDecision(id) { return this.post(`/decision-support/decisions/${encodeURIComponent(id)}/acknowledge`, {}); },
+  dismissDecision(id) { return this.post(`/decision-support/decisions/${encodeURIComponent(id)}/dismiss`, {}); },
+  resolveDecision(id) { return this.post(`/decision-support/decisions/${encodeURIComponent(id)}/resolve`, {}); },
   health() { return this.get("/health"); },
   healthDB() { return this.get("/health/db"); },
   healthML() { return this.get("/health/ml"); },
@@ -141,6 +158,11 @@ const Api = {
     return params.length ? '?' + params.join('&') : '';
   },
   analyticsOverview(wh, period, start, end) { return this.get(`/analytics/overview` + this.buildQueryParams(wh, period, start, end)); },
+  getExplainableAnalytics(wh, period, start, end) { return this.get(`/analytics/explainable-overview` + this.buildQueryParams(wh, period, start, end)); },
+  getAnalyticsTrends(wh, period) { return this.get(`/analytics/trends` + this.buildQueryParams(wh, period)); },
+  getAnalyticsBottlenecks(wh) { return this.get(`/analytics/bottlenecks` + (wh ? `?warehouse_id=${encodeURIComponent(wh)}` : '')); },
+  getPathfindingComparison(wh, period) { return this.get(`/analytics/pathfinding-comparison` + this.buildQueryParams(wh, period)); },
+  explainDecisionMetrics(decisionId) { return this.get(`/analytics/decision-explanation/${encodeURIComponent(decisionId)}`); },
   analyticsOrders(wh, period, start, end, format) { return this.get(`/analytics/orders` + this.buildQueryParams(wh, period, start, end, format)); },
   analyticsInventory(wh, period, start, end, format) { return this.get(`/analytics/inventory` + this.buildQueryParams(wh, period, start, end, format)); },
   analyticsTasks(wh, period, start, end, format) { return this.get(`/analytics/tasks` + this.buildQueryParams(wh, period, start, end, format)); },
@@ -169,17 +191,21 @@ const Api = {
     if (offset) q.push(`offset=${offset}`);
     return this.get(`/analytics/forecasting/results` + (q.length ? '?' + q.join('&') : ''));
   },
-  runABC(source, thresholdA, thresholdB) {
+  runABC(source, thresholdA, thresholdB, warehouseId = null) {
     let q = [];
     if (source) q.push(`source=${source}`);
     if (thresholdA) q.push(`threshold_a=${thresholdA}`);
     if (thresholdB) q.push(`threshold_b=${thresholdB}`);
+    const wh = warehouseId || (typeof currentWarehouse !== 'undefined' ? currentWarehouse : null);
+    if (wh) q.push(`warehouse_id=${encodeURIComponent(wh)}`);
     return this.post(`/analytics/abc/run` + (q.length ? '?' + q.join('&') : ''));
   },
-  getABC(source, abcClass, limit, offset) {
+  getABC(source, abcClass, limit, offset, warehouseId = null) {
     let q = [];
     if (source) q.push(`source=${source}`);
     if (abcClass) q.push(`abc_class=${abcClass}`);
+    const wh = warehouseId || (typeof currentWarehouse !== 'undefined' ? currentWarehouse : null);
+    if (wh) q.push(`warehouse_id=${encodeURIComponent(wh)}`);
     if (limit) q.push(`limit=${limit}`);
     if (offset) q.push(`offset=${offset}`);
     return this.get(`/analytics/abc` + (q.length ? '?' + q.join('&') : ''));
@@ -229,6 +255,7 @@ const Api = {
   taskDetail(id) { return this.get(`/tasks/${id}`); },
   taskHistory(id) { return this.get(`/tasks/${id}/history`); },
   prioritizeTask(id) { return this.post(`/tasks/${id}/prioritize`); },
+  claimTask(id) { return this.post(`/tasks/${id}/claim`); },
   assignTask(id, userId, notes) { return this.post(`/tasks/${id}/assign`, { assigned_user_id: userId, notes }); },
   reassignTask(id, userId, reason, notes) { return this.post(`/tasks/${id}/reassign`, { assigned_user_id: userId, reason, notes }); },
   startTask(id) { return this.post(`/tasks/${id}/start`); },
@@ -252,7 +279,23 @@ const Api = {
   simulateFailure(id) { return this.post(`/robots/${id}/simulate-failure`); },
   recoverRobot(id) { return this.post(`/robots/${id}/recover`); },
   chargeRobot(id) { return this.post(`/robots/${id}/charge`); },
+  recommendRobotForTask(taskId) { return this.post(`/tasks/${taskId}/recommend-robot`, {}); },
+  assignRobotToTask(taskId, robotCode, method = "INTELLIGENT") { return this.post(`/tasks/${taskId}/assign-robot`, { robot_code: robotCode, assignment_method: method }); },
+  updateTask(id, data) { return this.patch(`/tasks/${id}`, data); },
+  removeRobot(id) { return this.delete(`/robots/${id}`); },
+  orders(wh = "", status = "", page = 1, pageSize = 50) {
+    let q = `?page=${page}&page_size=${pageSize}`;
+    if (wh) q += `&warehouse_id=${encodeURIComponent(wh)}`;
+    if (status) q += `&status=${encodeURIComponent(status)}`;
+    return this.get(`/wms/orders${q}`);
+  },
+  createOrder(payload) { return this.post("/wms/orders", payload); },
+  getOrderDetail(id) { return this.get(`/wms/orders/${id}`); },
+  updateOrder(id, data) { return this.patch(`/wms/orders/${id}`, data); },
+  cancelOrder(id) { return this.post(`/wms/orders/${id}/cancel`); },
+  retryTask(id) { return this.post(`/tasks/${id}/retry`); },
   autoAssignRobot(wh) { return this.post(`/robots/auto-assign?warehouse_id=${encodeURIComponent(wh)}`); },
+
   simulationStart() { return this.post("/robots/simulation/start"); },
   simulationPause() { return this.post("/robots/simulation/pause"); },
   simulationResume() { return this.post("/robots/simulation/resume"); },
@@ -263,7 +306,33 @@ const Api = {
   planPath(wh, sx, sy, gx, gy, robotId = null, algorithm = "A_STAR") {
     return this.post("/pathfinding/plan", { warehouse_id: wh, start_x: sx, start_y: sy, goal_x: gx, goal_y: gy, robot_id: robotId, algorithm: algorithm });
   },
+  planTaskRoute(taskId, robotCode = null, algorithm = "A_STAR") {
+    return this.post("/pathfinding/task-route", { task_id: taskId, robot_code: robotCode, algorithm: algorithm });
+  },
+  rerouteRobotPath(robotCode, algorithm = "A_STAR") {
+    return this.post("/pathfinding/reroute", { robot_code: robotCode, algorithm: algorithm });
+  },
+  runReplenishmentEngine(wh = null) {
+    const q = wh ? `?warehouse_id=${encodeURIComponent(wh)}` : "";
+    return this.post(`/analytics/replenishment/run${q}`);
+  },
+  getReplenishmentRecommendations(wh = null, urgency = null, abc = null) {
+    let q = [];
+    if (wh) q.push(`warehouse_id=${encodeURIComponent(wh)}`);
+    if (urgency) q.push(`urgency=${encodeURIComponent(urgency)}`);
+    if (abc) q.push(`abc_class=${encodeURIComponent(abc)}`);
+    const qStr = q.length ? `?${q.join("&")}` : "";
+    return this.get(`/analytics/replenishment${qStr}`);
+  },
+  approveReplenishment(id) {
+    return this.post(`/analytics/replenishment/${id}/approve`);
+  },
+  rejectReplenishment(id, reason = null) {
+    return this.post(`/analytics/replenishment/${id}/reject`, { reason });
+  },
   updateGridCell(wh, x, y, cell_type, traversable, cost) {
+
+
     return this.put(`/pathfinding/warehouse/${encodeURIComponent(wh)}/grid/cell`, { x, y, cell_type, traversable, cost });
   },
   getGrid(wh) {

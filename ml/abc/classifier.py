@@ -101,21 +101,15 @@ class ABCClassifier:
             total_value=("line_value", "sum"),
         ).reset_index().rename(columns={item_col: "item_id"})
 
-        # Remove zero-value items (they cannot be meaningfully classified)
-        agg = agg[agg["total_value"] > 0].copy()
-
-        if agg.empty:
-            logger.warning("All items have zero value — no ABC classifications produced.")
-            self._result_df = agg
-            self._fitted = True
-            return self
-
         # Sort descending by value
         agg = agg.sort_values("total_value", ascending=False).reset_index(drop=True)
 
         total_value = agg["total_value"].sum()
-        agg["pct_contribution"] = (agg["total_value"] / total_value * 100.0).round(4)
-        agg["cumulative_pct"] = agg["pct_contribution"].cumsum().round(4)
+        if total_value > 0:
+            agg["pct_contribution"] = (agg["total_value"] / total_value * 100.0).round(4)
+        else:
+            agg["pct_contribution"] = 0.0
+        agg["cumulative_pct"] = agg["pct_contribution"].cumsum().clip(upper=100.0).round(4)
 
         # Assign classes using configurable thresholds
         def _assign_class(cum_pct: float) -> str:

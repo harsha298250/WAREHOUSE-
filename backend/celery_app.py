@@ -26,7 +26,36 @@ celery = Celery(
 )
 
 
-from backend.timeout_policy import REDIS_CONNECT_TIMEOUT, REDIS_SOCKET_TIMEOUT
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
+
+_dispatch_executor = ThreadPoolExecutor(max_workers=8, thread_name_prefix="celery_safe_dispatch")
+
+def safe_task_dispatch(task_func, *args, timeout: float = 2.5, **kwargs):
+    """
+    Centralized safe Celery task-dispatch helper with a hard wall-clock timeout backstop.
+    Prevents application code/threads from blocking indefinitely when Celery/Redis/RabbitMQ is unavailable.
+
+    Returns:
+        The AsyncResult object if dispatch succeeds within timeout.
+    Raises:
+        kombu.exceptions.OperationalError if broker connection fails or times out.
+    """
+    func_name = getattr(task_func, "__name__", str(task_func))
+
+    def _dispatch():
+        return task_func.delay(*args, **kwargs)
+
+    future = _dispatch_executor.submit(_dispatch)
+    try:
+        return future.result(timeout=timeout)
+    except FutureTimeoutError:
+        logger.warning("Celery task dispatch for '%s' timed out after %s seconds.", func_name, timeout)
+        import kombu.exceptions
+        raise kombu.exceptions.OperationalError(f"Task dispatch for '{func_name}' timed out after {timeout}s")
+    except Exception as e:
+        logger.warning("Celery task dispatch for '%s' failed: %s", func_name, e)
+        raise
+
 
 # Standard configurations
 celery.conf.update(
@@ -38,16 +67,36 @@ celery.conf.update(
     task_track_started=True,
     task_time_limit=300, # 5 minutes max per task
     task_soft_time_limit=240,
-    broker_connection_timeout=5.0,  # fail fast on broker connection (seconds)
+    broker_connection_timeout=2.0,  # fail fast on broker connection (seconds)
     broker_connection_max_retries=1, # do not retry connection indefinitely
+    broker_connection_retry=False,
+    broker_connection_retry_on_startup=False,
+    task_publish_retry=False,  # fail fast without Kombu internal publish retry loops
+    task_publish_retry_policy={
+        "max_retries": 1,
+        "interval_start": 0,
+        "interval_step": 0,
+        "interval_max": 0
+    },
     broker_transport_options={
         'max_retries': 1,
         'interval_start': 0.1,
-        'interval_step': 0.2,
-        'interval_max': 0.5,
+        'interval_step': 0.1,
+        'interval_max': 0.2,
+        'socket_timeout': 1.0,
+        'socket_connect_timeout': 1.0,
     },
     redis_socket_timeout=1.0,
     redis_socket_connect_timeout=1.0,
+    redis_retry_on_timeout=False,
+    backend_transport_options={
+        "socket_timeout": 1.0,
+        "socket_connect_timeout": 1.0,
+        "retry_on_timeout": False,
+        "retry_policy": {
+            "max_retries": 1
+        }
+    },
     result_backend_transport_options={
         "socket_timeout": 1.0,
         "socket_connect_timeout": 1.0,

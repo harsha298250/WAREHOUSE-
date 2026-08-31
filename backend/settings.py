@@ -1,6 +1,7 @@
 """
 backend/settings.py — Settings retrieval, persistence and fallback defaults.
 """
+from typing import Any
 from sqlalchemy.orm import Session
 from backend.models import AppSetting
 from datetime import datetime, UTC
@@ -203,10 +204,25 @@ def get_settings(db: Session) -> dict:
     """Retrieve full app settings merged with defaults.
     Always returns every key in DEFAULT_SETTINGS; DB overrides defaults.
     """
-    row = db.query(AppSetting).filter(AppSetting.key == "wms_platform_settings").first()
-    if row and isinstance(row.value, dict):
-        return {**DEFAULT_SETTINGS, **row.value}
+    if not db:
+        return dict(DEFAULT_SETTINGS)
+    try:
+        row = db.query(AppSetting).filter(AppSetting.key == "wms_platform_settings").first()
+        if row and isinstance(row.value, dict):
+            return {**DEFAULT_SETTINGS, **row.value}
+    except Exception as e:
+        pass
     return dict(DEFAULT_SETTINGS)
+
+
+def get_setting_value(db: Session, key: str, default: Any = None) -> Any:
+    """Helper to retrieve a specific setting value by key with DB override and fallback."""
+    settings = get_settings(db)
+    if key in settings and settings[key] is not None:
+        return settings[key]
+    if default is not None:
+        return default
+    return DEFAULT_SETTINGS.get(key)
 
 
 def save_settings(db: Session, settings_dict: dict) -> dict:
@@ -230,3 +246,4 @@ def reset_to_defaults(db: Session) -> dict:
         db.delete(row)
         db.commit()
     return dict(DEFAULT_SETTINGS)
+

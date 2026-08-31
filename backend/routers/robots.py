@@ -68,11 +68,23 @@ class RobotUpdateSchema(BaseModel):
     max_payload: Optional[float] = None
     max_speed: Optional[float] = None
     metadata: Optional[str] = None
+    current_x: Optional[float] = None
+    current_y: Optional[float] = None
+    current_location_id: Optional[str] = None
 
 class RobotManualAssignSchema(BaseModel):
     task_id: int
 
+class IntelligentRecommendRequest(BaseModel):
+    task_id: int
+
+class IntelligentAssignRequest(BaseModel):
+    task_id: int
+    robot_code: str
+    assignment_method: Optional[str] = "INTELLIGENT"
+
 class RobotTelemetrySchema(BaseModel):
+
     event_type: str
     x: float
     y: float
@@ -85,7 +97,7 @@ class RobotTelemetrySchema(BaseModel):
 # Robot State Transition Rules
 # ---------------------------------------------------------------------------
 ALLOWED_ROBOT_TRANSITIONS = {
-    "IDLE": ["AVAILABLE", "OFFLINE"],
+    "IDLE": ["AVAILABLE", "ASSIGNED", "OFFLINE"],
     "AVAILABLE": ["ASSIGNED", "CHARGING", "OFFLINE", "IDLE"],
     "ASSIGNED": ["MOVING", "PAUSED", "OFFLINE", "AVAILABLE", "FAILED", "WAITING"],
     "MOVING": ["PICKING", "PAUSED", "FAILED", "OFFLINE", "RETURNING", "AVAILABLE", "CHARGING", "WAITING", "DROPPING"],
@@ -140,6 +152,11 @@ def calculate_manhattan_distance(x1: float, y1: float, x2: float, y2: float) -> 
 WAIT_TICKS = {}
 
 def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGESTION_AWARE"):
+    from backend.settings import get_settings
+    app_settings = get_settings(db)
+    effective_robot_speed = float(app_settings.get("robot_speed", 1.2))
+    effective_low_battery_thresh = float(app_settings.get("low_battery_thresh", 20.0))
+
     robots_before = {r.id: {
         "status": r.status, "x": r.current_x, "y": r.current_y, "battery": r.battery_level, "warehouse_id": r.warehouse_id
     } for r in db.query(Robot).all()}
@@ -626,6 +643,31 @@ def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGEST
                 ))
                 continue
 
+            # If status is DROPPING, complete task and release robot back to AVAILABLE
+            if r.status == "DROPPING" and task:
+                try:
+                    complete_task(task.id, payload=TaskCompleteSchema(completed_quantity=task.requested_quantity), db=db, user=SystemUser())
+                except Exception as comp_err:
+                    logger.warning("Auto task completion failed for task %s: %s", task.id, comp_err)
+                    task.status = "COMPLETED"
+                    task.completed_quantity = task.requested_quantity
+
+                r.assigned_task_id = None
+                r.target_location_id = None
+                transition_robot_status(db, r, "AVAILABLE", notes=f"Task {task.task_number} completed. Robot returned to AVAILABLE.")
+                db.flush()
+                
+                db.add(RobotTelemetryEvent(
+                    robot_id=r.id,
+                    event_type="STATUS_CHANGED",
+                    x=r.current_x,
+                    y=r.current_y,
+                    battery=r.battery_level,
+                    status="AVAILABLE",
+                    task_id=None
+                ))
+                continue
+
             if not route:
                 continue
 
@@ -679,8 +721,15 @@ def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGEST
                 next_pos = path_list[1]
                 r.current_x = float(next_pos[0])
                 r.current_y = float(next_pos[1])
-                r.total_distance += 1.0
+                r.total_distance += effective_robot_speed
                 r.battery_level = max(0.0, r.battery_level - 0.5) # 0.5% per step
+                if r.battery_level <= effective_low_battery_thresh and r.status != "CHARGING":
+                    notifications.send_change_alert("ROBOT_LOW_BATTERY", {
+                        "robot_code": r.robot_code,
+                        "warehouse": r.warehouse_id,
+                        "battery_level": r.battery_level,
+                        "low_battery_thresh": effective_low_battery_thresh
+                    })
                 db.add(RobotTelemetryEvent(
                     robot_id=r.id,
                     event_type="POSITION_UPDATED",
@@ -926,15 +975,87 @@ def update_robot(
     r = db.query(Robot).filter(Robot.id == robot_id).with_for_update().first()
     if not r:
         raise HTTPException(404, "Robot not found")
+
+    old_x, old_y = r.current_x, r.current_y
+    old_status = r.status
     
     for k, v in payload.model_dump(exclude_unset=True).items():
         if k == "status" and v is not None:
             transition_robot_status(db, r, v, user.id, "Manually updated via status patch API")
         elif v is not None:
             setattr(r, k, v)
+
+    # Invalidate active route if position or status changed during task execution
+    pos_changed = (payload.current_x is not None and payload.current_x != old_x) or \
+                  (payload.current_y is not None and payload.current_y != old_y)
+    if (pos_changed or (payload.status is not None and payload.status != old_status)) and r.assigned_task_id:
+        active_route = db.query(RobotRoute).filter(
+            RobotRoute.robot_id == r.id,
+            RobotRoute.status == "ACTIVE"
+        ).first()
+        if active_route:
+            active_route.status = "INVALIDATED"
+            active_route.completed_at = datetime.now(UTC).replace(tzinfo=None)
+
+    # Live sync broadcast for Digital Twin
+    try:
+        from backend.sync_broadcast import broadcaster
+        broadcaster.broadcast_live(r.warehouse_id, {
+            "event_type": "ROBOT_UPDATED",
+            "entity_type": "robot",
+            "entity_id": r.robot_code,
+            "data": {
+                "x": r.current_x,
+                "y": r.current_y,
+                "status": r.status,
+                "battery_level": r.battery_level,
+                "enabled": r.enabled
+            }
+        })
+    except Exception as e:
+        logger.warning("Failed live broadcast for robot update: %s", e)
             
     db.commit()
     return {"status": "updated", "robot_id": r.id}
+
+@router.delete("/{robot_id}", summary="Safely remove or deactivate a robot")
+def remove_robot(
+    robot_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    if user.role not in ("admin", "manager"):
+        raise HTTPException(403, "Insufficient permissions to remove robots")
+    r = db.query(Robot).filter(Robot.id == robot_id).with_for_update().first()
+    if not r:
+        raise HTTPException(404, "Robot not found")
+
+    # Safe Removal Check: prevent deletion/deactivation if robot has an active task
+    if r.assigned_task_id or r.status in ("ASSIGNED", "MOVING", "PICKING", "RETURNING", "PAUSED", "WAITING"):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Robot {r.robot_code} cannot be removed because it currently has an active task."
+        )
+
+    # Soft deactivation preserves historical audit ledger and telemetry logs
+    r.enabled = False
+    r.status = "OFFLINE"
+    r.updated_at = datetime.now(UTC).replace(tzinfo=None)
+
+    ledger.append_entry(db, "ROBOT_DEACTIVATED", {
+        "robot_id": r.id,
+        "robot_code": r.robot_code,
+        "deactivated_by": user.username,
+        "timestamp": datetime.now(UTC).replace(tzinfo=None).isoformat()
+    })
+    db.commit()
+
+    return {
+        "status": "deactivated",
+        "robot_id": r.id,
+        "robot_code": r.robot_code,
+        "message": f"Robot {r.robot_code} safely deactivated."
+    }
 
 @router.post("/{robot_id}/assign", summary="Manually assign a task to a robot")
 def manual_assign_robot(
@@ -960,10 +1081,14 @@ def manual_assign_robot(
         raise HTTPException(409, "Robot is disabled")
     if r.status in ("OFFLINE", "FAILED", "MAINTENANCE"):
         raise HTTPException(409, f"Robot is currently offline or failed (status: {r.status})")
-    if r.assigned_task_id:
+    if r.status == "CHARGING" and r.battery_level < 90.0:
+        raise HTTPException(409, f"Robot is currently charging (battery level: {r.battery_level:.1f}%)")
+    if r.assigned_task_id and r.assigned_task_id != t.id:
         raise HTTPException(409, "Robot is already executing another task")
     if t.status in ("COMPLETED", "CANCELLED"):
         raise HTTPException(409, f"Task is in terminal state '{t.status}'")
+    if t.status == "ASSIGNED" and t.assigned_robot_id and t.assigned_robot_id != r.robot_code:
+        raise HTTPException(409, f"Task is already assigned to robot {t.assigned_robot_id}")
     if r.battery_level < 25.0 and t.priority != "CRITICAL":
         raise HTTPException(409, "Robot has low battery and cannot accept non-critical tasks")
     if r.battery_level < 10.0:
@@ -1298,9 +1423,40 @@ def auto_assign_task(
         "candidates": candidates
     }
 
+@router.post("/recommend-assignment", summary="Generate explainable intelligent robot recommendation for a task (Non-mutating)")
+def recommend_robot_assignment(
+    payload: IntelligentRecommendRequest,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    if user.role not in ("admin", "manager", "operator", "staff"):
+        raise HTTPException(403, "Insufficient permissions to generate assignment recommendations")
+    from backend.services.intelligent_assignment import recommend_robot_for_task
+    return recommend_robot_for_task(db, payload.task_id)
+
+
+@router.post("/assign-intelligent", summary="Execute intelligent/manual robot assignment with race condition protection")
+def assign_robot_intelligent_endpoint(
+    payload: IntelligentAssignRequest,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    if user.role not in ("admin", "manager"):
+        raise HTTPException(403, "Insufficient permissions to assign robots to tasks")
+    from backend.services.intelligent_assignment import assign_robot_intelligently
+    return assign_robot_intelligently(
+        db=db,
+        task_id=payload.task_id,
+        robot_identifier=payload.robot_code,
+        user_id=user.id,
+        username=user.username,
+        assignment_method=payload.assignment_method or "INTELLIGENT"
+    )
+
 # ---------------------------------------------------------------------------
 # Simulation Control Endpoints
 # ---------------------------------------------------------------------------
+
 @router.post("/simulation/start", summary="Start simulation clock")
 def simulation_start(user=Depends(get_current_user)):
     global SIMULATION_RUNNING

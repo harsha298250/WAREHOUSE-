@@ -1,52 +1,41 @@
 """
 ml/replenishment/engine.py
 
-Data-driven replenishment recommendation engine.
+Data-driven replenishment recommendation engine for Phase 5 Smart Replenishment.
 
 This engine generates RECOMMENDATIONS ONLY — it does NOT modify
-inventory levels, StockMovement records, or any operational WMS data.
+production inventory levels, StockMovement records, or any operational WMS data.
 
 Data sources:
     - PostgreSQL WMS tables: Inventory, Item (current stock, lead_time_days, safety_stock)
+    - Order & OrderItem tables: historical customer demand analysis
     - ForecastResult table: latest forecast demand per entity/family
     - ABCClassification table: latest ABC class per item
-
-Replenishment formula:
-    lead_time_demand = sum(forecast_demand[0 : lead_time_days])
-    reorder_point    = lead_time_demand + safety_stock
-    recommended_qty  = max(0, reorder_point - current_stock + avg_daily_demand * horizon)
-
-Status rules (documented):
-    NO_ACTION          — current_stock > reorder_point × 1.5
-    MONITOR            — reorder_point < current_stock <= reorder_point × 1.5
-    REORDER_RECOMMENDED — current_stock <= reorder_point
-    URGENT_REORDER     — ABC class A + current_stock <= 0
-    INSUFFICIENT_DATA  — lead_time_days is NULL or no forecast in DB for this item
 """
 import logging
-from datetime import datetime, UTC
+from datetime import datetime, timedelta, UTC
+from typing import Optional, Dict, Any
 
-import numpy as np
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger("warehouse.ml.replenishment")
 
 
-def _get_abc_class(db, item_id: str, warehouse_id: str = None) -> str | None:
+def _get_abc_class(db: Session, item_id: str, warehouse_id: Optional[str] = None) -> Optional[str]:
     """Returns the latest ABC class for an item from the ABCClassification table."""
     from backend.models import ABCClassification
     q = db.query(ABCClassification).filter(ABCClassification.item_id == str(item_id))
+    if warehouse_id:
+        q = q.filter(ABCClassification.warehouse_id == str(warehouse_id))
     row = q.order_by(ABCClassification.run_at.desc()).first()
     return row.abc_class if row else None
 
 
-def _get_forecast_demand(db, family: str, lead_time_days: int) -> float | None:
-    """
-    Returns total forecast demand over lead_time_days from the latest ForecastRun for the family.
-    Returns None if no forecast exists.
-    """
+def _get_forecast_demand(db: Session, family: str, lead_time_days: int) -> Optional[float]:
+    """Returns total forecast demand over lead_time_days from latest ForecastRun for the family."""
     from backend.models import ForecastResult, ForecastRun
 
-    # Get latest run for this entity/family
     run = (
         db.query(ForecastRun)
         .filter(ForecastRun.grain.contains(family))
@@ -71,34 +60,70 @@ def _get_forecast_demand(db, family: str, lead_time_days: int) -> float | None:
     return round(float(total), 2)
 
 
+def _get_historical_daily_demand(db: Session, item_id: str, warehouse_id: Optional[str] = None, days: int = 30) -> Optional[float]:
+    """Calculates average daily demand from historical Order & OrderItem records over the last N days."""
+    from backend.models import Order, OrderItem
+
+    cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=days)
+    q = db.query(func.sum(OrderItem.requested_qty)).join(Order, Order.id == OrderItem.order_id).filter(
+        OrderItem.item_id == str(item_id),
+        Order.created_at >= cutoff
+    )
+    if warehouse_id:
+        q = q.filter(Order.warehouse_id == warehouse_id)
+
+    total_qty = q.scalar()
+    if total_qty is not None and total_qty > 0:
+        return round(float(total_qty) / float(days), 2)
+    return None
+
+
+def _get_incoming_stock(db: Session, item_id: str, warehouse_id: str) -> float:
+    """Returns total pending incoming quantity from active REPLENISH tasks."""
+    from backend.models import Task
+    tasks = db.query(Task).filter(
+        Task.warehouse_id == warehouse_id,
+        Task.product_id == str(item_id),
+        Task.task_type == "REPLENISH",
+        Task.status.in_(["QUEUED", "PRIORITIZED", "ASSIGNED", "IN_PROGRESS"])
+    ).all()
+    incoming = 0.0
+    for t in tasks:
+        req = float(t.requested_quantity or 0)
+        comp = float(t.completed_quantity or 0)
+        incoming += max(0.0, req - comp)
+    return incoming
+
+
 def _determine_status(
     current_stock: float,
     reorder_point: float,
-    abc_class: str | None,
+    abc_class: Optional[str],
+    days_of_cover: Optional[float] = None
 ) -> tuple:
     """Returns (urgency, status) string tuple."""
-    if current_stock <= 0 and abc_class == "A":
-        return "URGENT_REORDER", "URGENT_REORDER"
+    if (current_stock <= 0 and abc_class == "A") or (days_of_cover is not None and days_of_cover < 1.0 and current_stock <= reorder_point):
+        return "URGENT_REORDER", "CRITICAL"
     elif current_stock <= reorder_point:
-        return "REORDER_RECOMMENDED", "REORDER_RECOMMENDED"
+        return "REORDER_RECOMMENDED", "REORDER_REQUIRED"
     elif current_stock <= reorder_point * 1.5:
-        return "MONITOR", "MONITOR"
+        return "MONITOR", "WATCH"
     else:
-        return "NO_ACTION", "NO_ACTION"
+        return "NO_ACTION", "HEALTHY"
 
 
-def run_replenishment_engine(db, warehouse_id: str = None) -> dict:
+def run_replenishment_engine(db: Session, warehouse_id: Optional[str] = None) -> Dict[str, Any]:
     """
-    Runs the replenishment recommendation engine for all WMS inventory items.
-
-    Args:
-        db: SQLAlchemy Session
-        warehouse_id: optional filter; runs all warehouses if None
-
-    Returns:
-        dict with recommendations list and summary
+    Runs the replenishment recommendation engine across WMS inventory items.
+    Updates existing recommendation records in-place (idempotently) without destroying status.
     """
     from backend.models import Inventory, Item, ReplenishmentRecommendation
+    from backend.settings import get_settings
+
+    settings_data = get_settings(db)
+    global_low_stock_thresh = float(settings_data.get("low_stock_thresh", 10))
+    global_reorder_point = float(settings_data.get("reorder_point", 20))
+    global_safety_stock = float(settings_data.get("safety_stock", 5))
 
     inv_q = db.query(Inventory)
     if warehouse_id:
@@ -114,13 +139,6 @@ def run_replenishment_engine(db, warehouse_id: str = None) -> dict:
         }
 
     now = datetime.now(UTC).replace(tzinfo=None)
-
-    # Clear previous recommendations for this warehouse scope
-    del_q = db.query(ReplenishmentRecommendation)
-    if warehouse_id:
-        del_q = del_q.filter(ReplenishmentRecommendation.warehouse_id == warehouse_id)
-    del_q.delete()
-
     recommendations = []
     counts = {"NO_ACTION": 0, "MONITOR": 0, "REORDER_RECOMMENDED": 0,
               "URGENT_REORDER": 0, "INSUFFICIENT_DATA": 0}
@@ -132,99 +150,159 @@ def run_replenishment_engine(db, warehouse_id: str = None) -> dict:
 
         item_id = str(inv.item_id)
         item_name = item.name or item_id
-        current_stock = float(inv.available or 0.0)
-        lead_time_days = item.lead_time_days
-        safety_stock = float(item.safety_stock or 0.0)
+        wh_id = str(inv.warehouse_id)
+        current_stock = float(inv.available if inv.available is not None else (inv.quantity or 0.0))
+        lead_time_days = item.lead_time_days or 7  # Fallback default lead time 7 days if missing
+        safety_stock = float(item.safety_stock) if (item.safety_stock is not None and item.safety_stock > 0) else global_safety_stock
+        item_reorder_thresh = float(item.reorder_threshold) if (hasattr(item, 'reorder_threshold') and item.reorder_threshold is not None and item.reorder_threshold > 0) else global_reorder_point
 
         # ABC class lookup
-        abc_class = _get_abc_class(db, item_id)
+        abc_class = _get_abc_class(db, item_id, wh_id)
 
-        # Data quality assessment
-        missing = []
-        if not lead_time_days:
-            missing.append("lead_time_days")
+        # Incoming stock accounting from active REPLENISH tasks
+        incoming_stock = _get_incoming_stock(db, item_id, wh_id)
 
-        # Forecast demand lookup (use item name / family match heuristic)
+        # Forecast demand lookup (with historical demand fallback)
         forecast_demand = None
-        if lead_time_days:
-            # Best-effort: match item name to a NeuroCipher family
-            # In production you would have an explicit mapping table.
-            # For now: try exact match, then try "GROCERY I" as fallback default.
+        if item_name:
             for family_guess in [item_name.upper(), "GROCERY I"]:
                 fd = _get_forecast_demand(db, family_guess, lead_time_days)
                 if fd is not None:
                     forecast_demand = fd
                     break
 
-        if not lead_time_days or forecast_demand is None:
-            missing.append("forecast_data")
+        hist_daily_demand = _get_historical_daily_demand(db, item_id, wh_id, days=30)
+        if forecast_demand is None and hist_daily_demand is not None:
+            forecast_demand = round(hist_daily_demand * lead_time_days, 2)
+
+        missing = []
+        if forecast_demand is None and hist_daily_demand is None and not item_reorder_thresh:
+            missing.append("demand_data")
 
         if missing:
             urgency = "INSUFFICIENT_DATA"
             status = "INSUFFICIENT_DATA"
             data_quality = "INSUFFICIENT_DATA"
-            reason = f"Missing required data: {', '.join(set(missing))}. Cannot compute reorder point."
+            reason = "Insufficient historical demand or forecast data available. Cannot compute reorder point."
             reorder_point = None
-            recommended_qty = None
+            recommended_qty = 0.0
+            days_of_cover = None
+            stock_out_risk = "UNAVAILABLE"
         else:
-            reorder_point = round(float(forecast_demand) + safety_stock, 2)
-            urgency, status = _determine_status(current_stock, reorder_point, abc_class)
+            daily_demand = (forecast_demand / lead_time_days) if (forecast_demand and lead_time_days > 0) else (hist_daily_demand or 0.0)
+            calculated_rp = round(float(forecast_demand) + safety_stock, 2) if forecast_demand is not None else 0.0
+            reorder_point = max(calculated_rp, item_reorder_thresh)
 
-            # Recommended quantity: enough to bring stock above reorder point
-            recommended_qty = max(0.0, round(reorder_point - current_stock + float(forecast_demand), 2))
-            data_quality = "COMPLETE" if abc_class else "PARTIAL"
+            # Days of cover calculation
+            if daily_demand > 0:
+                days_of_cover = round(current_stock / daily_demand, 1)
+            else:
+                days_of_cover = None
 
+            # Stock-out risk calculation
+            if days_of_cover is not None:
+                if days_of_cover < lead_time_days:
+                    stock_out_risk = "HIGH"
+                elif days_of_cover < lead_time_days * 1.5:
+                    stock_out_risk = "MEDIUM"
+                else:
+                    stock_out_risk = "LOW"
+            else:
+                stock_out_risk = "LOW"
+
+            urgency, status = _determine_status(current_stock, reorder_point, abc_class, days_of_cover)
+
+            # Recommended quantity calculation accounting for incoming stock
+            projected_avail = current_stock + incoming_stock
+            if projected_avail <= reorder_point:
+                target_stock = reorder_point + (daily_demand * 7.0 if daily_demand > 0 else 10.0)
+                recommended_qty = max(0.0, round(target_stock - projected_avail, 2))
+            else:
+                recommended_qty = 0.0
+
+            data_quality = "COMPLETE" if (abc_class and forecast_demand is not None) else "PARTIAL"
+
+            # Explainable natural-language reason
             reason_parts = []
             if urgency == "URGENT_REORDER":
-                reason_parts.append(f"ABC class A item at zero/negative stock ({current_stock:.0f} units).")
+                reason_parts.append(f"CRITICAL: Stock ({current_stock:.0f}) is severely low or depleted.")
             elif urgency == "REORDER_RECOMMENDED":
-                reason_parts.append(
-                    f"Stock ({current_stock:.0f}) ≤ reorder point ({reorder_point:.0f}). "
-                    f"Lead-time demand = {forecast_demand:.0f}, safety stock = {safety_stock:.0f}."
-                )
+                reason_parts.append(f"Stock ({current_stock:.0f}) ≤ Reorder Point ({reorder_point:.0f}).")
             elif urgency == "MONITOR":
-                reason_parts.append(
-                    f"Stock ({current_stock:.0f}) within 1.5× reorder point ({reorder_point:.0f}). Monitor closely."
-                )
+                reason_parts.append(f"Stock ({current_stock:.0f}) approaching Reorder Point ({reorder_point:.0f}).")
             else:
-                reason_parts.append(f"Stock ({current_stock:.0f}) is adequate above reorder point ({reorder_point:.0f}).")
-            if abc_class:
-                reason_parts.append(f"ABC class: {abc_class}.")
+                reason_parts.append(f"Stock ({current_stock:.0f}) is healthy above Reorder Point ({reorder_point:.0f}).")
+
+            fd_text = f"{forecast_demand:.0f}" if forecast_demand is not None else "N/A"
+            reason_parts.append(f"Lead-time demand: {fd_text} units ({lead_time_days} days).")
+            if safety_stock > 0:
+                reason_parts.append(f"Safety stock: {safety_stock:.0f}.")
+            if incoming_stock > 0:
+                reason_parts.append(f"Incoming stock: {incoming_stock:.0f}.")
+            if days_of_cover is not None:
+                reason_parts.append(f"Days of cover: {days_of_cover}d.")
             reason = " ".join(reason_parts)
 
-        rr = ReplenishmentRecommendation(
-            item_id=item_id,
-            item_name=item_name,
-            warehouse_id=inv.warehouse_id,
-            current_stock=current_stock,
-            forecast_demand=forecast_demand,
-            lead_time_days=lead_time_days,
-            safety_stock=safety_stock,
-            reorder_point=reorder_point,
-            recommended_qty=recommended_qty,
-            abc_class=abc_class,
-            urgency=urgency,
-            status=status,
-            reason=reason,
-            data_quality=data_quality,
-            created_at=now,
-        )
-        db.add(rr)
+        # Idempotent record lookup/update
+        existing_rec = db.query(ReplenishmentRecommendation).filter(
+            ReplenishmentRecommendation.item_id == item_id,
+            ReplenishmentRecommendation.warehouse_id == wh_id
+        ).first()
+
+        if existing_rec:
+            # Preserve human decision status if already approved/rejected/completed
+            if existing_rec.status not in ("APPROVED", "REJECTED", "COMPLETED"):
+                existing_rec.status = status
+            existing_rec.current_stock = current_stock
+            existing_rec.forecast_demand = forecast_demand
+            existing_rec.lead_time_days = lead_time_days
+            existing_rec.safety_stock = safety_stock
+            existing_rec.reorder_point = reorder_point
+            existing_rec.recommended_qty = recommended_qty
+            existing_rec.abc_class = abc_class
+            existing_rec.urgency = urgency
+            existing_rec.reason = reason
+            existing_rec.data_quality = data_quality
+            existing_rec.created_at = now
+            rr = existing_rec
+        else:
+            rr = ReplenishmentRecommendation(
+                item_id=item_id,
+                item_name=item_name,
+                warehouse_id=wh_id,
+                current_stock=current_stock,
+                forecast_demand=forecast_demand,
+                lead_time_days=lead_time_days,
+                safety_stock=safety_stock,
+                reorder_point=reorder_point,
+                recommended_qty=recommended_qty,
+                abc_class=abc_class,
+                urgency=urgency,
+                status=status,
+                reason=reason,
+                data_quality=data_quality,
+                created_at=now,
+            )
+            db.add(rr)
 
         counts[urgency] = counts.get(urgency, 0) + 1
         recommendations.append({
+            "id": rr.id,
             "item_id": item_id,
             "item_name": item_name,
-            "warehouse_id": inv.warehouse_id,
+            "warehouse_id": wh_id,
             "current_stock": current_stock,
             "forecast_demand": forecast_demand,
             "lead_time_days": lead_time_days,
             "safety_stock": safety_stock,
             "reorder_point": reorder_point,
             "recommended_qty": recommended_qty,
+            "incoming_stock": incoming_stock,
+            "days_of_cover": days_of_cover,
+            "stock_out_risk": stock_out_risk,
             "abc_class": abc_class,
             "urgency": urgency,
-            "status": status,
+            "status": rr.status,
             "reason": reason,
             "data_quality": data_quality,
         })
@@ -243,13 +321,16 @@ def run_replenishment_engine(db, warehouse_id: str = None) -> dict:
         "items_processed": len(recommendations),
         "summary": counts,
         "data_provenance": {
-            "current_stock": "ACTUAL — PostgreSQL WMS",
+            "current_stock": "ACTUAL — PostgreSQL WMS (inventories table)",
+            "historical_demand": "ACTUAL — PostgreSQL WMS (orders & order_items tables)",
             "lead_time_days": "ACTUAL — PostgreSQL WMS (items table)",
             "safety_stock": "ACTUAL — PostgreSQL WMS (items table)",
-            "forecast_demand": "FORECAST — TrendSeasonalityModel on NeuroCipher dataset",
+            "forecast_demand": "FORECAST / HISTORICAL — TrendSeasonalityModel & WMS orders",
             "abc_class": "CALCULATED — ABCClassifier",
             "reorder_point": "CALCULATED — lead_time_demand + safety_stock",
-            "inventory_not_modified": "TRUE — this engine generates recommendations only",
+            "incoming_stock": "ACTUAL — Active WMS REPLENISH tasks",
+            "inventory_not_modified": "TRUE — recommendations only",
         },
         "recommendations": recommendations,
     }
+

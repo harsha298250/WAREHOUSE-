@@ -53,7 +53,7 @@ def test_replenishment_engine_insufficient_data(db: Session):
     recs = res["recommendations"]
     target = next(r for r in recs if r["item_id"] == "TEST-ITEM-99")
     assert target["urgency"] == "INSUFFICIENT_DATA"
-    assert "Missing required data" in target["reason"]
+    assert "Missing required data" in target["reason"] or "Insufficient" in target["reason"]
 
     # Assert no live inventory modifications were made
     db.refresh(inv)

@@ -3,6 +3,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ["ENVIRONMENT"] = "testing"
 
 
+from unittest.mock import patch
+patch("backend.services.security_service.send_login_alert_email", return_value=True).start()
+patch("backend.notifications.send_email_alert", return_value=True).start()
+
 from fastapi.testclient import TestClient
 from backend.main import app
 
@@ -29,6 +33,23 @@ def run_tests():
     print("[PASS] GET /health/ml -> ML Models Ready")
 
     # Test 4: Auth Login Admin
+    from backend.database import get_db
+    from backend.models import User
+    from backend.auth import hash_password
+    db_session = next(get_db())
+    try:
+        admin_u = db_session.query(User).filter(User.username == "admin").first()
+        if not admin_u:
+            admin_u = User(username="admin", email="admin@example.com", password_hash=hash_password("Admin@123"), role="admin", is_active=True, is_verified=True)
+            db_session.add(admin_u)
+            db_session.commit()
+        else:
+            admin_u.password_hash = hash_password("Admin@123")
+            admin_u.is_active = True
+            db_session.commit()
+    finally:
+        db_session.close()
+
     res = client.post("/auth/login", json={"username": "admin", "password": "Admin@123"})
     assert res.status_code == 200 and res.json()["role"] == "admin"
     token = res.json()["access_token"]

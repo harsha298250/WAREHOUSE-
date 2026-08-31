@@ -14,7 +14,7 @@ from backend.database import get_db
 from backend.auth import get_current_user
 from backend.models import User, Scenario, Experiment, ExperimentRun, AuditLedger
 from backend import audit_ledger
-from backend.celery_app import execute_experiment_task
+from backend.celery_app import execute_experiment_task, safe_task_dispatch
 
 logger = logging.getLogger("warehouse.scenarios_router")
 
@@ -338,7 +338,7 @@ def create_experiment(
 
     if celery_enabled and workers_online:
         try:
-            execute_experiment_task.delay(exp.id)
+            safe_task_dispatch(execute_experiment_task, exp.id)
             logger.info("Experiment %s queued in Celery successfully.", exp.id)
         except Exception as queue_err:
             logger.error("Failed to queue experiment in Celery: %s. Falling back to background thread.", queue_err)
@@ -487,7 +487,7 @@ def rerun_experiment(
     celery_enabled = os.getenv("CELERY_ENABLED", "false").lower() == "true"
     if celery_enabled:
         try:
-            execute_experiment_task.delay(new_exp.id)
+            safe_task_dispatch(execute_experiment_task, new_exp.id)
         except Exception:
             threading.Thread(target=execute_experiment_task, args=(new_exp.id,), daemon=True).start()
     else:

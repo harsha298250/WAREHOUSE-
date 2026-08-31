@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from backend.models import (
     Order, OrderItem, OrderEvent, PackingRecord, Shipment,
     Inventory, Item, StockMovement, ShrinkageFlag,
-    Task, TaskEvent, Robot, RobotTelemetryEvent, RobotRoute,
+    Task, TaskEvent, Robot, RobotTelemetryEvent, RobotRoute, WarehouseObstacle,
     DigitalTwinSimulation, SimulationEvent, SimulationSnapshot,
     AIRecommendation, BackupRecord, Notification
 )
@@ -61,13 +61,17 @@ def calculate_abc_distribution(
     consumption = []
     total_val = 0.0
 
+    from backend.models import Inventory
     for item in query_items:
-        # Sum historical stock_out movements
-        move_query = db.query(func.sum(StockMovement.stock_out))
+        # Sum historical stock_out movements and current inventory on hand
+        move_query = db.query(func.sum(StockMovement.stock_out)).filter(StockMovement.item_id == item.id)
+        inv_query = db.query(func.sum(Inventory.on_hand)).filter(Inventory.item_id == item.id)
         if warehouse_id:
             move_query = move_query.filter(StockMovement.warehouse_id == warehouse_id)
-        move_query = move_query.filter(StockMovement.item_id == item.id)
-        qty = float(move_query.scalar() or 0.0)
+            inv_query = inv_query.filter(Inventory.warehouse_id == warehouse_id)
+        stock_out_qty = float(move_query.scalar() or 0.0)
+        on_hand_qty = float(inv_query.scalar() or 0.0)
+        qty = max(stock_out_qty, on_hand_qty)
         
         val = qty * float(item.unit_cost or 0.0)
         consumption.append({
@@ -130,15 +134,19 @@ def calculate_abc_distribution(
 def compute_order_analytics(db: Session, warehouse_id: Optional[str], start: datetime, end: datetime) -> Dict[str, Any]:
     """Computes order cycle times, completion rate, SLA targets, and counts."""
     order_q = db.query(Order).filter(Order.created_at.between(start, end))
-    if warehouse_id:
+    if warehouse_id and warehouse_id != "ALL":
         order_q = order_q.filter(Order.warehouse_id == warehouse_id)
         
     orders = order_q.all()
     total_orders = len(orders)
     
     completed_orders = [o for o in orders if o.status in ("COMPLETED", "DELIVERED", "SHIPPED")]
+    pending_orders = [o for o in orders if o.status in ("PENDING", "PROCESSING", "CREATED", "QUEUED")]
     cancelled_orders = [o for o in orders if o.status == "CANCELLED"]
     exception_orders = [o for o in orders if o.status in ("FAILED", "RETURNED", "EXCEPTIONAL")]
+    now_dt = datetime.now(UTC).replace(tzinfo=None)
+    delayed_orders = [o for o in orders if getattr(o, "is_delayed", False) or (o.status not in ("COMPLETED", "DELIVERED", "SHIPPED", "CANCELLED") and getattr(o, "due_at", None) and o.due_at < now_dt)]
+    high_priority_orders = [o for o in orders if getattr(o, "priority", "MEDIUM") in ("HIGH", "CRITICAL")]
     
     # Completion Rate = Completed / (Total - Cancelled)
     denominator = total_orders - len(cancelled_orders)
@@ -190,6 +198,12 @@ def compute_order_analytics(db: Session, warehouse_id: Optional[str], start: dat
     exception_rate = (len(exception_orders) / total_orders * 100.0) if total_orders > 0 else 0.0
 
     return {
+        "total_orders": {"value": total_orders, "unit": "orders", "data_quality": "DATABASE_SYNCHRONIZED"},
+        "pending_orders": {"value": len(pending_orders), "unit": "orders", "data_quality": "DATABASE_SYNCHRONIZED"},
+        "completed_orders": {"value": len(completed_orders), "unit": "orders", "data_quality": "DATABASE_SYNCHRONIZED"},
+        "cancelled_orders": {"value": len(cancelled_orders), "unit": "orders", "data_quality": "DATABASE_SYNCHRONIZED"},
+        "delayed_orders": {"value": len(delayed_orders), "unit": "orders", "data_quality": "DATABASE_SYNCHRONIZED"},
+        "high_priority_orders": {"value": len(high_priority_orders), "unit": "orders", "data_quality": "DATABASE_SYNCHRONIZED"},
         "throughput": {"value": len(completed_orders), "unit": "orders", "data_quality": "DATABASE_SYNCHRONIZED"},
         "completion_rate": {"value": round(completion_rate, 1), "unit": "percent", "data_quality": "DATABASE_SYNCHRONIZED"},
         "avg_cycle_time_hours": {"value": round(avg_cycle, 1) if avg_cycle is not None else None, "unit": "hours", "data_quality": "DATABASE_SYNCHRONIZED" if cycle_times else "INSUFFICIENT DATA"},
@@ -414,7 +428,7 @@ def compute_robot_analytics(db: Session, warehouse_id: Optional[str], start: dat
 
 
 def compute_routing_analytics(db: Session, warehouse_id: Optional[str], start: datetime, end: datetime) -> Dict[str, Any]:
-    """Computes routing computation metrics, replanning frequency, and spatial congestion alerts."""
+    """Computes routing computation metrics, algorithm comparison (A* vs Dijkstra), replanning frequency, and spatial congestion alerts."""
     routes_q = db.query(RobotRoute).filter(RobotRoute.created_at.between(start, end))
     if warehouse_id:
         routes_q = routes_q.filter(RobotRoute.warehouse_id == warehouse_id)
@@ -422,11 +436,36 @@ def compute_routing_analytics(db: Session, warehouse_id: Optional[str], start: d
     routes = routes_q.all()
     route_count = len(routes)
     
-    avg_distance = statistics.mean([r.distance for r in routes]) if routes else None
-    avg_cost = statistics.mean([r.cost for r in routes]) if routes else None
+    avg_distance = statistics.mean([r.distance for r in routes if r.distance is not None]) if routes else None
+    avg_cost = statistics.mean([r.cost for r in routes if r.cost is not None]) if routes else None
     replanned_count = sum(1 for r in routes if r.status == "REPLANNED")
+
+    # A* vs Dijkstra Comparison
+    a_star_routes = [r for r in routes if r.algorithm == "A_STAR"]
+    dijkstra_routes = [r for r in routes if r.algorithm == "DIJKSTRA"]
+
+    a_star_dist = [r.distance for r in a_star_routes if r.distance is not None]
+    dijkstra_dist = [r.distance for r in dijkstra_routes if r.distance is not None]
+
+    a_star_cost = [r.cost for r in a_star_routes if r.cost is not None]
+    dijkstra_cost = [r.cost for r in dijkstra_routes if r.cost is not None]
+
+    algorithm_comparison = {
+        "a_star": {
+            "routes_count": len(a_star_routes),
+            "avg_distance": round(statistics.mean(a_star_dist), 2) if a_star_dist else None,
+            "avg_cost": round(statistics.mean(a_star_cost), 2) if a_star_cost else None,
+            "data_quality": "DATABASE_SYNCHRONIZED" if a_star_routes else "INSUFFICIENT DATA"
+        },
+        "dijkstra": {
+            "routes_count": len(dijkstra_routes),
+            "avg_distance": round(statistics.mean(dijkstra_dist), 2) if dijkstra_dist else None,
+            "avg_cost": round(statistics.mean(dijkstra_cost), 2) if dijkstra_cost else None,
+            "data_quality": "DATABASE_SYNCHRONIZED" if dijkstra_routes else "INSUFFICIENT DATA"
+        }
+    }
     
-    # Calculate congestion events from SimulationEvents (contains warnings of obstacles or collision avoidances)
+    # Calculate congestion events from SimulationEvents
     sim_events_q = db.query(SimulationEvent).filter(SimulationEvent.real_timestamp.between(start, end))
     if warehouse_id:
         sim_events_q = sim_events_q.filter(SimulationEvent.warehouse_id == warehouse_id)
@@ -443,8 +482,104 @@ def compute_routing_analytics(db: Session, warehouse_id: Optional[str], start: d
         "replanning_count": {"value": replanned_count, "unit": "replans", "data_quality": "DATABASE_SYNCHRONIZED"},
         "collision_events": {"value": collision_avoided, "unit": "events", "data_quality": "DATABASE_SYNCHRONIZED"},
         "robot_waiting_events": {"value": robot_waiting, "unit": "events", "data_quality": "DATABASE_SYNCHRONIZED"},
-        "obstacles_logged": {"value": obstacle_count, "unit": "events", "data_quality": "DATABASE_SYNCHRONIZED"}
+        "obstacles_logged": {"value": obstacle_count, "unit": "events", "data_quality": "DATABASE_SYNCHRONIZED"},
+        "algorithm_comparison": algorithm_comparison
     }
+
+
+def compute_bottleneck_analytics(db: Session, warehouse_id: Optional[str] = None) -> Dict[str, Any]:
+    """Identifies operational bottlenecks from pending tasks, robot availability, and obstacle obstacles."""
+    bottlenecks = []
+    
+    # 1. Task backlog check
+    task_q = db.query(Task)
+    if warehouse_id:
+        task_q = task_q.filter(Task.warehouse_id == warehouse_id)
+    all_tasks = task_q.all()
+    pending_tasks = [t for t in all_tasks if t.status in ("QUEUED", "PRIORITIZED")]
+    
+    if len(pending_tasks) > 10:
+        bottlenecks.append({
+            "category": "TASK_BACKLOG",
+            "severity": "HIGH" if len(pending_tasks) > 25 else "MEDIUM",
+            "reason": f"Pending task volume ({len(pending_tasks)}) exceeds current completion processing rate."
+        })
+
+    # 2. Robot availability check
+    bot_q = db.query(Robot)
+    if warehouse_id:
+        bot_q = bot_q.filter(Robot.warehouse_id == warehouse_id)
+    bots = bot_q.all()
+    avail_bots = [r for r in bots if r.status == "AVAILABLE"]
+    if bots and len(avail_bots) == 0:
+        bottlenecks.append({
+            "category": "ROBOT_AVAILABILITY",
+            "severity": "HIGH",
+            "reason": f"No available robots out of {len(bots)} total fleet size. Fleet is fully saturated."
+        })
+
+    # 3. Dynamic Obstacle check
+    from backend.models import WarehouseObstacle
+    obs_q = db.query(WarehouseObstacle).filter(WarehouseObstacle.active == True)
+    if warehouse_id:
+        obs_q = obs_q.filter(WarehouseObstacle.warehouse_id == warehouse_id)
+    active_obs = obs_q.all()
+    if active_obs:
+        bottlenecks.append({
+            "category": "BLOCKED_ROUTES",
+            "severity": "MEDIUM",
+            "reason": f"Active obstacles ({len(active_obs)}) are causing operational path rerouting."
+        })
+
+    return {
+        "status": "success",
+        "bottlenecks_count": len(bottlenecks),
+        "bottlenecks": bottlenecks
+    }
+
+
+def compute_risk_indicators(db: Session, warehouse_id: Optional[str] = None) -> Dict[str, Any]:
+    """Computes deterministic operational risk indicators based on inventory, backlog, and robot status."""
+    reasons = []
+    
+    # Inventory stockout check
+    inv_q = db.query(Inventory)
+    if warehouse_id:
+        inv_q = inv_q.filter(Inventory.warehouse_id == warehouse_id)
+    inv_records = inv_q.all()
+    stockouts = sum(1 for i in inv_records if i.available <= 0)
+    if stockouts > 0:
+        reasons.append(f"{stockouts} items are currently out of stock.")
+
+    # Task backlog
+    task_q = db.query(Task)
+    if warehouse_id:
+        task_q = task_q.filter(Task.warehouse_id == warehouse_id)
+    pending_tasks = task_q.filter(Task.status.in_(["QUEUED", "PRIORITIZED"])).count()
+    if pending_tasks > 15:
+        reasons.append(f"High task backlog of {pending_tasks} pending tasks.")
+
+    # Low battery robots
+    bot_q = db.query(Robot)
+    if warehouse_id:
+        bot_q = bot_q.filter(Robot.warehouse_id == warehouse_id)
+    low_bat_bots = bot_q.filter(Robot.battery_level < 20.0).count()
+    if low_bat_bots > 0:
+        reasons.append(f"{low_bat_bots} robots have battery level below 20%.")
+
+    if stockouts > 3 or pending_tasks > 30:
+        level = "CRITICAL"
+    elif stockouts > 0 or pending_tasks > 15 or low_bat_bots > 0:
+        level = "ATTENTION"
+    else:
+        level = "NORMAL"
+
+    return {
+        "status": "success",
+        "risk_level": level,
+        "reasons": reasons if reasons else ["All warehouse operational metrics within normal parameters."]
+    }
+
 
 
 def compute_forecasting_analytics(db: Session, warehouse_id: Optional[str]) -> Dict[str, Any]:
@@ -613,3 +748,323 @@ def compute_system_reliability_analytics(db: Session, start: datetime, end: date
         "backup_verification_integrity": {"value": round(backup_integrity_rate, 1), "unit": "percent", "data_quality": "DATABASE_SYNCHRONIZED"},
         "backup_failures": {"value": failed_backups, "unit": "failures", "data_quality": "DATABASE_SYNCHRONIZED"}
     }
+
+
+# ---------------------------------------------------------------------------
+# PHASE 9: EXPLAINABLE ANALYTICS & ADVANCED OPERATIONAL INSIGHTS
+# ---------------------------------------------------------------------------
+def compute_period_comparison(
+    db: Session,
+    warehouse_id: Optional[str] = None,
+    period: str = "30d"
+) -> Dict[str, Any]:
+    """
+    Computes Current Period vs Previous Period comparison metrics.
+    Transparently reports data availability without fabricating fake historical values.
+    """
+    now = datetime.now(UTC).replace(tzinfo=None)
+    
+    if period == "today":
+        days = 1
+    elif period == "7d":
+        days = 7
+    elif period == "90d":
+        days = 90
+    else:
+        days = 30
+
+    curr_start = now - timedelta(days=days)
+    curr_end = now
+
+    prev_start = now - timedelta(days=days * 2)
+    prev_end = now - timedelta(days=days)
+
+    def count_orders(start_dt, end_dt):
+        q = db.query(Order).filter(Order.created_at.between(start_dt, end_dt))
+        if warehouse_id:
+            q = q.filter(Order.warehouse_id == warehouse_id)
+        return q.count()
+
+    def count_tasks(start_dt, end_dt):
+        q = db.query(Task).filter(Task.status == "COMPLETED", Task.completed_at.between(start_dt, end_dt))
+        if warehouse_id:
+            q = q.filter(Task.warehouse_id == warehouse_id)
+        return q.count()
+
+    def count_routes(start_dt, end_dt):
+        q = db.query(RobotRoute).filter(RobotRoute.created_at.between(start_dt, end_dt))
+        if warehouse_id:
+            q = q.filter(RobotRoute.warehouse_id == warehouse_id)
+        return q.count()
+
+    curr_orders = count_orders(curr_start, curr_end)
+    prev_orders = count_orders(prev_start, prev_end)
+
+    curr_tasks = count_tasks(curr_start, curr_end)
+    prev_tasks = count_tasks(prev_start, prev_end)
+
+    curr_routes = count_routes(curr_start, curr_end)
+    prev_routes = count_routes(prev_start, prev_end)
+
+    has_baseline = (prev_orders > 0 or prev_tasks > 0 or prev_routes > 0)
+
+    def calc_delta(curr, prev):
+        if not has_baseline or prev == 0:
+            return {"current": curr, "previous": prev, "delta_pct": None, "trend": "STABLE", "message": "No historical baseline for previous period"}
+        diff = curr - prev
+        pct = round((diff / prev) * 100.0, 1)
+        if pct > 2.0:
+            trend = "INCREASING"
+        elif pct < -2.0:
+            trend = "DECREASING"
+        else:
+            trend = "STABLE"
+        return {"current": curr, "previous": prev, "delta_pct": pct, "trend": trend}
+
+    return {
+        "period": period,
+        "warehouse_id": warehouse_id or "ALL",
+        "has_historical_baseline": has_baseline,
+        "metrics": {
+            "orders": calc_delta(curr_orders, prev_orders),
+            "completed_tasks": calc_delta(curr_tasks, prev_tasks),
+            "routes_executed": calc_delta(curr_routes, prev_routes)
+        }
+    }
+
+
+def compute_explainable_bottlenecks(
+    db: Session,
+    warehouse_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Ranks operational bottlenecks by measurable impact and provides structured
+    WHAT, WHY, IMPACT explanations for warehouse operators.
+    """
+    bottlenecks = []
+    
+    robots_q = db.query(Robot)
+    tasks_q = db.query(Task)
+    inv_q = db.query(Inventory, Item).join(Item, Inventory.item_id == Item.id)
+    obs_q = db.query(WarehouseObstacle).filter(WarehouseObstacle.active == True)
+
+    if warehouse_id and warehouse_id != "ALL":
+        robots_q = robots_q.filter(Robot.warehouse_id == warehouse_id)
+        tasks_q = tasks_q.filter(Task.warehouse_id == warehouse_id)
+        inv_q = inv_q.filter(Inventory.warehouse_id == warehouse_id)
+        obs_q = obs_q.filter(WarehouseObstacle.warehouse_id == warehouse_id)
+
+    robots = robots_q.all()
+    tasks = tasks_q.all()
+    inventory_items = inv_q.all()
+    obstacles = obs_q.all()
+
+    # 1. Robot Capacity Bottleneck
+    avail_robots = [r for r in robots if r.enabled and r.status == "AVAILABLE"]
+    queued_tasks = [t for t in tasks if t.status == "QUEUED"]
+    
+    if len(queued_tasks) > len(avail_robots) and len(queued_tasks) > 0:
+        gap = len(queued_tasks) - len(avail_robots)
+        impact_mins = round(gap * 5.0 / max(1, len(avail_robots)), 1)
+        bottlenecks.append({
+            "category": "ROBOT_CAPACITY",
+            "severity": "CRITICAL" if len(avail_robots) == 0 else ("HIGH" if gap > 5 else "MEDIUM"),
+            "impact_score": 90 if len(avail_robots) == 0 else (75 if gap > 5 else 50),
+            "what": "Robot Fleet Capacity Bottleneck",
+            "why": f"Queue has {len(queued_tasks)} pending task(s) waiting, but only {len(avail_robots)} AGV robot(s) are in AVAILABLE status.",
+            "impact": f"Task completion latency projected to increase by ~{impact_mins} minutes due to fleet capacity strain.",
+            "action_url": "/robots"
+        })
+
+    # 2. Critical Stockout Bottleneck
+    stockout_items = [item.name for inv, item in inventory_items if inv.available <= 0]
+    if stockout_items:
+        bottlenecks.append({
+            "category": "INVENTORY_STOCKOUT",
+            "severity": "CRITICAL" if len(stockout_items) > 2 else "HIGH",
+            "impact_score": 85 if len(stockout_items) > 2 else 70,
+            "what": f"Critical Stockout Exposure ({len(stockout_items)} SKUs)",
+            "why": f"{len(stockout_items)} SKU(s) (e.g. {stockout_items[0]}) have 0 available stock in warehouse inventory.",
+            "impact": "Customer order picks for affected SKUs cannot be fulfilled until replenishment completes.",
+            "action_url": "/analytics/replenishment"
+        })
+
+    # 3. Route Corridor Obstacle Bottleneck
+    if obstacles:
+        bottlenecks.append({
+            "category": "ROUTE_OBSTACLE",
+            "severity": "HIGH" if len(obstacles) > 3 else "MEDIUM",
+            "impact_score": 65 if len(obstacles) > 3 else 45,
+            "what": f"Grid Corridor Obstruction ({len(obstacles)} active)",
+            "why": f"{len(obstacles)} active obstacle(s) in grid layout force A* pathfinding detours.",
+            "impact": "Increased path travel distance and potential localized congestion near affected corridors.",
+            "action_url": "/pathfinding"
+        })
+
+    # Sort by impact_score descending and add rank
+    bottlenecks.sort(key=lambda b: b["impact_score"], reverse=True)
+    for idx, b in enumerate(bottlenecks, 1):
+        b["rank"] = idx
+
+    return {
+        "warehouse_id": warehouse_id or "ALL",
+        "total_bottlenecks": len(bottlenecks),
+        "status": "NO BOTTLENECKS DETECTED" if not bottlenecks else "BOTTLENECKS IDENTIFIED",
+        "bottlenecks": bottlenecks
+    }
+
+
+def compute_pathfinding_factual_comparison(
+    db: Session,
+    warehouse_id: Optional[str] = None,
+    period: str = "30d"
+) -> Dict[str, Any]:
+    """
+    Provides factual, data-driven comparison of A* vs Dijkstra metrics.
+    Never claims one algorithm is universally superior.
+    """
+    start, end = get_date_range(period)
+    route_q = db.query(RobotRoute).filter(RobotRoute.created_at.between(start, end))
+    if warehouse_id and warehouse_id != "ALL":
+        route_q = route_q.filter(RobotRoute.warehouse_id == warehouse_id)
+
+    routes = route_q.all()
+    a_star_routes = [r for r in routes if (r.algorithm or "").upper() == "A_STAR"]
+    dijkstra_routes = [r for r in routes if (r.algorithm or "").upper() == "DIJKSTRA"]
+
+    def stats(r_list):
+        if not r_list:
+            return {"count": 0, "avg_cost": None, "avg_distance": None, "avg_time_ms": None}
+        costs = [r.cost for r in r_list if r.cost is not None]
+        dists = [r.distance for r in r_list if r.distance is not None]
+        times = [getattr(r, "execution_time_ms", None) for r in r_list if getattr(r, "execution_time_ms", None) is not None]
+        return {
+            "count": len(r_list),
+            "avg_cost": round(statistics.mean(costs), 2) if costs else None,
+            "avg_distance": round(statistics.mean(dists), 2) if dists else None,
+            "avg_time_ms": round(statistics.mean(times), 2) if times else None
+        }
+
+    a_stats = stats(a_star_routes)
+    d_stats = stats(dijkstra_routes)
+
+    if a_stats["count"] > 0 and d_stats["count"] > 0:
+        if (a_stats["avg_time_ms"] or 0) < (d_stats["avg_time_ms"] or 0):
+            explanation = "Under the tested warehouse graph layout, A* demonstrated faster average compute time than Dijkstra due to heuristic-guided search space pruning."
+        else:
+            explanation = "Both A* and Dijkstra demonstrated comparable path cost efficiency on the active warehouse grid graph."
+    elif a_stats["count"] > 0:
+        explanation = f"A* executed {a_stats['count']} route computations cleanly on active grid paths."
+    else:
+        explanation = "Insufficient historical route execution records for algorithm comparison."
+
+    return {
+        "warehouse_id": warehouse_id or "ALL",
+        "period": period,
+        "total_routes_evaluated": len(routes),
+        "a_star": a_stats,
+        "dijkstra": d_stats,
+        "factual_explanation": explanation,
+        "disclaimer": "Algorithm performance is dependent on warehouse graph topology, obstacle density, and heuristic weight. Neither algorithm is universally superior."
+    }
+
+
+def explain_decision_metrics(
+    db: Session,
+    decision_id: str
+) -> Dict[str, Any]:
+    """
+    Explains the exact underlying data metrics behind a Phase 8 Decision Intelligence record.
+    """
+    rec = db.query(AIRecommendation).filter(AIRecommendation.id == decision_id).first()
+    if not rec:
+        rec = db.query(AIRecommendation).filter(AIRecommendation.source_entity_id == decision_id).first()
+
+    if not rec:
+        return {"error": f"Decision record '{decision_id}' not found.", "status": 404}
+
+    return {
+        "decision_id": rec.id,
+        "title": rec.title,
+        "category": rec.recommendation_type,
+        "severity": rec.risk_level,
+        "score": rec.score,
+        "source_entity_type": rec.source_entity_type,
+        "source_entity_id": rec.source_entity_id,
+        "explanation": rec.explanation or rec.description,
+        "recommended_action": rec.recommended_action or rec.action_recommended,
+        "underlying_metrics": {
+            "warehouse_id": rec.warehouse_id,
+            "confidence_or_reliability": rec.confidence_or_reliability or rec.confidence_score,
+            "status": rec.status,
+            "created_at": rec.created_at.isoformat() if rec.created_at else None
+        }
+    }
+
+
+def compute_explainable_overview(
+    db: Session,
+    warehouse_id: Optional[str] = None,
+    period: str = "30d",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Consolidates 8 KPI categories, trend comparison, rank-ordered bottlenecks,
+    and top operational insights.
+    """
+    start, end = get_date_range(period, start_date, end_date)
+
+    orders = compute_order_analytics(db, warehouse_id, start, end)
+    inventory = compute_inventory_analytics(db, warehouse_id, start, end)
+    tasks = compute_task_analytics(db, warehouse_id, start, end)
+    robots = compute_robot_analytics(db, warehouse_id, start, end)
+    routing = compute_routing_analytics(db, warehouse_id, start, end)
+    forecasting = compute_forecasting_analytics(db, warehouse_id)
+    simulations = compute_simulation_analytics(db, warehouse_id, start, end)
+    system = compute_system_reliability_analytics(db, start, end)
+
+    trends = compute_period_comparison(db, warehouse_id, period)
+    bottlenecks = compute_explainable_bottlenecks(db, warehouse_id)
+    pathfinding = compute_pathfinding_factual_comparison(db, warehouse_id, period)
+
+    # Executive Summary & Top Operational Insights
+    top_insights = []
+    if tasks["tasks_pending"]["value"] > 5:
+        top_insights.append(f"Task queue depth ({tasks['tasks_pending']['value']} tasks) requires AGV dispatch review.")
+    if inventory["low_stock_count"]["value"] > 0:
+        top_insights.append(f"{inventory['low_stock_count']['value']} item(s) are below reorder threshold.")
+    if bottlenecks["total_bottlenecks"] > 0:
+        top_insights.append(f"Top bottleneck: {bottlenecks['bottlenecks'][0]['what']}.")
+    if not top_insights:
+        top_insights.append("All warehouse operational indicators within normal design parameters.")
+
+    return {
+        "timestamp": datetime.now(UTC).replace(tzinfo=None).isoformat(),
+        "period": period,
+        "warehouse_id": warehouse_id or "ALL",
+        "data_mode": "EXPLAINABLE ANALYTICS / READ-ONLY INSIGHTS",
+        "executive_summary": {
+            "total_orders": orders["throughput"]["value"],
+            "task_completion_rate": tasks["completion_rate"]["value"],
+            "fleet_size": robots["fleet_size"]["value"],
+            "critical_stockouts": inventory["stockout_rate"]["value"],
+            "route_count": routing["route_count"]["value"],
+            "active_bottlenecks": bottlenecks["total_bottlenecks"]
+        },
+        "kpis": {
+            "order_performance": orders,
+            "task_performance": tasks,
+            "robot_performance": robots,
+            "route_performance": routing,
+            "inventory_performance": inventory,
+            "replenishment_performance": forecasting,
+            "warehouse_performance": system,
+            "simulation_performance": simulations
+        },
+        "trends": trends,
+        "bottleneck_analysis": bottlenecks,
+        "pathfinding_comparison": pathfinding,
+        "top_operational_insights": top_insights
+    }
+

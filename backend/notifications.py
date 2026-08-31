@@ -278,12 +278,28 @@ def send_change_alert(event_type: str, details: dict, recipient: str = None) -> 
 
         details_copy["message"] = message
 
-        # 3. Create database session and publish event
+        # 3. Create database session and check notification preferences before publishing
         from backend.database import SessionLocal
         from backend import event_processor
+        from backend.settings import get_settings
         
         db = SessionLocal()
         try:
+            app_settings = get_settings(db)
+            # Flag checks to suppress alerts based on user configuration
+            if std_event in ("ROBOT_BATTERY_LOW", "ROBOT_BATTERY_CRITICAL") and not app_settings.get("notif_low_battery", True):
+                logger.info("Notification %s suppressed per notif_low_battery setting", std_event)
+                return
+            if std_event in ("TASK_COMPLETED", "TASK_GENERATED", "ROBOT_TASK_COMPLETED") and not app_settings.get("notif_task", True):
+                logger.info("Notification %s suppressed per notif_task setting", std_event)
+                return
+            if std_event in ("STOCK_RECEIVED", "INVENTORY_CHANGED", "ITEM_CREATED") and not app_settings.get("notif_inventory", True):
+                logger.info("Notification %s suppressed per notif_inventory setting", std_event)
+                return
+            if std_event in ("ORDER_CREATED", "ORDER_CANCELLED", "ORDER_PACKED", "ORDER_SHIPPED", "ORDER_COMPLETED") and not app_settings.get("notif_order", True):
+                logger.info("Notification %s suppressed per notif_order setting", std_event)
+                return
+
             event_processor.publish_event(
                 db=db,
                 event_type=std_event,

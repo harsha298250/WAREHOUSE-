@@ -484,6 +484,32 @@ def seed():
             except Exception as e:
                 pass
 
+        # Trigger demand anomaly detection and save to DB
+        print("Seeding demand anomalies...")
+        try:
+            from ml.anomaly.demand_anomaly import detect_demand_anomalies, save_anomalies_to_db
+            res_anom = detect_demand_anomalies()
+            save_anomalies_to_db(db, res_anom)
+        except Exception as e_anom:
+            print(f"Demand anomaly seeding skipped: {e_anom}")
+
+        # Trigger initial ABC classification
+        print("Seeding ABC classifications...")
+        try:
+            from ml.abc.classifier import ABCClassifier
+            from sqlalchemy import func
+            clf = ABCClassifier()
+            data_list = []
+            for it in db.query(Item).all():
+                q_sum = db.query(func.sum(StockMovement.stock_out)).filter(StockMovement.item_id == it.id).scalar() or 0.0
+                inv_sum = db.query(func.sum(Inventory.on_hand)).filter(Inventory.item_id == it.id).scalar() or 0.0
+                data_list.append({"item_id": it.id, "item_name": it.name, "qty": max(float(q_sum), float(inv_sum)), "unit_cost": float(it.unit_cost or 0.0)})
+            if data_list:
+                clf.fit(pd.DataFrame(data_list), item_col="item_id", qty_col="qty", value_col="unit_cost", item_name_col="item_name")
+                clf.save_to_db(db, source="wms")
+        except Exception as e_abc:
+            print(f"ABC classification seeding skipped: {e_abc}")
+
         print(f"Success! Seeded:")
         print(f"  - {len(WAREHOUSES)} warehouses")
         print(f"  - {len(ITEMS)} items")

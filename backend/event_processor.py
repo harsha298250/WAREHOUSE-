@@ -386,12 +386,16 @@ def publish_event(
                 body_content = build_email_body(event_type, severity, title, message, warehouse_id, payload)
                 
                 # Directly dispatch via thread-safe daemon background worker
-                import threading
-                threading.Thread(
-                    target=_send_email_async_thread,
-                    args=(email_notif.id, subject, body_content, target_email),
-                    daemon=True
-                ).start()
+                if os.getenv("ENVIRONMENT") == "testing":
+                    _send_email_async_thread(email_notif.id, subject, body_content, target_email)
+                else:
+                    import threading
+                    threading.Thread(
+                        target=_send_email_async_thread,
+                        args=(email_notif.id, subject, body_content, target_email),
+                        daemon=True
+                    ).start()
+
 
                     
         # Publish event message to RabbitMQ topic exchange

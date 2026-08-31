@@ -65,6 +65,10 @@ class SyncBroadcaster:
 
         self._dispatch(_put)
 
+    def broadcast_sync_event(self, warehouse_id: str, event_type: str, payload: dict = None):
+        data = {"event_type": event_type, **(payload or {})}
+        self.broadcast_live(warehouse_id, data)
+
     def _dispatch(self, func):
         if self.loop and self.loop.is_running():
             try:
