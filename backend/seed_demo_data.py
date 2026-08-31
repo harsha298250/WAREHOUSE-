@@ -37,12 +37,18 @@ ITEMS = [
 ]
 
 
-def seed():
+def seed(force: bool = False):
     print("Connecting to database...")
     db = SessionLocal()
     try:
+        # Check if warehouse data already exists to ensure idempotency
+        existing_warehouses_count = db.query(Warehouse).count()
+        if existing_warehouses_count > 0 and not force and os.getenv("FORCE_RESEED", "false").lower() != "true":
+            print(f"Database already contains {existing_warehouses_count} warehouse(s) — skipping seed to preserve existing production data.")
+            return
+
         # Clear existing data (but NOT users/admin)
-        print("Clearing existing data...")
+        print("Seeding demo data (clearing previous operational records)...")
         db.query(AuditLedger).delete()
         db.query(StockMovement).delete()
         db.query(ShrinkageFlag).delete()
@@ -527,5 +533,6 @@ def seed():
 
 
 if __name__ == "__main__":
-    seed()
+    force_flag = "--force" in sys.argv
+    seed(force=force_flag)
 

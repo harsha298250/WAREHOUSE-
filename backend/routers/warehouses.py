@@ -49,7 +49,7 @@ def create_warehouse(payload: WarehouseCreate, request: Request, db: Session = D
             warning_msg = "Location could not be automatically resolved. Please enter coordinates or select the location on the map."
             
     w = Warehouse(
-        id=payload.id, name=payload.name, location=payload.location,
+        id=payload.id, name=payload.name, location=resolved_addr or payload.location,
         city=payload.city or "", state=payload.state or "", country=payload.country or "",
         latitude=lat, longitude=lon
     )
@@ -66,9 +66,7 @@ def create_warehouse(payload: WarehouseCreate, request: Request, db: Session = D
         "created_by": user.username
     })
     
-    res = {"status": "created", "id": w.id, "latitude": lat, "longitude": lon}
-    if warning_msg:
-        res["warning"] = warning_msg
+    res = {"status": "created", "id": w.id, "latitude": lat, "longitude": lon, "warning": warning_msg}
     return res
 
 
@@ -99,8 +97,19 @@ def update_warehouse(id: str, payload: WarehouseUpdate, request: Request, db: Se
     w.city = payload.city or ""
     w.state = payload.state or ""
     w.country = payload.country or ""
-    w.latitude = payload.latitude
-    w.longitude = payload.longitude
+
+    lat = payload.latitude
+    lon = payload.longitude
+    resolved_addr = None
+    if lat is None or lon is None:
+        lat, lon, resolved_addr = geocode_address(
+            payload.name, payload.city or "", payload.state or "", payload.country or "", payload.location
+        )
+    w.latitude = lat
+    w.longitude = lon
+    if resolved_addr:
+        w.location = resolved_addr
+
     db.commit()
     log_access(db, user.username, "update_warehouse", warehouse_id=w.id, request=request)
     return {"status": "updated", "id": w.id}
@@ -169,16 +178,28 @@ def update_warehouse_coordinates(id: str, payload: CoordinatesUpdate, request: R
     # Trigger reverse geocoding to enrich location metadata
     reverse_res = reverse_geocode(payload.latitude, payload.longitude)
     if reverse_res:
-        if reverse_res.get("city"):
-            w.city = reverse_res["city"]
-        if reverse_res.get("state"):
-            w.state = reverse_res["state"]
-        if reverse_res.get("country"):
-            w.country = reverse_res["country"]
+        if isinstance(reverse_res, dict):
+            if reverse_res.get("city"):
+                w.city = reverse_res["city"]
+            if reverse_res.get("state"):
+                w.state = reverse_res["state"]
+            if reverse_res.get("country"):
+                w.country = reverse_res["country"]
+        elif isinstance(reverse_res, str):
+            w.location = reverse_res
             
     db.commit()
     log_access(db, user.username, "update_coordinates", warehouse_id=w.id, request=request)
     
+    ledger.append_entry(db, "warehouse_location_changed", {
+        "actor": user.username,
+        "warehouse_id": w.id,
+        "old_latitude": old_lat,
+        "old_longitude": old_lon,
+        "new_latitude": w.latitude,
+        "new_longitude": w.longitude
+    })
+
     notifications.send_change_alert("Warehouse Coordinates Updated", {
         "warehouse_id": w.id,
         "name": w.name,
