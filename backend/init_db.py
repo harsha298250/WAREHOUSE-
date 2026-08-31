@@ -38,32 +38,33 @@ def init():
 
     db = SessionLocal()
     try:
-        # Enforce non-empty password for initialization
-        if not DEFAULT_ADMIN_PASSWORD:
-            raise ValueError(
-                "INITIAL_ADMIN_PASSWORD environment variable is missing or empty! "
-                "Please configure a secure INITIAL_ADMIN_PASSWORD in your environment or .env file before running initialization."
-            )
-        if len(DEFAULT_ADMIN_PASSWORD) < 8:
-            raise ValueError(
-                "INITIAL_ADMIN_PASSWORD is too weak! It must be at least 8 characters long."
-            )
-
         existing = db.query(User).filter(User.username == DEFAULT_ADMIN_USERNAME).first()
         default_email = os.getenv("ALERT_EMAIL_TO", "admin@example.com")
         if existing:
-            print(f"Admin user '{DEFAULT_ADMIN_USERNAME}' already exists — skipping.")
+            print(f"Admin user '{DEFAULT_ADMIN_USERNAME}' already exists — skipping initial admin creation.")
             if not existing.email and default_email:
                 existing.email = default_email
                 db.commit()
                 print(f"Updated existing admin user email to '{default_email}'")
         else:
+            # Enforce non-empty password for initial creation
+            if not DEFAULT_ADMIN_PASSWORD:
+                raise ValueError(
+                    "INITIAL_ADMIN_PASSWORD environment variable is missing or empty! "
+                    "Please configure INITIAL_ADMIN_PASSWORD in your environment or Render dashboard before initializing."
+                )
+            if len(DEFAULT_ADMIN_PASSWORD) < 8:
+                raise ValueError(
+                    "INITIAL_ADMIN_PASSWORD is too weak! It must be at least 8 characters long."
+                )
+
             admin = User(
                 username=DEFAULT_ADMIN_USERNAME,
                 password_hash=hash_password(DEFAULT_ADMIN_PASSWORD),
                 role="admin",
                 full_name="System Administrator",
                 email=default_email,
+                is_active=True,
             )
             db.add(admin)
             db.commit()

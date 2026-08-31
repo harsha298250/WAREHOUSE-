@@ -52,6 +52,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
 # ============================================================
 # STARTUP:
 #   1. alembic upgrade head — runs migration schemas dynamically
-#   2. uvicorn — starts the API server
+#   2. python backend/init_db.py — creates initial admin account if not existing
+#   3. uvicorn — starts the API server
 # ============================================================
-CMD ["sh", "-c", "alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
+CMD ["sh", "-c", "alembic upgrade head && python backend/init_db.py && uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
