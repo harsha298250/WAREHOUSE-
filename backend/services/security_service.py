@@ -32,7 +32,7 @@ OTP_EXPIRY_LOGIN_SECONDS = int(os.getenv("OTP_EXPIRY_SECONDS", "300"))   # 5 min
 OTP_RATE_LIMIT_PER_HOUR = int(os.getenv("OTP_RATE_LIMIT_PER_HOUR", "10"))
 SECURITY_NOTIFICATION_RATE_LIMIT = int(os.getenv("SECURITY_NOTIFICATION_RATE_LIMIT", "20"))
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
-LOGIN_OTP_REQUIRED = os.getenv("LOGIN_OTP_REQUIRED", "true" if ENVIRONMENT == "production" else "false").lower() == "true"
+LOGIN_OTP_REQUIRED = os.getenv("LOGIN_OTP_REQUIRED", "false").lower() == "true"
 
 
 def get_security_alert_recipient() -> str:

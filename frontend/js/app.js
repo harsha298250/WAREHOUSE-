@@ -1285,11 +1285,14 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   errBox.style.display = "none";
   try {
     const data = await Api.login(username, password);
+    if (!data || !data.access_token) {
+      throw new Error(data && data.message ? data.message : "Failed to obtain access token.");
+    }
     Api.setToken(data.access_token);
     toast("Signed in successfully", "success");
     await bootstrapApp();
   } catch (err) {
-    errBox.textContent = "Invalid credentials. Please try again.";
+    errBox.textContent = err.message || "Invalid credentials. Please try again.";
     errBox.style.display = "block";
   }
 });
