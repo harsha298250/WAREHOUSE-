@@ -34,6 +34,7 @@ from backend.auth import (
     get_current_user,
     hash_password,
     verify_password,
+    validate_password_strength,
     require_admin,
     require_permission,
     log_access,
@@ -711,17 +712,7 @@ def request_change_password(
     if not verify_password(payload.current_password, user.password_hash):
         raise HTTPException(status_code=400, detail="Current password incorrect")
 
-    # Load settings from db to validate password requirements
-    from backend.settings import get_settings
-    settings = get_settings(db)
-    
-    if settings.get("require_strong_pass"):
-        new_pw = payload.new_password
-        import re
-        # Default policy: Min 8 chars, 1 digit, 1 special char
-        if len(new_pw) < 8 or not re.search(r"\d", new_pw) or not re.search(r"[!@#$%^&*(),.?\":{}|<>\-_=+`~;']", new_pw):
-            policy = settings.get("password_requirements") or "Min 8 chars, 1 digit, 1 special char"
-            raise HTTPException(status_code=400, detail=f"New password does not meet complexity requirements: {policy}")
+    validate_password_strength(payload.new_password, db)
 
     ip = request.client.host if request and request.client else ""
     otp_code = _create_db_otp(db, user, "PASSWORD_CHANGE", ip, {"new_password_hash": hash_password(payload.new_password)})
@@ -801,6 +792,9 @@ def request_add_admin(
     user=Depends(require_admin),
     db: Session = Depends(get_db)
 ):
+    if hasattr(payload, "password") and payload.password:
+        validate_password_strength(payload.password, db)
+
     target_email = payload.email.strip().lower()
     google_admin_email = os.getenv("GOOGLE_ADMIN_EMAIL", "").strip().lower()
     if not (target_email.endswith("@gmail.com") or (google_admin_email and target_email == google_admin_email)):

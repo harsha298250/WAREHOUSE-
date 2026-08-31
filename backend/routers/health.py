@@ -495,15 +495,21 @@ def get_system_health(
     telemetry = perform_deep_telemetry(db)
     process_incidents_detection(db, telemetry)
 
-    # Calculate overall health
-    overall = "HEALTHY"
-    for k, v in telemetry.items():
-        if isinstance(v, dict) and "status" in v:
-            if v["status"] == "UNAVAILABLE":
-                overall = "UNAVAILABLE"
-                break
-            elif v["status"] == "DEGRADED":
-                overall = "DEGRADED"
+    # Calculate overall health based on core critical services
+    core_services = ["database", "application"]
+    critical_failed = any(
+        telemetry.get(s, {}).get("status") in ("UNAVAILABLE", "FAILED") for s in core_services
+    )
+    critical_degraded = any(
+        telemetry.get(s, {}).get("status") == "DEGRADED" for s in core_services
+    )
+
+    if critical_failed:
+        overall = "UNAVAILABLE"
+    elif critical_degraded:
+        overall = "DEGRADED"
+    else:
+        overall = "HEALTHY"
 
     return {
         "overall_status": overall,

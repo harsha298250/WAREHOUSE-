@@ -293,6 +293,8 @@
             return { dot: `<span class="status-dot" style="background:var(--success);"></span>`, text: "Connected" };
           } else if (s === "DEGRADED" || s === "WARN" || s === "WARNING") {
             return { dot: `<span class="status-dot" style="background:var(--warning);"></span>`, text: "Degraded" };
+          } else if (s === "NOT_CONFIGURED" || s === "UNCONFIGURED") {
+            return { dot: `<span class="status-dot" style="background:var(--text-muted);"></span>`, text: "Not Configured" };
           } else {
             return { dot: `<span class="status-dot" style="background:var(--danger);"></span>`, text: "Disconnected" };
           }
@@ -311,8 +313,12 @@
             storageText = "Available";
             storageDot = `<span class="status-dot" style="background:var(--success);"></span>`;
             storageDotColor = "var(--success)";
-          } else if (bs === "DEGRADED" || bs === "NOT_CONFIGURED" || bs === "UNCONFIGURED") {
-            storageText = "Warning";
+          } else if (bs === "NOT_CONFIGURED" || bs === "UNCONFIGURED") {
+            storageText = "Local Storage Active";
+            storageDot = `<span class="status-dot" style="background:var(--success);"></span>`;
+            storageDotColor = "var(--success)";
+          } else if (bs === "DEGRADED" || bs === "WARN" || bs === "WARNING") {
+            storageText = "Degraded";
             storageDot = `<span class="status-dot" style="background:var(--warning);"></span>`;
             storageDotColor = "var(--warning)";
           }

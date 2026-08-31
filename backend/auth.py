@@ -159,6 +159,33 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
     return bcrypt.checkpw(plain_password.encode("utf-8"), password_hash.encode("utf-8"))
 
 
+def validate_password_strength(password: str, db: Session = None) -> None:
+    """
+    Server-side authoritative password policy enforcement.
+    Requires minimum 8 characters, at least 1 digit, and at least 1 special character.
+    Raises HTTPException(400) if validation fails.
+    """
+    if not password:
+        raise HTTPException(status_code=400, detail="Password cannot be empty.")
+
+    import re
+    require_strong = True
+    if db:
+        try:
+            from backend.settings import get_settings
+            st = get_settings(db)
+            require_strong = st.get("require_strong_pass", True)
+        except Exception:
+            pass
+
+    if require_strong:
+        if len(password) < 8 or not re.search(r"\d", password) or not re.search(r"[!@#$%^&*(),.?\":{}|<>\-_=+`~;']", password):
+            raise HTTPException(
+                status_code=400,
+                detail="Password must contain at least 8 characters, 1 digit, and 1 special character."
+            )
+
+
 def create_access_token(data: dict, expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES) -> str:
     to_encode = data.copy()
     expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(minutes=expires_minutes)

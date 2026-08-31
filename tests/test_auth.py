@@ -268,3 +268,21 @@ class TestSecurePasswordChange:
 
         r = client.post("/auth/login", json={"username": "test_admin", "password": "NewSecurePassword@123"})
         assert r.status_code == 200
+
+
+class TestPasswordPolicyEnforcement:
+
+    def test_weak_passwords_rejected(self):
+        from backend.auth import validate_password_strength
+        from fastapi import HTTPException
+
+        invalid_passwords = ["123456", "password", "password123", "short!1"]
+        for pw in invalid_passwords:
+            with pytest.raises(HTTPException) as exc_info:
+                validate_password_strength(pw)
+            assert exc_info.value.status_code == 400
+            assert "8 characters" in exc_info.value.detail
+
+    def test_strong_password_accepted(self):
+        from backend.auth import validate_password_strength
+        validate_password_strength("Password123!")

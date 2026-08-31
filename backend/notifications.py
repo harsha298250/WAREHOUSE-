@@ -117,20 +117,26 @@ def test_email_connection() -> dict:
         cfg = get_smtp_config()
         use_ssl = (cfg["SMTP_PORT"] == 465)
         if use_ssl:
-            server = smtplib.SMTP_SSL(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=8)
+            server = smtplib.SMTP_SSL(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=15)
+            server.ehlo()
         else:
-            server = smtplib.SMTP(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=8)
-            server.starttls()
-            
+            server = smtplib.SMTP(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=15)
+            server.ehlo()
+            if server.has_extn("starttls"):
+                server.starttls()
+                server.ehlo()
+
         with server:
             server.login(cfg["SMTP_USER"], cfg["SMTP_PASSWORD"])
         return {"success": True, "message": "Successfully authenticated and connected to SMTP server!"}
-    except smtplib.SMTPAuthenticationError:
+    except smtplib.SMTPAuthenticationError as ae:
+        logger.warning("SMTP Authentication failure: %s", ae)
         return {
             "success": False,
             "message": "Authentication Failed. If using Gmail, you must use a 16-character 'App Password' rather than your normal account password."
         }
     except Exception as e:
+        logger.error("SMTP connection failure: %s", e)
         return {"success": False, "message": f"Connection Failed: {str(e)}"}
 
 
@@ -178,9 +184,13 @@ def send_email_alert(subject: str, body: str, recipient: str = None) -> bool:
         
         if use_ssl:
             server = smtplib.SMTP_SSL(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=15)
+            server.ehlo()
         else:
             server = smtplib.SMTP(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=15)
-            server.starttls()
+            server.ehlo()
+            if server.has_extn("starttls"):
+                server.starttls()
+                server.ehlo()
 
         with server:
             server.login(cfg["SMTP_USER"], cfg["SMTP_PASSWORD"])
