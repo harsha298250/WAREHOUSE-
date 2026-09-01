@@ -234,22 +234,30 @@ def detect_shrinkage(contamination: float = 0.05, db: Session = None):
 
 
 def save_flags_to_db(db: Session, result_dict: dict):
-    """Saves flagged shrinkage anomalies to the MySQL shrinkage_flags table."""
+    """Saves flagged shrinkage anomalies to the shrinkage_flags database table."""
+    from datetime import datetime
     anomalies = result_dict.get("anomalies", [])
-    db.query(ShrinkageFlag).delete()
-    for row in anomalies:
-        db.add(ShrinkageFlag(
-            date=row["detection_date"],
-            warehouse_id=row["warehouse_id"],
-            item_id=row["item_id"],
-            item_name=row["item_name"],
-            deviation_score=round(float(row["anomaly_score"]) / 100.0, 3),
-            expected_quantity=row["expected_quantity"],
-            actual_quantity=row["actual_quantity"],
-            discrepancy_quantity=row["discrepancy_quantity"],
-            estimated_exposure=row["estimated_exposure"],
-            severity=row["severity"],
-            likely_cause=row["likely_cause"],
-            explanation=row["explanation"]
-        ))
-    db.commit()
+    try:
+        db.query(ShrinkageFlag).delete()
+        for row in anomalies:
+            raw_d = row.get("detection_date")
+            d_val = datetime.strptime(str(raw_d), "%Y-%m-%d").date() if raw_d else datetime.now().date()
+            db.add(ShrinkageFlag(
+                date=d_val,
+                warehouse_id=str(row["warehouse_id"]),
+                item_id=str(row["item_id"]),
+                item_name=str(row.get("item_name", "")),
+                deviation_score=round(float(row.get("anomaly_score", 0.0)) / 100.0, 3),
+                expected_quantity=float(row.get("expected_quantity", 0.0)),
+                actual_quantity=float(row.get("actual_quantity", 0.0)),
+                discrepancy_quantity=float(row.get("discrepancy_quantity", 0.0)),
+                estimated_exposure=float(row.get("estimated_exposure", 0.0)),
+                severity=str(row.get("severity", "MEDIUM")),
+                likely_cause=str(row.get("likely_cause", "")),
+                explanation=str(row.get("explanation", ""))
+            ))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        import logging
+        logging.getLogger("warehouse").error("Failed to save shrinkage flags to database: %s", e)
