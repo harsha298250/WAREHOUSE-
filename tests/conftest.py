@@ -344,13 +344,18 @@ def admin_token(test_app):
             username="test_admin",
             password_hash=hash_password("TestAdmin@123"),
             role="admin",
+            is_active=True,
+            is_verified=True
         )
         _session.add(admin)
         _session.commit()
     else:
-        existing.password_hash = hash_password("TestAdmin@123")
+        existing.role = "admin"
         existing.is_active = True
+        existing.is_verified = True
         existing.failed_login_count = 0
+        existing.locked_until = None
+        existing.password_hash = hash_password("TestAdmin@123")
         _session.commit()
     _session.close()
 

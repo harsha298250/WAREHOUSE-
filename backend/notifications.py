@@ -320,7 +320,7 @@ def send_change_alert(event_type: str, details: dict, recipient: str = None) -> 
                 payload=details_copy
             )
         except Exception as err:
-            logger.error("Event processor pipeline injection failed in background thread: %s", err)
+            logger.error("[NOTIFICATION ERROR] event=%s warehouse_id=%s entity=%s error=%s", std_event, warehouse_id, source_id, err)
         finally:
             db.close()
 
@@ -329,13 +329,13 @@ def send_change_alert(event_type: str, details: dict, recipient: str = None) -> 
             worker()
             return True
         except Exception as e:
-            logger.error("Notification worker failed during test: %s", e)
+            logger.error("[NOTIFICATION ERROR] Notification worker failed during test: %s", e)
             return False
 
     try:
         threading.Thread(target=worker, daemon=True).start()
         return True
     except Exception as e:
-        logger.error("Failed to spawn background notification thread: %s", e)
+        logger.error("[NOTIFICATION ERROR] Failed to spawn background notification thread: %s", e)
         return False
 

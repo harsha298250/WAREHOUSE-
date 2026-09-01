@@ -1724,13 +1724,131 @@ if (brandLogoEl) {
   });
 }
 
-const topbarNotifBtn = document.getElementById("topbar-notif-btn");
-if (topbarNotifBtn) {
-  topbarNotifBtn.addEventListener("click", () => {
-    navigate("alerts-notifications");
-    closeMobileSidebar();
+function setupNotificationDropdown() {
+  const btn = document.getElementById("topbar-notif-btn");
+  const dropdown = document.getElementById("topbar-notif-dropdown");
+  const markAllBtn = document.getElementById("notif-dropdown-mark-all");
+  const viewAllBtn = document.getElementById("notif-dropdown-view-all");
+
+  if (!btn || !dropdown) return;
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isVisible = dropdown.style.display === "flex";
+    if (isVisible) {
+      dropdown.style.display = "none";
+    } else {
+      dropdown.style.display = "flex";
+      loadHeaderNotificationDropdown();
+    }
+  });
+
+  if (markAllBtn) {
+    markAllBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      try {
+        await Api.markAllNotificationsRead();
+        toast("All notifications marked as read", "success");
+        refreshNotificationBadge();
+        loadHeaderNotificationDropdown();
+      } catch (err) {
+        toast("Failed to mark all as read: " + err.message, "error");
+      }
+    });
+  }
+
+  if (viewAllBtn) {
+    viewAllBtn.addEventListener("click", () => {
+      dropdown.style.display = "none";
+      navigate("alerts-notifications");
+      closeMobileSidebar();
+    });
+  }
+
+  document.addEventListener("click", (e) => {
+    if (dropdown && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+      dropdown.style.display = "none";
+    }
   });
 }
+
+async function loadHeaderNotificationDropdown() {
+  const listEl = document.getElementById("notif-dropdown-list");
+  if (!listEl) return;
+
+  listEl.innerHTML = `
+    <div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 12px;">
+      <i data-lucide="loader" class="spin" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i> Loading notifications...
+    </div>
+  `;
+  if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+
+  try {
+    const res = await Api.listNotifications(null, "", "", "", 10, 0);
+    const notifications = res && res.items ? res.items : (Array.isArray(res) ? res : []);
+    
+    if (notifications.length === 0) {
+      listEl.innerHTML = `
+        <div style="padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 12px;">
+          <i data-lucide="bell-off" style="width:24px;height:24px;margin-bottom:8px;opacity:0.6;"></i>
+          <div>No notifications yet</div>
+        </div>
+      `;
+      if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+      return;
+    }
+
+    listEl.innerHTML = notifications.map(n => {
+      const isUnread = n.status !== "READ";
+      const sevColor = n.severity === "CRITICAL" || n.severity === "HIGH" ? "var(--danger)" :
+                       n.severity === "WARNING" ? "var(--warning)" : "var(--accent)";
+      const timeStr = n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+      return `
+        <div class="notif-dropdown-item" data-id="${n.id}" style="padding: 10px 16px; border-bottom: 1px solid var(--border); background: ${isUnread ? 'rgba(59, 130, 246, 0.05)' : 'transparent'}; cursor: pointer; display: flex; gap: 10px; align-items: flex-start; transition: background 0.15s ease;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${isUnread ? sevColor : 'transparent'}; margin-top: 5px; flex-shrink: 0;"></span>
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px;">
+              <span style="font-weight: 600; font-size: 12px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${esc(n.title)}</span>
+              <span style="font-size: 10px; color: var(--text-muted); flex-shrink: 0;">${esc(timeStr)}</span>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${esc(n.message)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    // Add click listeners to items
+    listEl.querySelectorAll(".notif-dropdown-item").forEach(item => {
+      item.addEventListener("click", async () => {
+        const id = item.getAttribute("data-id");
+        try {
+          await Api.markNotificationRead(id);
+          refreshNotificationBadge();
+          loadHeaderNotificationDropdown();
+        } catch (e) {
+          toast("Error marking read: " + e.message, "error");
+        }
+      });
+    });
+
+  } catch (err) {
+    listEl.innerHTML = `
+      <div style="padding: 16px; text-align: center; color: var(--danger); font-size: 12px;">
+        <div>Failed to load notifications</div>
+        <button id="notif-dropdown-retry" style="margin-top:6px;background:var(--surface-3);border:1px solid var(--border);color:var(--text-primary);padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer;">Retry</button>
+      </div>
+    `;
+    const retryBtn = document.getElementById("notif-dropdown-retry");
+    if (retryBtn) retryBtn.addEventListener("click", loadHeaderNotificationDropdown);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  setupNotificationDropdown();
+});
+
+const topbarNotifBtn = document.getElementById("topbar-notif-btn");
 
 // Password visibility toggle handler
 document.addEventListener("click", (e) => {

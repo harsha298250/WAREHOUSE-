@@ -308,6 +308,14 @@ def publish_event(
         smtp_cfg = email_service.get_smtp_config()
         configured_alert_email = smtp_cfg.get("ALERT_EMAIL_TO") or "harsha200797@gmail.com"
 
+        # Verify warehouse_id foreign key validity
+        valid_wh = None
+        if warehouse_id:
+            from backend.models import Warehouse
+            wh_exists = db.query(Warehouse).filter(Warehouse.id == warehouse_id).first()
+            if wh_exists:
+                valid_wh = warehouse_id
+
         for u in recipients:
             try:
                 u_id = u.id
@@ -339,47 +347,55 @@ def publish_event(
                 
             # Create In-App Notification (Step 12)
             if in_app_ok:
-                notif = Notification(
-                    user_id=u_id,
-                    warehouse_id=warehouse_id,
-                    event_type=event_type,
-                    notification_type=f"{category.upper()}_ALERT",
-                    title=title,
-                    message=message,
-                    severity=severity,
-                    status="DELIVERED",  # delivered instantly for in-app
-                    channel="IN_APP",
-                    source_entity_type=source_entity_type,
-                    source_entity_id=source_entity_id,
-                    created_at=occurred_at,
-                    delivered_at=datetime.now(UTC).replace(tzinfo=None),
-                    idempotency_key=idempotency_key,
-                    notif_metadata=json.dumps(payload)
-                )
-                db.add(notif)
-                db.commit()
+                try:
+                    notif = Notification(
+                        user_id=u_id,
+                        warehouse_id=valid_wh,
+                        event_type=event_type,
+                        notification_type=f"{category.upper()}_ALERT",
+                        title=title,
+                        message=message,
+                        severity=severity,
+                        status="DELIVERED",  # delivered instantly for in-app
+                        channel="IN_APP",
+                        source_entity_type=source_entity_type,
+                        source_entity_id=source_entity_id,
+                        created_at=occurred_at,
+                        delivered_at=datetime.now(UTC).replace(tzinfo=None),
+                        idempotency_key=idempotency_key,
+                        notif_metadata=json.dumps(payload)
+                    )
+                    db.add(notif)
+                    db.commit()
+                except Exception as notif_err:
+                    db.rollback()
+                    logger.error("[NOTIFICATION ERROR] Failed to save in-app notification for user %s: %s", u_id, notif_err)
  
             # Create Email Notification (Step 14)
             if email_ok and target_email:
-                # Create PENDING/QUEUED email record
-                email_notif = Notification(
-                    user_id=u_id,
-                    warehouse_id=warehouse_id,
-                    event_type=event_type,
-                    notification_type=f"{category.upper()}_ALERT",
-                    title=title,
-                    message=message,
-                    severity=severity,
-                    status="QUEUED",
-                    channel="EMAIL",
-                    source_entity_type=source_entity_type,
-                    source_entity_id=source_entity_id,
-                    created_at=occurred_at,
-                    idempotency_key=f"email_{idempotency_key}",
-                    notif_metadata=json.dumps(payload)
-                )
-                db.add(email_notif)
-                db.commit()
+                try:
+                    # Create PENDING/QUEUED email record
+                    email_notif = Notification(
+                        user_id=u_id,
+                        warehouse_id=valid_wh,
+                        event_type=event_type,
+                        notification_type=f"{category.upper()}_ALERT",
+                        title=title,
+                        message=message,
+                        severity=severity,
+                        status="QUEUED",
+                        channel="EMAIL",
+                        source_entity_type=source_entity_type,
+                        source_entity_id=source_entity_id,
+                        created_at=occurred_at,
+                        idempotency_key=f"email_{idempotency_key}",
+                        notif_metadata=json.dumps(payload)
+                    )
+                    db.add(email_notif)
+                    db.commit()
+                except Exception as email_err:
+                    db.rollback()
+                    logger.error("[NOTIFICATION ERROR] Failed to queue email notification for user %s: %s", u_id, email_err)
                 
                 # Render email templates
                 subject = f"[{severity.upper()}] {title} — Warehouse OS"

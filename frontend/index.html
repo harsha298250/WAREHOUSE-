@@ -153,11 +153,27 @@
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:16px;">
-        <!-- Notification Center count badge -->
-        <button class="topbar-action-btn" id="topbar-notif-btn" title="View Notifications" aria-label="Notifications" style="background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;color:var(--text-muted);">
-          <i data-lucide="bell" style="width:18px;height:18px;"></i>
-          <span class="notif-badge" id="topbar-notif-count" style="position:absolute;top:-4px;right:-4px;background:var(--danger);color:white;font-size:9px;font-weight:800;border-radius:50%;padding:1px 4px;min-width:14px;text-align:center;">0</span>
-        </button>
+        <!-- Notification Center count badge & popover dropdown -->
+        <div style="position:relative;">
+          <button class="topbar-action-btn" id="topbar-notif-btn" title="View Notifications" aria-label="Notifications" style="background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;color:var(--text-muted);">
+            <i data-lucide="bell" style="width:18px;height:18px;"></i>
+            <span class="notif-badge" id="topbar-notif-count" style="position:absolute;top:-4px;right:-4px;background:var(--danger);color:white;font-size:9px;font-weight:800;border-radius:50%;padding:1px 4px;min-width:14px;text-align:center;">0</span>
+          </button>
+          <div id="topbar-notif-dropdown" class="notif-popover-dropdown" style="display:none;position:absolute;top:38px;right:0;width:340px;max-height:420px;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);z-index:9999;overflow:hidden;flex-direction:column;">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);">
+              <span style="font-weight:700;font-size:13px;color:var(--text-primary);">Notifications</span>
+              <div style="display:flex;gap:8px;">
+                <button id="notif-dropdown-mark-all" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;padding:0;">Mark All Read</button>
+              </div>
+            </div>
+            <div id="notif-dropdown-list" style="overflow-y:auto;max-height:300px;padding:8px 0;">
+              <!-- Notifications populated here -->
+            </div>
+            <div style="padding:8px 16px;border-top:1px solid var(--border);text-align:center;background:var(--surface-2);">
+              <button id="notif-dropdown-view-all" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;">View All Notifications Inbox →</button>
+            </div>
+          </div>
+        </div>
         <div class="system-status-indicator" id="system-status-indicator" title="System Status: Connected" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface-2);color:var(--text-muted);">
           <i data-lucide="shield-check" style="width:14px;height:14px;color:var(--success);vertical-align:middle;"></i>
           <span class="status-label">Operational</span>

@@ -452,7 +452,7 @@ def ensure_admin_user_exists():
             logger.info("Auto-seeded default admin user '%s'", initial_username)
         else:
             db.execute(
-                text("UPDATE users SET locked_until = NULL, failed_login_count = 0, is_active = true, password_hash = :p WHERE username = :u OR role = 'admin'"),
+                text("UPDATE users SET locked_until = NULL, failed_login_count = 0, is_active = true, password_hash = :p WHERE username = :u"),
                 {"p": hashed, "u": initial_username}
             )
             db.commit()
