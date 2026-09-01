@@ -379,6 +379,32 @@ def ensure_warehouses_schema():
                 db.execute(text("ALTER TABLE warehouses ALTER COLUMN country TYPE VARCHAR(120);"))
             except Exception as ex:
                 pass
+            # Ensure simulation_events.created_at exists
+            if "simulation_events" in inspector.get_table_names():
+                sim_cols = [c["name"] for c in inspector.get_columns("simulation_events")]
+                if "created_at" not in sim_cols:
+                    logger.info("DB SCHEMA: Adding column 'created_at' to simulation_events table...")
+                    try:
+                        db.execute(text("ALTER TABLE simulation_events ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+                    except Exception:
+                        pass
+
+            # Ensure financial_transactions.reference_id & warehouse_id exist
+            if "financial_transactions" in inspector.get_table_names():
+                fin_cols = [c["name"] for c in inspector.get_columns("financial_transactions")]
+                if "reference_id" not in fin_cols:
+                    logger.info("DB SCHEMA: Adding column 'reference_id' to financial_transactions table...")
+                    try:
+                        db.execute(text("ALTER TABLE financial_transactions ADD COLUMN reference_id VARCHAR(100)"))
+                    except Exception:
+                        pass
+                if "warehouse_id" not in fin_cols:
+                    logger.info("DB SCHEMA: Adding column 'warehouse_id' to financial_transactions table...")
+                    try:
+                        db.execute(text("ALTER TABLE financial_transactions ADD COLUMN warehouse_id VARCHAR(20)"))
+                    except Exception:
+                        pass
+
             db.commit()
             
             # Seed geocoding data migration for existing warehouses without coordinates

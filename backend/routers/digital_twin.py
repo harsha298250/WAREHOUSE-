@@ -749,9 +749,10 @@ def setup_scenario_conditions(db: Session, warehouse_id: str, scenario_type: str
     import random
     from backend.models import Robot, WarehouseObstacle, Item, WarehouseLocation, Order, OrderItem, Task, RobotRoute, RobotTelemetryEvent, RobotReservation, InventoryMovement
     
-    # Ensure there are exactly 6 robots for the simulation (only for default warehouse WH-BLR-01)
-    if warehouse_id == "WH-BLR-01":
-        wh_code = warehouse_id.split("-")[1] if "-" in warehouse_id else "BLR"
+    # Ensure there are 6 robots for the simulation across any registered warehouse
+    existing_robot_count = db.query(Robot).filter(Robot.warehouse_id == warehouse_id).count()
+    if existing_robot_count < 4 or warehouse_id == "WH-BLR-01":
+        wh_code = warehouse_id.split("-")[1] if "-" in warehouse_id else warehouse_id[:3].upper()
         # 1. Clean up route, reservation, and telemetry tables referencing these robots
         db.query(RobotRoute).filter(RobotRoute.warehouse_id == warehouse_id).delete(synchronize_session=False)
         db.query(RobotReservation).filter(RobotReservation.warehouse_id == warehouse_id).delete(synchronize_session=False)
@@ -997,13 +998,20 @@ def start_simulation(
     except Exception as e:
         logger.error("Simulation tick error on start: %s", e)
 
-    ledger.append_entry(db, "SIMULATION_STARTED", {
-        "simulation_id": sim.id, "warehouse_id": req.warehouse_id,
-        "by": user.username, "scenario": req.scenario_type
-    })
-    notifications.send_change_alert("SIMULATION_STARTED", {
-        "warehouse_id": req.warehouse_id, "simulation_id": sim.id
-    })
+    try:
+        ledger.append_entry(db, "SIMULATION_STARTED", {
+            "simulation_id": sim.id, "warehouse_id": req.warehouse_id,
+            "by": user.username, "scenario": req.scenario_type
+        })
+    except Exception as le:
+        logger.warning("Ledger entry failed for SIMULATION_STARTED: %s", le)
+
+    try:
+        notifications.send_change_alert("SIMULATION_STARTED", {
+            "warehouse_id": req.warehouse_id, "simulation_id": sim.id
+        })
+    except Exception as ne:
+        logger.warning("Notification alert failed for SIMULATION_STARTED: %s", ne)
 
     return {"simulation_id": sim.id, "status": sim.simulation_status,
             "message": "Simulation started.", "tick_count": sim.tick_count}

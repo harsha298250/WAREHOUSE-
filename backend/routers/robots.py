@@ -167,7 +167,7 @@ def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGEST
     failed_robots = db.query(Robot).filter(
         Robot.enabled == True,
         Robot.status == "FAILED"
-    ).with_for_update().all()
+    ).all()
     for fr in failed_robots:
         if fr.assigned_task_id:
             stuck_task = db.query(Task).filter(Task.id == fr.assigned_task_id).first()
@@ -193,7 +193,7 @@ def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGEST
     robots = db.query(Robot).filter(
         Robot.enabled == True,
         ~Robot.status.in_(["OFFLINE", "FAILED", "MAINTENANCE"])
-    ).with_for_update().all()
+    ).all()
 
     # Preload current cells and state
     current_cells = {}
