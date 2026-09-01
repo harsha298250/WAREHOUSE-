@@ -487,7 +487,7 @@ async def lifespan(app: FastAPI):
     ensure_admin_user_exists()
 
     from data_pipeline.provisioner import ensure_all_datasets_provisioned
-    ensure_all_datasets_provisioned()
+    threading.Thread(target=ensure_all_datasets_provisioned, daemon=True, name="DatasetProvisionerWorker").start()
     
     # Launch background backup threads only outside testing to avoid SQLite database locks & leaked loops
     if os.getenv("ENVIRONMENT") != "testing":
