@@ -1826,6 +1826,9 @@ async function loadHeaderNotificationDropdown() {
           await Api.markNotificationRead(id);
           refreshNotificationBadge();
           loadHeaderNotificationDropdown();
+          if (typeof window.openNotificationDetail === "function") {
+            window.openNotificationDetail(id);
+          }
         } catch (e) {
           toast("Error marking read: " + e.message, "error");
         }
@@ -6001,10 +6004,167 @@ async function renderAlertsNotifications(el) {
         modal.id = "notif-detail-modal";
         modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
 
+        const isSecurity = n.notification_type === "SECURITY_ALERT" || n.category === "SECURITY" || (n.event_type && n.event_type.includes("LOGIN"));
+
+        if (isSecurity) {
+          let meta = {};
+          try {
+            meta = typeof n.payload === "string" ? JSON.parse(n.payload) : (n.payload || {});
+          } catch(e) { meta = {}; }
+
+          const status = meta.status || (n.severity === "WARNING" || n.severity === "CRITICAL" ? "FAILED" : "SUCCESS");
+          const statusColor = status === "SUCCESS" ? "#10b981" : "#ef4444";
+          const statusBg = status === "SUCCESS" ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)";
+          const username = meta.username || n.user_id || "admin";
+          const role = meta.user_role || "Administrator";
+          const authMethod = meta.auth_method || "Password";
+          const dateStr = n.created_at ? new Date(n.created_at).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : "Just now";
+
+          const device = meta.device_type || "Desktop";
+          const os = meta.operating_system || "Windows";
+          const browser = meta.browser ? `${meta.browser} ${meta.browser_version && meta.browser_version !== 'N/A' ? meta.browser_version : ''}` : "Google Chrome";
+          const ip = meta.ip_address || "xxx.xxx.xxx.xxx";
+          const location = meta.approximate_location || (meta.city && meta.country ? `${meta.city}, ${meta.country}` : "Location unavailable");
+          const timezone = meta.timezone || "Asia/Kolkata";
+          const warehouse = meta.warehouse_id || "System-Wide";
+          const eventId = meta.event_id || n.id;
+          const sessionRef = meta.session_reference || `sess_${n.id}`;
+
+          modal.innerHTML = `
+            <div class="modal-content" style="max-width: 540px; width: 100%; padding: 0; overflow: hidden; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); animation: fadeIn 0.2s ease-out;">
+              <!-- SECURITY HEADER -->
+              <div style="padding: 18px 22px; background: rgba(99,102,241,0.08); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); display: flex; align-items: center; justify-content: center; color: var(--accent); flex-shrink: 0;">
+                    <i data-lucide="shield-check" style="width: 22px; height: 22px;"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px;">SECURITY</div>
+                    <h3 style="margin: 2px 0 0 0; font-size: 16px; font-weight: 800; color: var(--text);">${esc(n.title || "User Login Alert")}</h3>
+                  </div>
+                </div>
+                <button type="button" style="background: var(--surface-3); border: 1px solid var(--border); color: var(--text-muted); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="document.getElementById('notif-detail-modal').remove()" title="Close">
+                  <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+              </div>
+
+              <!-- BODY METADATA SECTIONS -->
+              <div style="padding: 22px; display: flex; flex-direction: column; gap: 18px; max-height: 75vh; overflow-y: auto;">
+                
+                <!-- USER & AUTH STATUS -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; background: var(--surface-2); padding: 14px; border-radius: 10px; border: 1px solid var(--border);">
+                  <div>
+                    <div style="font-size: 10px; font-weight: 700; color: var(--text-faint); text-transform: uppercase;">Status</div>
+                    <div style="font-size: 12px; font-weight: 800; color: ${statusColor}; background: ${statusBg}; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-top: 4px;">${esc(status)}</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; font-weight: 700; color: var(--text-faint); text-transform: uppercase;">User</div>
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-top: 2px;">${esc(username)}</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; font-weight: 700; color: var(--text-faint); text-transform: uppercase;">Role</div>
+                    <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 2px;">${esc(role)}</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; font-weight: 700; color: var(--text-faint); text-transform: uppercase;">Authentication</div>
+                    <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 2px;">${esc(authMethod)}</div>
+                  </div>
+                  <div style="grid-column: span 2;">
+                    <div style="font-size: 10px; font-weight: 700; color: var(--text-faint); text-transform: uppercase;">Timestamp</div>
+                    <div style="font-size: 12px; font-weight: 600; color: var(--text); margin-top: 2px; display: flex; align-items: center; gap: 4px;">
+                      <i data-lucide="clock" style="width: 12px; height: 12px; color: var(--text-muted);"></i> ${esc(dateStr)}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- DEVICE INFORMATION -->
+                <div>
+                  <div style="font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="laptop" style="width: 14px; height: 14px;"></i> Device Information
+                  </div>
+                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--surface-3); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div>
+                      <div style="font-size: 10px; color: var(--text-faint);">Device</div>
+                      <div style="font-size: 12px; font-weight: 700; color: var(--text);">${esc(device)}</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 10px; color: var(--text-faint);">Operating System</div>
+                      <div style="font-size: 12px; font-weight: 700; color: var(--text);">${esc(os)}</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 10px; color: var(--text-faint);">Browser</div>
+                      <div style="font-size: 12px; font-weight: 700; color: var(--text);">${esc(browser)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- NETWORK INFORMATION -->
+                <div>
+                  <div style="font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="globe" style="width: 14px; height: 14px;"></i> Network Information
+                  </div>
+                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--surface-3); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div>
+                      <div style="font-size: 10px; color: var(--text-faint);">IP Address</div>
+                      <div class="mono" style="font-size: 12px; font-weight: 700; color: var(--text);">${esc(ip)}</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 10px; color: var(--text-faint);">Location</div>
+                      <div style="font-size: 12px; font-weight: 700; color: var(--text);">${esc(location)}</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 10px; color: var(--text-faint);">Timezone</div>
+                      <div style="font-size: 12px; font-weight: 700; color: var(--text);">${esc(timezone)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- WAREHOUSE CONTEXT -->
+                <div>
+                  <div style="font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="warehouse" style="width: 14px; height: 14px;"></i> Warehouse Context
+                  </div>
+                  <div style="background: var(--surface-3); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; font-weight: 700; color: var(--text);">
+                    ${esc(warehouse)}
+                  </div>
+                </div>
+
+                <!-- EVENT METADATA -->
+                <div>
+                  <div style="font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="file-text" style="width: 14px; height: 14px;"></i> Event Metadata
+                  </div>
+                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: var(--surface-3); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div>
+                      <div style="font-size: 10px; color: var(--text-faint);">Event ID</div>
+                      <div class="mono" style="font-size: 12px; font-weight: 700; color: var(--text);">${esc(eventId)}</div>
+                    </div>
+                    <div>
+                      <div style="font-size: 10px; color: var(--text-faint);">Session Reference</div>
+                      <div class="mono" style="font-size: 12px; font-weight: 700; color: var(--text);">${esc(sessionRef)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- FOOTER ACTIONS -->
+                <div style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 14px; display: flex; justify-content: flex-end;">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('notif-detail-modal').remove()" style="font-size: 12px; padding: 6px 18px;">
+                    Close
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          `;
+          document.body.appendChild(modal);
+          if (window.lucide) window.lucide.createIcons();
+          return;
+        }
+
         const sevConfig = {
           CRITICAL: { color: "#ef4444", bg: "linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(244,63,94,0.1) 100%)", border: "rgba(239,68,68,0.3)", icon: "shield-alert", badgeBg: "rgba(239,68,68,0.15)", badgeFg: "#ef4444" },
           HIGH: { color: "#f43f5e", bg: "linear-gradient(135deg, rgba(244,63,94,0.2) 0%, rgba(239,68,68,0.1) 100%)", border: "rgba(244,63,94,0.3)", icon: "alert-triangle", badgeBg: "rgba(244,63,94,0.15)", badgeFg: "#f43f5e" },
-          WARNING: { color: "#f59e0b", bg: "linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.1) 100%)", border: "rgba(245,158,11,0.3)", icon: "alert-circle", badgeBg: "rgba(245,158,11,0.15)", badgeFg: "#f59e0b" },
+          WARNING: { color: "#f59e0b", bg: "linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.1) 100%)", border: "rgba(245,158,11,0.15)", badgeFg: "#f59e0b" },
           SUCCESS: { color: "#10b981", bg: "linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(5,150,105,0.1) 100%)", border: "rgba(16,185,129,0.3)", icon: "check-circle-2", badgeBg: "rgba(16,185,129,0.15)", badgeFg: "#10b981" },
           INFO: { color: "#06b6d4", bg: "linear-gradient(135deg, rgba(6,182,212,0.2) 0%, rgba(99,102,241,0.1) 100%)", border: "rgba(6,182,212,0.3)", icon: "info", badgeBg: "rgba(6,182,212,0.15)", badgeFg: "#06b6d4" }
         };
@@ -15384,8 +15544,58 @@ async function appLedger(body) {
       <div class="stat-box"><div class="n" style="color:${valid ? 'var(--success)' : 'var(--danger)'}">${valid ? '✓ Intact' : '✗ Broken'}</div><div class="l">Chain Status</div></div>
       <div class="stat-box"><div class="n">${data.chain_status.checked}</div><div class="l">Entries Verified</div></div>
     </div>
-    <table class="data-table"><thead><tr><th>Time</th><th>Event</th><th>Details</th></tr></thead><tbody>
-      ${data.entries.slice(-15).reverse().map(e => `<tr><td class="mono" style="font-size:11px;">${esc(e.timestamp)}</td><td><span class="badge badge-neutral">${esc(e.event_type)}</span></td><td style="font-size:11.5px;font-family:'JetBrains Mono',monospace;word-break:break-all;max-width:480px;white-space:normal;line-height:1.4;">${esc(JSON.stringify(e.details))}</td></tr>`).join("") || '<tr><td colspan="3" class="empty-state">No ledger entries yet — record some stock or run a scan.</td></tr>'}
+    <table class="data-table"><thead><tr><th>Time</th><th>Event</th><th>Badges</th><th>Details</th></tr></thead><tbody>
+      ${data.entries.slice(-20).reverse().map((e, idx) => {
+        let badgeClass = "badge-neutral";
+        let isSuccess = e.event_type.includes("SUCCESS") || e.event_type.includes("CREATE");
+        let isFailed = e.event_type.includes("FAILED") || e.event_type.includes("DELETE");
+        let isSecurity = e.event_type.includes("LOGIN") || e.event_type.includes("SECURITY");
+
+        if (isSuccess) badgeClass = "badge-success";
+        else if (isFailed) badgeClass = "badge-danger";
+        else if (isSecurity) badgeClass = "badge-info";
+
+        let d = e.details || {};
+        if (typeof d === "string") {
+          try { d = JSON.parse(d); } catch(err) {}
+        }
+
+        let detailsSummary = "";
+        if (typeof d === "object" && d && (d.event_type === "USER_LOGIN_SUCCESS" || d.event_type === "USER_LOGIN_FAILED" || e.event_type.includes("user_login"))) {
+          detailsSummary = `<div style="font-size:12px; font-weight:700; color:var(--text);">User: <strong>${esc(d.username || 'admin')}</strong> (${esc(d.user_role || d.role || 'ADMIN')})</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+            ${esc(d.device_type || 'Desktop')} • ${esc(d.operating_system || 'Windows')} • ${esc(d.browser || 'Chrome')} | IP: ${esc(d.ip_address || d.ip || 'unknown')} | Location: ${esc(d.approximate_location || 'N/A')}
+          </div>`;
+        } else {
+          detailsSummary = `<div style="font-size:11.5px; font-family:'JetBrains Mono',monospace; word-break:break-all; max-width:480px; white-space:normal; line-height:1.4;">${esc(JSON.stringify(d))}</div>`;
+        }
+
+        const rawJsonId = `ledger-raw-json-${idx}`;
+
+        return `
+          <tr>
+            <td class="mono" style="font-size:11px;">${esc(e.timestamp)}</td>
+            <td><span class="badge ${badgeClass}">${esc(e.event_type)}</span></td>
+            <td>
+              <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                ${isSecurity ? '<span class="badge badge-info" style="font-size:9px;">SECURITY</span>' : ''}
+                ${isSuccess ? '<span class="badge badge-success" style="font-size:9px;">SUCCESS</span>' : ''}
+                ${isFailed ? '<span class="badge badge-danger" style="font-size:9px;">FAILED</span>' : ''}
+                ${e.event_type.includes("LOGIN") || e.event_type.includes("login") ? '<span class="badge badge-warn" style="font-size:9px;">USER LOGIN</span>' : ''}
+              </div>
+            </td>
+            <td>
+              ${detailsSummary}
+              <button type="button" style="background:none; border:none; color:var(--accent); font-size:10px; font-weight:700; cursor:pointer; padding:2px 0; margin-top:4px; display:block;" onclick="const el=document.getElementById('${rawJsonId}'); el.style.display = el.style.display === 'none' ? 'block' : 'none';">
+                Toggle Raw JSON
+              </button>
+              <div id="${rawJsonId}" style="display:none; margin-top:6px; padding:8px; background:var(--surface-3); border:1px solid var(--border); border-radius:6px;">
+                <pre class="mono" style="font-size:10px; margin:0; overflow-x:auto; white-space:pre-wrap; color:var(--text-muted);">${esc(JSON.stringify(d, null, 2))}</pre>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("") || '<tr><td colspan="4" class="empty-state">No ledger entries yet — record some stock or run a scan.</td></tr>'}
     </tbody></table>`;
 }
 

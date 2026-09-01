@@ -41,6 +41,7 @@
   --shadow-lg: 0 10px 25px rgba(15, 23, 42, 0.08);
 
   --sidebar-w: 260px;
+  --surface-1: #ffffff;
   --surface-3: #e2e8f0;
 
   /* Clean Light Navigation Sidebar Colors (Light Mode) */
@@ -78,6 +79,7 @@ body.dark-mode {
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
+  --surface-1: #111827;
   --surface-3: #0f172a;
 
   /* Navy Navigation Sidebar Colors (Locked to dark navy scheme for Dark Mode) */
@@ -1549,4 +1551,59 @@ textarea:focus-visible,
 @keyframes iso-cube-rise {
   from { opacity: 0; transform: translateY(10px) scale(0.92); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ============================================================
+   Enterprise Notification Center (100% Solid Opaque Styling)
+   ============================================================ */
+.notif-popover-dropdown, #topbar-notif-dropdown {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 20px 30px -5px rgba(15, 23, 42, 0.4), 0 10px 15px -5px rgba(15, 23, 42, 0.2) !important;
+  border: 1px solid var(--border) !important;
+  z-index: 99999 !important;
+}
+
+body.dark-mode .notif-popover-dropdown, body.dark-mode #topbar-notif-dropdown {
+  background: #111827 !important;
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+  box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.7), 0 10px 15px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+#notif-dropdown-list {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+body.dark-mode #notif-dropdown-list {
+  background: #111827 !important;
+  background-color: #111827 !important;
+}
+
+.notif-dropdown-item {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  opacity: 1 !important;
+}
+
+body.dark-mode .notif-dropdown-item {
+  background: #111827 !important;
+  background-color: #111827 !important;
+  border-bottom-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.notif-dropdown-item.unread {
+  background: #f5f3ff !important;
+}
+
+body.dark-mode .notif-dropdown-item.unread {
+  background: rgba(99, 102, 241, 0.15) !important;
 }

@@ -217,19 +217,17 @@ def login(payload: LoginRequest, request: Request, background_tasks: BackgroundT
     # authenticate_user enforces lockout and active checks
     user = authenticate_user(db, payload.username, payload.password)
     if not user:
-        # Phase 18: Record failed login security event
+        # Record structured failed login security event & audit ledger entry
         db_user_check = db.query(User).filter(User.username == payload.username.strip()).first()
-        security_service.create_security_event(
+        security_service.record_login_audit_event(
             db=db,
-            event_type="LOGIN_FAILED",
-            severity="WARNING",
+            username=payload.username.strip(),
+            user_id=db_user_check.id if db_user_check else None,
+            role=db_user_check.role if db_user_check else "UNKNOWN",
             status="FAILED",
-            actor_username=payload.username,
-            actor_user_id=db_user_check.id if db_user_check else None,
-            authentication_method="password",
-            ip_address=ip,
-            user_agent=ua,
-            extra_details={"reason": "invalid_credentials"},
+            auth_method="password",
+            request=request,
+            failure_reason="invalid_credentials"
         )
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -272,58 +270,40 @@ def login(payload: LoginRequest, request: Request, background_tasks: BackgroundT
     token = create_access_token({"sub": user.username, "role": user.role})
     log_access(db, user.username, "login", request=request)
 
-    # Phase 9: Update login audit fields
+    # Update login audit fields
     user.last_login_at = datetime.now(UTC).replace(tzinfo=None)
-    user.last_login_ip = ip
+    user.last_login_ip = security_service.get_client_ip(request)
     user.login_method = "password"
     if not user.is_verified:
         user.is_verified = True
     db.commit()
 
-    ledger.append_entry(db, "user_login", {
-        "username": user.username,
-        "role": user.role,
-        "method": "password",
-        "ip": ip,
-        "time": datetime.now(UTC).replace(tzinfo=None).isoformat()
-    })
-
-    # Phase 18: Rich security event
-    sec_event = security_service.create_security_event(
+    # Record structured login success audit event & in-app notification
+    security_service.record_login_audit_event(
         db=db,
-        event_type="LOGIN_SUCCESS",
-        severity="INFO",
+        username=user.username,
+        user_id=user.id,
+        role=user.role,
         status="SUCCESS",
-        actor_user_id=user.id,
-        actor_username=user.username,
-        authentication_method="password",
-        role_at_event=user.role,
-        ip_address=ip,
-        user_agent=ua,
+        auth_method="password",
+        request=request
     )
-    # Phase 18: Send login security alert to admin (background — non-blocking)
-    if sec_event:
-        device_info = security_service.get_device_info(ua)
-        location = None
-        if sec_event.details:
-            try:
-                location = json.loads(sec_event.details).get("approximate_location")
-            except Exception:
-                pass
-        background_tasks.add_task(
-            security_service.send_login_alert_email,
-            username=user.username,
-            role=user.role,
-            ip_address=ip,
-            device=device_info["device"],
-            browser=device_info["browser"],
-            os=device_info["os"],
-            auth_method="Password",
-            timestamp=sec_event.timestamp,
-            event_id=sec_event.id,
-            status="SUCCESS",
-            location=location,
-        )
+    # Send login security alert to admin (background — non-blocking)
+    device_info = security_service.get_device_info(ua)
+    background_tasks.add_task(
+        security_service.send_login_alert_email,
+        username=user.username,
+        role=user.role,
+        ip_address=ip,
+        device=device_info["device"],
+        browser=device_info["browser"],
+        os=device_info["os"],
+        auth_method="Password",
+        timestamp=datetime.now(UTC).replace(tzinfo=None),
+        event_id=user.id,
+        status="SUCCESS",
+        location=security_service.get_approximate_location(ip),
+    )
 
     from backend.event_processor import publish_event
     publish_event(

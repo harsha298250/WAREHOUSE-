@@ -54,11 +54,11 @@ def get_security_alert_recipient() -> str:
 
 def get_device_info(user_agent_str: str) -> dict:
     """
-    Parse a User-Agent string into human-readable device/browser/OS info.
+    Parse a User-Agent string into human-readable device/browser/OS info & version.
     Returns defaults if parsing fails. Never raises exceptions.
     """
     if not user_agent_str:
-        return {"device": "Unknown", "browser": "Other/Unknown", "os": "Unknown"}
+        return {"device": "Unknown", "browser": "Other/Unknown", "os": "Unknown", "version": "Unknown"}
 
     ua = user_agent_str.lower()
 
@@ -76,17 +76,27 @@ def get_device_info(user_agent_str: str) -> dict:
     else:
         os_name = "Unknown"
 
-    # Browser detection (order matters — check specific before generic)
+    # Browser detection & version extraction
+    browser = "Other/Unknown"
+    version = "Unknown"
+
+    import re
     if "edg/" in ua or "edge/" in ua:
         browser = "Edge"
+        m = re.search(r'(?:edg|edge)/([\d\.]+)', ua)
+        if m: version = m.group(1)
     elif "chrome/" in ua and "safari/" in ua:
         browser = "Chrome"
+        m = re.search(r'chrome/([\d\.]+)', ua)
+        if m: version = m.group(1)
     elif "firefox/" in ua:
         browser = "Firefox"
+        m = re.search(r'firefox/([\d\.]+)', ua)
+        if m: version = m.group(1)
     elif "safari/" in ua and "chrome" not in ua:
         browser = "Safari"
-    else:
-        browser = "Other/Unknown"
+        m = re.search(r'version/([\d\.]+)', ua)
+        if m: version = m.group(1)
 
     # Device category
     if "ipad" in ua or "tablet" in ua:
@@ -98,18 +108,45 @@ def get_device_info(user_agent_str: str) -> dict:
     else:
         device = "Unknown"
 
-    return {"device": device, "browser": browser, "os": os_name}
+    return {"device": device, "browser": browser, "os": os_name, "version": version}
 
 
-def get_approximate_location(ip: str) -> str:
+def get_client_ip(request: Optional[object]) -> str:
     """
-    Perform a lightweight IP geolocation look-up using a free geolocation provider.
-    Fails open / returns 'Location unavailable' on loopback/private IPs or connection issues.
+    Safely extract real client IP behind Render/Cloudflare trusted reverse proxies.
     """
-    if not ip or ip == "unknown":
-        return "Location unavailable"
+    if not request:
+        return "IP unavailable"
+    try:
+        x_forwarded_for = request.headers.get("x-forwarded-for") if hasattr(request, "headers") else None
+        if x_forwarded_for:
+            client_ip = x_forwarded_for.split(",")[0].strip()
+            if client_ip:
+                return client_ip
+        x_real_ip = request.headers.get("x-real-ip") if hasattr(request, "headers") else None
+        if x_real_ip and x_real_ip.strip():
+            return x_real_ip.strip()
+        if hasattr(request, "client") and request.client and request.client.host:
+            return request.client.host
+    except Exception:
+        pass
+    return "IP unavailable"
+
+
+def get_approximate_location_details(ip: str) -> dict:
+    """
+    Perform non-blocking IP geolocation lookup. Fails open, returning 'Location unavailable'.
+    """
+    default_res = {
+        "city": "Location unavailable",
+        "region": "Location unavailable",
+        "country": "Location unavailable",
+        "timezone": "UTC",
+        "formatted": "Location unavailable"
+    }
+    if not ip or ip.lower() in ["unknown", "ip unavailable", "none"]:
+        return default_res
         
-    # Check for private or loopback IPs
     ip_clean = ip.strip()
     if (
         ip_clean.startswith("127.") or 
@@ -119,38 +156,147 @@ def get_approximate_location(ip: str) -> str:
         ip_clean.startswith("169.254.") or
         ip_clean.startswith("localhost")
     ):
-        return "Location unavailable"
+        return default_res
         
-    # Handle 172.16.0.0/12 range
     if ip_clean.startswith("172."):
         parts = ip_clean.split(".")
         if len(parts) >= 2:
             try:
                 second_part = int(parts[1])
                 if 16 <= second_part <= 31:
-                    return "Location unavailable"
+                    return default_res
             except ValueError:
                 pass
 
     try:
         import httpx
-        # Call non-blocking ip-api.com endpoint with 1.0 second timeout
-        url = f"http://ip-api.com/json/{ip_clean}?fields=status,country,regionName,city"
+        url = f"http://ip-api.com/json/{ip_clean}?fields=status,country,regionName,city,timezone"
         resp = httpx.get(url, timeout=1.0)
         if resp.status_code == 200:
             data = resp.json()
             if data.get("status") == "success":
-                city = data.get("city", "")
-                region = data.get("regionName", "")
-                country = data.get("country", "")
+                city = data.get("city") or ""
+                region = data.get("regionName") or ""
+                country = data.get("country") or ""
+                tz = data.get("timezone") or "UTC"
                 
                 parts = [p for p in [city, region, country] if p]
-                if parts:
-                    return ", ".join(parts)
+                formatted = ", ".join(parts) if parts else "Location unavailable"
+                return {
+                    "city": city or "Location unavailable",
+                    "region": region or "Location unavailable",
+                    "country": country or "Location unavailable",
+                    "timezone": tz,
+                    "formatted": formatted
+                }
     except Exception as e:
         logger.info("IP geolocation request failed for %s: %s", ip_clean, e)
         
-    return "Location unavailable"
+    return default_res
+
+
+def get_approximate_location(ip: str) -> str:
+    """
+    Perform a lightweight IP geolocation look-up using a free geolocation provider.
+    Fails open / returns 'Location unavailable' on loopback/private IPs or connection issues.
+    """
+    return get_approximate_location_details(ip)["formatted"]
+
+
+def record_login_audit_event(
+    db: Session,
+    username: str,
+    user_id: Optional[int],
+    role: str,
+    status: str,
+    auth_method: str = "password",
+    request: Optional[object] = None,
+    failure_reason: Optional[str] = None
+):
+    """
+    Structured, tamper-evident login audit recording & in-app notification dispatch.
+    NEVER logs passwords, tokens, or secrets. Fails open (login is never blocked by audit errors).
+    """
+    try:
+        from backend import audit_ledger as ledger
+        from backend.models import Notification
+
+        ip = get_client_ip(request)
+        ua = request.headers.get("user-agent", "") if (request and hasattr(request, "headers")) else ""
+        device_info = get_device_info(ua)
+        loc_details = get_approximate_location_details(ip)
+        
+        now_utc = datetime.now(UTC).replace(tzinfo=None)
+        session_ref = f"sess_{secrets.token_hex(8)}"
+        event_type = "USER_LOGIN_SUCCESS" if status == "SUCCESS" else "USER_LOGIN_FAILED"
+
+        audit_payload = {
+            "event_type": event_type,
+            "username": username,
+            "user_id": user_id,
+            "user_role": role,
+            "status": status,
+            "timestamp": now_utc.isoformat(),
+            "ip_address": ip,
+            "country": loc_details["country"],
+            "region": loc_details["region"],
+            "city": loc_details["city"],
+            "timezone": loc_details["timezone"],
+            "approximate_location": loc_details["formatted"],
+            "device_type": device_info["device"],
+            "operating_system": device_info["os"],
+            "browser": device_info["browser"],
+            "browser_version": device_info.get("version", "N/A"),
+            "warehouse_id": "System-Wide",
+            "auth_method": auth_method,
+            "session_reference": session_ref
+        }
+        if failure_reason:
+            audit_payload["reason"] = failure_reason
+
+        # 1. Append to cryptographic Audit Ledger
+        ledger_entry = ledger.append_entry(db, event_type, audit_payload)
+
+        # 2. Persist SecurityEvent record
+        create_security_event(
+            db=db,
+            event_type="LOGIN_SUCCESS" if status == "SUCCESS" else "LOGIN_FAILED",
+            severity="INFO" if status == "SUCCESS" else "WARNING",
+            status=status,
+            actor_user_id=user_id,
+            actor_username=username,
+            authentication_method=auth_method,
+            role_at_event=role,
+            ip_address=ip,
+            user_agent=ua,
+            extra_details=audit_payload
+        )
+
+        # 3. Dispatch In-App Notification
+        if user_id:
+            title = "User Login Alert" if status == "SUCCESS" else "Failed Login Attempt"
+            msg = f"User {username} logged in successfully from {device_info['browser']} on {device_info['os']} ({loc_details['formatted']})" if status == "SUCCESS" else f"Failed login attempt for username '{username}' from IP {ip}"
+            
+            notif = Notification(
+                user_id=user_id,
+                warehouse_id=None,
+                event_type=event_type,
+                notification_type="SECURITY_ALERT",
+                title=title,
+                message=msg,
+                severity="INFO" if status == "SUCCESS" else "WARNING",
+                status="PENDING",
+                channel="IN_APP",
+                source_entity_type="security_events",
+                source_entity_id=str(ledger_entry.id) if ledger_entry else None,
+                notif_metadata=json.dumps(audit_payload),
+                created_at=now_utc
+            )
+            db.add(notif)
+            db.commit()
+
+    except Exception as err:
+        logger.error("Non-blocking error in record_login_audit_event: %s", err)
 
 
 
