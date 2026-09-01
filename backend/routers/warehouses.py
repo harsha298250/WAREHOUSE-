@@ -37,12 +37,12 @@ def create_warehouse(payload: WarehouseCreate, request: Request, db: Session = D
 
     if not wh_id:
         raise HTTPException(400, "Warehouse ID is required")
-    if len(wh_id) > 20:
-        raise HTTPException(400, "Warehouse ID cannot exceed 20 characters")
+    if len(wh_id) > 50:
+        raise HTTPException(400, "Warehouse ID cannot exceed 50 characters")
     if not wh_name:
         raise HTTPException(400, "Warehouse Name is required")
-    if len(wh_name) > 120:
-        raise HTTPException(400, "Warehouse Name cannot exceed 120 characters")
+    if len(wh_name) > 255:
+        raise HTTPException(400, "Warehouse Name cannot exceed 255 characters")
 
     if payload.latitude is not None and (payload.latitude < -90.0 or payload.latitude > 90.0):
         raise HTTPException(400, "Latitude must be between -90.0 and 90.0")

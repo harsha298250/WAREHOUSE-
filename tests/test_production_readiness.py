@@ -68,9 +68,9 @@ class TestWarehouseManagement:
         res = client.post("/warehouses", json=invalid_lat, headers=headers)
         assert res.status_code in (400, 422), f"Expected 400 for invalid lat, got {res.status_code}"
 
-        # ID too long (> 20 chars)
+        # ID too long (> 50 chars)
         long_id = {
-            "id": "WH-VERY-LONG-ID-EXTENDED-OVERFLOW",
+            "id": "WH-VERY-LONG-ID-EXTENDED-OVERFLOW-THAT-EXCEEDS-FIFTY-CHARACTERS",
             "name": "Long ID Warehouse"
         }
         res_long = client.post("/warehouses", json=long_id, headers=headers)
