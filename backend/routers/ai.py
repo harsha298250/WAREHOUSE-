@@ -1212,24 +1212,37 @@ def run_shrinkage_detection(db: Session = Depends(get_db), user=Depends(require_
     save_flags_to_db(db, result_dict)
     anomalies = result_dict.get("anomalies", [])
     
-    ledger.append_entry(db, "shrinkage_scan", {
-        "triggered_by": user.username, "flags_found": len(anomalies)
-    })
+    try:
+        ledger.append_entry(db, "shrinkage_scan", {
+            "triggered_by": user.username, "flags_found": len(anomalies)
+        })
+    except Exception as e:
+        logger.warning("Audit ledger logging failed for shrinkage scan: %s", e)
     
     notified = 0
     for row in anomalies:
-        ledger.append_entry(db, "shrinkage_flag", {
-            "warehouse_id": row["warehouse_id"], 
-            "item_id": row["item_id"],
-            "date": str(row["date"]), 
-            "likely_cause": row["likely_cause"]
-        })
-        if row["likely_cause"] in ["UNUSUAL_OUTBOUND_ACTIVITY", "POSSIBLE_DAMAGE_OR_WASTAGE"]:
-            alert_res = notifications.notify_anomaly(
-                row["likely_cause"], row["warehouse_id"], row["item_name"], row["explanation"]
-            )
-            if alert_res["email_sent"] or alert_res["sms_sent"]:
-                notified += 1
+        wh = str(row.get("warehouse_id", ""))
+        itm = str(row.get("item_id", ""))
+        dt_val = str(row.get("date") or row.get("detection_date") or "")
+        cause = str(row.get("likely_cause", ""))
+        try:
+            ledger.append_entry(db, "shrinkage_flag", {
+                "warehouse_id": wh, 
+                "item_id": itm,
+                "date": dt_val, 
+                "likely_cause": cause
+            })
+        except Exception:
+            pass
+        if cause in ["UNUSUAL_OUTBOUND_ACTIVITY", "POSSIBLE_DAMAGE_OR_WASTAGE"]:
+            try:
+                alert_res = notifications.notify_anomaly(
+                    cause, wh, str(row.get("item_name", "")), str(row.get("explanation", ""))
+                )
+                if alert_res and alert_res.get("email_sent"):
+                    notified += 1
+            except Exception:
+                pass
                 
     logger.info("Shrinkage scan complete: flags=%d alerts=%d by=%s", len(anomalies), notified, user.username)
     return {"status": "done", "flags_found": len(anomalies), "alerts_sent": notified}
