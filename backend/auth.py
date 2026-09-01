@@ -209,6 +209,12 @@ def authenticate_user(db: Session, username: str, password: str):
     if not user:
         return None
 
+    # Auto-unlock admin account if valid admin password is provided
+    if user.locked_until and user.role == "admin" and verify_password(password, user.password_hash):
+        user.locked_until = None
+        user.failed_login_count = 0
+        db.commit()
+
     # Check account lockout
     if user.locked_until and datetime.now(UTC).replace(tzinfo=None) < user.locked_until:
         minutes_remaining = int((user.locked_until - datetime.now(UTC).replace(tzinfo=None)).total_seconds() / 60) + 1
