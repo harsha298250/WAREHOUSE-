@@ -2794,7 +2794,10 @@ async function renderWarehouses(el) {
             ? `<a href="#" onclick="showWarehouseOnMap('${esc(w.id)}'); return false;" style="color:var(--primary);font-weight:600;display:flex;align-items:center;gap:4px;"><i data-lucide="map-pin" style="width:12px;height:12px;"></i>${coordText}</a>`
             : coordText;
           const actionsHtml = isAdmin 
-            ? `<button class="btn btn-secondary btn-xs btn-edit-warehouse" data-id="${esc(w.id)}" style="padding:2px 8px;">Edit</button>`
+            ? `<div style="display:flex; gap:6px; align-items:center;">
+                <button class="btn btn-secondary btn-xs btn-edit-warehouse" data-id="${esc(w.id)}" style="padding:2px 8px;">Edit</button>
+                <button class="btn btn-danger btn-xs btn-delete-warehouse" data-id="${esc(w.id)}" data-name="${esc(w.name)}" style="padding:2px 8px; background:#ef4444; color:white; border:none; border-radius:4px; font-weight:600; cursor:pointer;">Delete</button>
+               </div>`
             : '<span style="color:var(--text-faint); font-size:11px;">Read-only</span>';
 
           return `<tr>
@@ -2919,6 +2922,69 @@ async function renderWarehouses(el) {
             navigate("warehouses");
           } catch (err) {
             toast(err.message, "error");
+          }
+        });
+      });
+    });
+
+    // Attach Delete actions
+    el.querySelectorAll(".btn-delete-warehouse").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const id = btn.getAttribute("data-id");
+        const name = btn.getAttribute("data-name");
+
+        const modalOverlay = document.createElement('div');
+        modalOverlay.className = 'modal-backdrop open';
+        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:99999;';
+
+        modalOverlay.innerHTML = `
+          <div class="modal-card" style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; max-width:480px; width:90%; box-shadow:var(--shadow-lg);">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+              <div style="width:40px; height:40px; border-radius:50%; background:rgba(239,68,68,0.15); color:#ef4444; display:flex; align-items:center; justify-content:center;">
+                <i data-lucide="trash-2" style="width:20px; height:20px;"></i>
+              </div>
+              <div>
+                <h3 style="margin:0; font-size:16px; color:var(--text); font-weight:700;">Delete Warehouse?</h3>
+                <div style="font-size:11.5px; color:var(--text-faint);">Permanent Administrative Action</div>
+              </div>
+            </div>
+            <p style="font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:16px;">
+              Are you sure you want to permanently delete:<br>
+              <strong style="color:var(--text); font-size:14px;">"${esc(name)}"</strong><br>
+              <span class="mono" style="font-size:12px; color:var(--text-faint);">ID: ${esc(id)}</span>
+            </p>
+            <div style="background:rgba(239,68,68,0.08); border-left:3px solid #ef4444; padding:10px 12px; border-radius:4px; font-size:12px; color:var(--text-muted); margin-bottom:20px;">
+              This action will permanently remove the warehouse and its associated simulation/operational data.
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+              <button type="button" class="btn btn-secondary modal-cancel-btn" style="font-size:12px; padding:6px 14px;">Cancel</button>
+              <button type="button" class="btn btn-danger modal-delete-btn" style="background:#ef4444; color:white; font-size:12px; padding:6px 14px; border:none; border-radius:4px; font-weight:700; cursor:pointer;">Delete Warehouse</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modalOverlay);
+        if (window.lucide) lucide.createIcons();
+
+        modalOverlay.querySelector(".modal-cancel-btn").addEventListener("click", () => modalOverlay.remove());
+
+        modalOverlay.querySelector(".modal-delete-btn").addEventListener("click", async () => {
+          modalOverlay.querySelector(".modal-delete-btn").disabled = true;
+          try {
+            const res = await Api.deleteWarehouse(id);
+            toast(res.message || `Warehouse '${name}' deleted successfully.`, "success");
+            modalOverlay.remove();
+            await refreshWarehouses();
+            if (currentWarehouse === id) {
+              currentWarehouse = warehousesCache.length > 0 ? warehousesCache[0].id : "";
+            }
+            renderWarehouses(el);
+          } catch (err) {
+            modalOverlay.querySelector(".modal-delete-btn").disabled = false;
+            if (err.message && err.message.includes("simulation is active")) {
+              toast("Cannot delete this warehouse while a simulation is active. Stop the simulation first.", "warning");
+            } else {
+              toast("Failed to delete warehouse: " + err.message, "danger");
+            }
           }
         });
       });
