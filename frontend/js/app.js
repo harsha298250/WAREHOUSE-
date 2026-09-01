@@ -2822,7 +2822,12 @@ function showSecureWarehouseDeleteModal(id, name, locationStr, onSuccessCallback
           </div>
           <div style="margin-bottom:18px;">
             <label style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-faint); display:block; margin-bottom:6px;">Enter Administrator Password</label>
-            <input type="password" id="wh-del-password-input" class="wh-select" placeholder="Enter your administrator password" style="width:100%; padding:9px 12px; font-size:13px; border-radius:4px; border:1px solid var(--border);" />
+            <div style="position:relative; display:flex; align-items:center;">
+              <input type="password" id="wh-del-password-input" class="wh-select" placeholder="Enter your administrator password" style="width:100%; padding:9px 36px 9px 12px; font-size:13px; border-radius:4px; border:1px solid var(--border);" />
+              <button type="button" id="wh-del-toggle-pw-btn" title="Toggle password visibility" style="position:absolute; right:8px; background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px; display:flex; align-items:center; justify-content:center;">
+                <i data-lucide="eye" style="width:16px; height:16px;"></i>
+              </button>
+            </div>
             <div id="wh-del-error-text" style="color:#ef4444; font-size:11.5px; font-weight:600; margin-top:6px; display:none;"></div>
           </div>
           <div style="display:flex; justify-content:flex-end; gap:10px;">
@@ -2844,8 +2849,20 @@ function showSecureWarehouseDeleteModal(id, name, locationStr, onSuccessCallback
     const step2 = modalOverlay.querySelector("#wh-del-step-2");
     const title = modalOverlay.querySelector("#wh-del-modal-title");
     const pwdInput = modalOverlay.querySelector("#wh-del-password-input");
+    const togglePwBtn = modalOverlay.querySelector("#wh-del-toggle-pw-btn");
     const errText = modalOverlay.querySelector("#wh-del-error-text");
     const verifyBtn = modalOverlay.querySelector(".modal-verify-delete-btn");
+
+    if (togglePwBtn && pwdInput) {
+      togglePwBtn.addEventListener("click", () => {
+        const isPassword = pwdInput.type === "password";
+        pwdInput.type = isPassword ? "text" : "password";
+        togglePwBtn.innerHTML = isPassword 
+          ? '<i data-lucide="eye-off" style="width:16px; height:16px;"></i>' 
+          : '<i data-lucide="eye" style="width:16px; height:16px;"></i>';
+        if (window.lucide) lucide.createIcons();
+      });
+    }
 
     modalOverlay.querySelector(".modal-continue-btn").addEventListener("click", () => {
       step1.style.display = "none";
