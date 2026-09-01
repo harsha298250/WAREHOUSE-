@@ -38,11 +38,12 @@ else:
     SECRET_KEY = RAW_SECRET
 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1440 if os.getenv("ENVIRONMENT") == "testing" else 60
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "43200"))  # 30 days long-lived demo session by default
 
-# Account lockout configuration
-MAX_FAILED_LOGINS = 5          # lock after 5 consecutive failures
-LOCKOUT_DURATION_MINUTES = 15  # lock for 15 minutes
+# Account lockout configuration (disabled by default for demo environment via AUTH_LOCKOUT_ENABLED=false)
+AUTH_LOCKOUT_ENABLED = os.getenv("AUTH_LOCKOUT_ENABLED", "false").lower() == "true"
+MAX_FAILED_LOGINS = 5          # lock after 5 consecutive failures if enabled
+LOCKOUT_DURATION_MINUTES = 15  # lock for 15 minutes if enabled
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -219,8 +220,15 @@ def authenticate_user(db: Session, username: str, password: str):
         user.password_hash = hash_password(password)
         db.commit()
 
-    # Check account lockout
-    if user.locked_until and datetime.now(UTC).replace(tzinfo=None) < user.locked_until:
+    # Clear lockout for demo environment if lockout is disabled
+    if not AUTH_LOCKOUT_ENABLED:
+        if user.locked_until or user.failed_login_count:
+            user.locked_until = None
+            user.failed_login_count = 0
+            db.commit()
+
+    # Check account lockout ONLY if AUTH_LOCKOUT_ENABLED is True
+    if AUTH_LOCKOUT_ENABLED and user.locked_until and datetime.now(UTC).replace(tzinfo=None) < user.locked_until:
         minutes_remaining = int((user.locked_until - datetime.now(UTC).replace(tzinfo=None)).total_seconds() / 60) + 1
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -236,8 +244,8 @@ def authenticate_user(db: Session, username: str, password: str):
         )
 
     if not verify_password(password, user.password_hash):
-        # Increment failed login count
-        if hasattr(user, 'failed_login_count'):
+        # Increment failed login count ONLY if AUTH_LOCKOUT_ENABLED is True
+        if AUTH_LOCKOUT_ENABLED and hasattr(user, 'failed_login_count'):
             user.failed_login_count = (user.failed_login_count or 0) + 1
             if user.failed_login_count >= MAX_FAILED_LOGINS:
                 user.locked_until = datetime.now(UTC).replace(tzinfo=None) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)

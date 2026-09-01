@@ -50,6 +50,38 @@ class TestLogin:
         d = r.json()
         assert "role" in d or "access_token" in d
 
+    def test_no_lockout_after_multiple_failed_logins(self, client):
+        """10 consecutive wrong password attempts must NOT lock the account; valid login succeeds immediately afterwards."""
+        for _ in range(10):
+            r = client.post("/auth/login", json={"username": "test_admin", "password": "WRONG_PASSWORD_123!"})
+            assert r.status_code == 401
+            assert "locked" not in r.text.lower()
+
+        # Immediate login with valid credentials must succeed
+        r_valid = client.post("/auth/login", json={"username": "test_admin", "password": "TestAdmin@123"})
+        assert r_valid.status_code == 200
+        assert "access_token" in r_valid.json()
+
+    def test_existing_locked_account_auto_unlocked(self, client, test_app):
+        """Even if locked_until was previously set in DB, demo auth mode must auto-clear lock and allow valid login."""
+        from tests.conftest import TestSessionLocal
+        from backend.models import User
+        from datetime import datetime, timedelta, UTC
+
+        # Force lock in database
+        db = TestSessionLocal()
+        u = db.query(User).filter(User.username == "test_admin").first()
+        if u:
+            u.locked_until = datetime.now(UTC).replace(tzinfo=None) + timedelta(minutes=60)
+            u.failed_login_count = 10
+            db.commit()
+        db.close()
+
+        # Login must succeed immediately without 403 lockout error
+        r = client.post("/auth/login", json={"username": "test_admin", "password": "TestAdmin@123"})
+        assert r.status_code == 200
+        assert "access_token" in r.json()
+
 
 class TestJWT:
 

@@ -31,9 +31,11 @@ const Api = {
       clearTimeout(timer);
     }
     if (res.status === 401) {
-      this.setToken(null);
-      showLogin();
-      throw new Error("Session expired — please log in again.");
+      if (path !== "/auth/login") {
+        this.setToken(null);
+        if (typeof showLogin === "function") showLogin();
+        throw new Error("Session expired — please log in again.");
+      }
     }
     let data;
     try { data = await res.json(); } catch (e) { data = null; }

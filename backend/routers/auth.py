@@ -66,7 +66,7 @@ OTP_EXPIRY_SECONDS = 600  # 10 minutes
 
 def check_login_rate_limit(ip: str):
     import os
-    if os.getenv("ENVIRONMENT") == "testing" or ip in ("127.0.0.1", "localhost", "::1"):
+    if os.getenv("AUTH_LOCKOUT_ENABLED", "false").lower() != "true" or os.getenv("ENVIRONMENT") == "testing" or ip in ("127.0.0.1", "localhost", "::1"):
         return
     try:
         from backend.redis_client import get_redis_client
