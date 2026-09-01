@@ -1785,7 +1785,7 @@ async function loadHeaderNotificationDropdown() {
 
   try {
     const res = await Api.listNotifications(null, "", "", "", 10, 0);
-    const notifications = res && res.items ? res.items : (Array.isArray(res) ? res : []);
+    const notifications = res && res.notifications ? res.notifications : (res && res.items ? res.items : (Array.isArray(res) ? res : []));
     
     if (notifications.length === 0) {
       listEl.innerHTML = `

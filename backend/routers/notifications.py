@@ -55,7 +55,10 @@ def list_notifications(
     Returns paginated notifications for the logged-in user.
     Adheres strictly to owner-only scoping and filters by category/severity/read status.
     """
-    q = db.query(Notification).filter(Notification.user_id == user.id, Notification.channel == "IN_APP")
+    q = db.query(Notification).filter(
+        (Notification.user_id == user.id) | (Notification.user_id.is_(None)),
+        Notification.channel == "IN_APP"
+    )
     
     if read_filter is not None:
         if read_filter:
@@ -111,7 +114,7 @@ def get_unread_count(
 ):
     """Returns the unread notification count for the topbar badge."""
     count = db.query(func.count(Notification.id)).filter(
-        Notification.user_id == user.id,
+        (Notification.user_id == user.id) | (Notification.user_id.is_(None)),
         Notification.channel == "IN_APP",
         Notification.status != "READ"
     ).scalar() or 0
@@ -224,7 +227,7 @@ def mark_all_read(
 ):
     """Marks all unread In-App notifications for the current user as read."""
     unread = db.query(Notification).filter(
-        Notification.user_id == user.id,
+        (Notification.user_id == user.id) | (Notification.user_id.is_(None)),
         Notification.channel == "IN_APP",
         Notification.status != "READ"
     ).all()
