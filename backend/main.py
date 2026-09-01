@@ -256,43 +256,33 @@ def schedule_simulation_worker():
                     # Execute a simulation tick (updates robots & routes across warehouses)
                     execute_simulation_tick(db)
                     
+                    max_speed = 1.0
                     for sim in running_sims:
                         sim.tick_count += 1
                         # Increment simulation time accounting for speed multiplier
-                        sim.simulation_time_seconds += 1.0 * (sim.speed_multiplier or 1.0)
+                        mult = sim.speed_multiplier or 1.0
+                        if mult > max_speed:
+                            max_speed = mult
+                        sim.simulation_time_seconds += 1.0 * mult
                         db.add(sim)
                         db.commit()
                         
                         # Emit tick events (which broadcasts to SSE stream)
                         _emit_tick_events(db, sim)
+                    
+                    max_speed = max(0.1, min(10.0, max_speed))
+                    sleep_time = 1.0 / max_speed
+                else:
+                    sleep_time = 1.5
             except Exception as e:
                 db.rollback()
                 logger.error("Simulation ticking worker error: %s", e)
+                sleep_time = 1.5
             finally:
                 db.close()
         except Exception as e:
             logger.error("Simulation ticking worker session error: %s", e)
-            
-        # Determine dynamic sleep time based on max speed multiplier of running simulations
-        sleep_time = 1.0
-        try:
-            from sqlalchemy.orm import sessionmaker
-            from backend.models import DigitalTwinSimulation
-            SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-            db = SessionLocal()
-            try:
-                running_sims = db.query(DigitalTwinSimulation).filter(
-                    DigitalTwinSimulation.simulation_status == "RUNNING"
-                ).all()
-                if running_sims:
-                    max_speed = max([sim.speed_multiplier for sim in running_sims], default=1.0)
-                    # Cap speed to 10.0x maximum, 0.1x minimum
-                    max_speed = max(0.1, min(10.0, max_speed))
-                    sleep_time = 1.0 / max_speed
-            finally:
-                db.close()
-        except Exception:
-            pass
+            sleep_time = 1.5
             
         if SIMULATION_WORKER_STOP_EVENT.wait(timeout=sleep_time):
             break
