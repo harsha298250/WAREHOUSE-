@@ -12864,19 +12864,21 @@ function _drawMap2D(data) {
   const svg = document.getElementById("dt-svg-canvas");
   if (!svg) return;
 
-  const CW = 60, CH = 60, OX = 40, OY = 30;
+  const CW = 58, CH = 58, OX = 25, OY = 20;
 
   // GRID
   const gGrid = document.getElementById("dt-g-grid");
   if (gGrid && dtState.layers.grid) {
     const cells = (data.grid && data.grid.length > 0) ? data.grid : _generateDefaultGrid();
     gGrid.innerHTML = cells.map(c => {
-      const colors = { RACK: ["#1e293b","#334155"], CHARGING: ["rgba(245,158,11,0.1)","#f59e0b"], PACKING: ["rgba(59,130,246,0.1)","#3b82f6"], RECEIVING: ["rgba(16,185,129,0.1)","#10b981"], AISLE: ["rgba(15,23,42,0.3)","var(--border)"] };
+      const colors = { RACK: ["#1e293b","#334155"], CHARGING: ["rgba(245,158,11,0.15)","#f59e0b"], PACKING: ["rgba(59,130,246,0.15)","#3b82f6"], RECEIVING: ["rgba(16,185,129,0.15)","#10b981"], AISLE: ["rgba(15,23,42,0.4)","var(--border)"] };
       const [fill, stroke] = colors[c.type] || ["var(--surface-2)","var(--border)"];
-      const rx = OX + c.x * CW, ry = OY + c.y * CH;
+      const gx = c.x >= 1 ? c.x - 1 : c.x;
+      const gy = c.y >= 1 ? c.y - 1 : c.y;
+      const rx = OX + gx * CW, ry = OY + gy * CH;
       const label = { RACK: "▣", CHARGING: "⚡", PACKING: "📦", RECEIVING: "🚚", AISLE: "" }[c.type] || "";
       return `<g class="dt-cell-group" data-x="${c.x}" data-y="${c.y}" style="cursor:pointer;">
-        <rect x="${rx}" y="${ry}" width="${CW}" height="${CH}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" rx="2"/>
+        <rect x="${rx}" y="${ry}" width="${CW}" height="${CH}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" rx="3"/>
         ${label ? `<text x="${rx+CW/2}" y="${ry+CH/2+4}" font-size="13" text-anchor="middle" style="pointer-events:none;user-select:none;">${label}</text>` : ''}
       </g>`;
     }).join('');
@@ -12896,8 +12898,10 @@ function _drawMap2D(data) {
   if (gHeat && dtState.layers.heatmap && dtState.heatmapData && dtState.heatmapData.length > 0) {
     gHeat.innerHTML = dtState.heatmapData.map(h => {
       if (!h.value) return "";
+      const gx = h.x >= 1 ? h.x - 1 : h.x;
+      const gy = h.y >= 1 ? h.y - 1 : h.y;
       const alpha = Math.min(0.75, h.value * 0.7 + 0.1);
-      return `<rect x="${OX+h.x*CW}" y="${OY+h.y*CH}" width="${CW}" height="${CH}" fill="rgba(239,68,68,${alpha})" style="pointer-events:none;"/>`;
+      return `<rect x="${OX+gx*CW}" y="${OY+gy*CH}" width="${CW}" height="${CH}" fill="rgba(239,68,68,${alpha})" style="pointer-events:none;"/>`;
     }).join('');
   } else if (gHeat) gHeat.innerHTML = "";
 
@@ -12908,8 +12912,12 @@ function _drawMap2D(data) {
       if (!r.path_data || r.path_data.length < 2) return "";
       const color = r.status === "ACTIVE" ? "#06b6d4" : r.status === "REPLANNED" ? "#f59e0b" : "#3b82f6";
       const dash = r.status === "ACTIVE" ? "none" : "6,4";
-      const pts = r.path_data.map(p => `${OX + p[0]*CW + CW/2},${OY + p[1]*CH + CH/2}`).join(' ');
-      return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-dasharray="${dash}" opacity="0.7" style="pointer-events:none;"/>`;
+      const pts = r.path_data.map(p => {
+        const px = p[0] >= 1 ? p[0] - 1 : p[0];
+        const py = p[1] >= 1 ? p[1] - 1 : p[1];
+        return `${OX + px*CW + CW/2},${OY + py*CH + CH/2}`;
+      }).join(' ');
+      return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-dasharray="${dash}" opacity="0.75" style="pointer-events:none;"/>`;
     }).join('');
   } else if (gRoutes) gRoutes.innerHTML = "";
 
@@ -12919,8 +12927,10 @@ function _drawMap2D(data) {
     gTrails.innerHTML = data.robots.map(r => {
       if (!r.trail || !r.trail.length) return "";
       return r.trail.map((t, i) => {
+        const tx = t.x >= 1 ? t.x - 1 : t.x;
+        const ty = t.y >= 1 ? t.y - 1 : t.y;
         const op = ((i+1)/(r.trail.length+1)) * 0.5;
-        return `<circle cx="${OX+t.x*CW+CW/2}" cy="${OY+t.y*CH+CH/2}" r="4" fill="#06b6d4" opacity="${op}" style="pointer-events:none;"/>`;
+        return `<circle cx="${OX+tx*CW+CW/2}" cy="${OY+ty*CH+CH/2}" r="4" fill="#06b6d4" opacity="${op}" style="pointer-events:none;"/>`;
       }).join('');
     }).join('');
   } else if (gTrails) gTrails.innerHTML = "";
@@ -12929,9 +12939,11 @@ function _drawMap2D(data) {
   const gObs = document.getElementById("dt-g-obstacles");
   if (gObs && dtState.layers.obstacles && data.obstacles) {
     gObs.innerHTML = data.obstacles.filter(o => o.active).map(o => {
-      const ox = OX + o.x*CW, oy = OY + o.y*CH, pad = 10;
+      const gx = o.x >= 1 ? o.x - 1 : o.x;
+      const gy = o.y >= 1 ? o.y - 1 : o.y;
+      const ox = OX + gx*CW, oy = OY + gy*CH, pad = 10;
       return `<g class="dt-obs-group" data-id="${o.id}" style="cursor:pointer;">
-        <rect x="${ox}" y="${oy}" width="${CW}" height="${CH}" fill="rgba(239,68,68,0.12)" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,3" rx="2"/>
+        <rect x="${ox}" y="${oy}" width="${CW}" height="${CH}" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,3" rx="3"/>
         <line x1="${ox+pad}" y1="${oy+pad}" x2="${ox+CW-pad}" y2="${oy+CH-pad}" stroke="#ef4444" stroke-width="2.5" style="pointer-events:none;"/>
         <line x1="${ox+CW-pad}" y1="${oy+pad}" x2="${ox+pad}" y2="${oy+CH-pad}" stroke="#ef4444" stroke-width="2.5" style="pointer-events:none;"/>
       </g>`;
@@ -12961,8 +12973,10 @@ function _drawMap2D(data) {
     // Render robots at their CURRENT display position
     gRobots.innerHTML = data.robots.map(r => {
       const dp = window.dtRobotDisplayPos[r.robot_code] || { x: r.current_x, y: r.current_y };
-      const cx = OX + dp.x * CW + CW/2;
-      const cy = OY + dp.y * CH + CH/2;
+      const gx = dp.x >= 1 ? dp.x - 1 : dp.x;
+      const gy = dp.y >= 1 ? dp.y - 1 : dp.y;
+      const cx = OX + gx * CW + CW/2;
+      const cy = OY + gy * CH + CH/2;
       const statusColors = {
         AVAILABLE: "#10b981", IDLE: "#10b981",
         MOVING: "#06b6d4", ASSIGNED: "#06b6d4",
