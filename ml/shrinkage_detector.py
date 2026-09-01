@@ -44,6 +44,7 @@ def detect_shrinkage(contamination: float = 0.05, db: Session = None):
         FROM stock_movements sm
         JOIN items i ON sm.item_id = i.id
         ORDER BY sm.warehouse_id, sm.item_id, sm.date ASC
+        LIMIT 5000
     """)
     try:
         if db is not None:
@@ -115,7 +116,7 @@ def detect_shrinkage(contamination: float = 0.05, db: Session = None):
         # Cap adjusted_contamination at 0.5 to avoid over-flagging normal data
         adjusted_contamination = min(0.5, adjusted_contamination)
         
-        model = IsolationForest(contamination=adjusted_contamination, random_state=42)
+        model = IsolationForest(n_estimators=20, max_samples=min(100, len(group)), contamination=adjusted_contamination, random_state=42)
         preds = model.fit_predict(features_df[non_zero_var_cols])
         scores = model.decision_function(features_df[non_zero_var_cols])
 
