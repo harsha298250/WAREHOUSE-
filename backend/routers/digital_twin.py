@@ -733,16 +733,29 @@ def get_heatmap(
 
 
 def cleanup_simulation_tasks(db: Session, warehouse_id: str):
-    from backend.models import Task, Order
-    db.query(Task).filter(
-        Task.warehouse_id == warehouse_id,
-        Task.task_number.like("SIM-TSK-%")
-    ).delete(synchronize_session=False)
-    db.query(Order).filter(
-        Order.warehouse_id == warehouse_id,
-        Order.id.like("SIM-ORD-%")
-    ).delete(synchronize_session=False)
-    db.commit()
+    from backend.models import Task, Order, OrderItem
+    try:
+        db.query(Task).filter(
+            Task.warehouse_id == warehouse_id,
+            Task.task_number.like("SIM-TSK-%")
+        ).delete(synchronize_session=False)
+
+        sim_orders = db.query(Order).filter(
+            Order.warehouse_id == warehouse_id,
+            Order.id.like("SIM-ORD-%")
+        ).all()
+        if sim_orders:
+            sim_order_ids = [o.id for o in sim_orders]
+            db.query(OrderItem).filter(OrderItem.order_id.in_(sim_order_ids)).delete(synchronize_session=False)
+
+        db.query(Order).filter(
+            Order.warehouse_id == warehouse_id,
+            Order.id.like("SIM-ORD-%")
+        ).delete(synchronize_session=False)
+        db.commit()
+    except Exception as e:
+        logger.warning("cleanup_simulation_tasks exception (non-fatal): %s", e)
+        db.rollback()
 
 
 def setup_scenario_conditions(db: Session, warehouse_id: str, scenario_type: str):
@@ -912,15 +925,19 @@ def start_simulation(
     if not wh:
         raise HTTPException(404, f"Warehouse '{req.warehouse_id}' not found.")
 
-    # Stop any existing active simulations for this warehouse
-    active = db.query(DigitalTwinSimulation).filter(
-        DigitalTwinSimulation.warehouse_id == req.warehouse_id,
-        DigitalTwinSimulation.simulation_status.in_(["RUNNING", "PAUSED"])
-    ).all()
-    for old_sim in active:
-        old_sim.simulation_status = "STOPPED"
-        old_sim.stopped_at = datetime.now(UTC).replace(tzinfo=None)
-    db.commit()
+    try:
+        # Stop any existing active simulations for this warehouse
+        active = db.query(DigitalTwinSimulation).filter(
+            DigitalTwinSimulation.warehouse_id == req.warehouse_id,
+            DigitalTwinSimulation.simulation_status.in_(["RUNNING", "PAUSED"])
+        ).all()
+        for old_sim in active:
+            old_sim.simulation_status = "STOPPED"
+            old_sim.stopped_at = datetime.now(UTC).replace(tzinfo=None)
+        db.commit()
+    except Exception as e_stop:
+        logger.warning("Failed to stop active simulations: %s", e_stop)
+        db.rollback()
 
     # Clean up any leftover simulation tasks and set up new scenario conditions
     cleanup_simulation_tasks(db, req.warehouse_id)
