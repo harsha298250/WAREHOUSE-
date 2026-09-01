@@ -431,6 +431,7 @@ def ensure_admin_user_exists():
     from backend.database import SessionLocal
     from backend.models import User
     from backend.auth import hash_password
+    from sqlalchemy import text
     db = SessionLocal()
     try:
         initial_password = os.getenv("INITIAL_ADMIN_PASSWORD", "AdminPassword123!")
@@ -449,12 +450,13 @@ def ensure_admin_user_exists():
             db.commit()
             logger.info("Auto-seeded default admin user '%s'", initial_username)
         else:
-            admin.is_active = True
-            admin.failed_login_attempts = 0
-            admin.locked_until = None
-            admin.password_hash = hash_password(initial_password)
+            hashed = hash_password(initial_password)
+            db.execute(
+                text("UPDATE users SET locked_until = NULL, failed_login_attempts = 0, is_active = true, password_hash = :p WHERE username = :u"),
+                {"p": hashed, "u": initial_username}
+            )
             db.commit()
-            logger.info("Reset default admin user '%s' credentials & unlocked account to guarantee access", initial_username)
+            logger.info("Reset default admin user '%s' credentials & unlocked account via SQL update", initial_username)
     except Exception as e:
         db.rollback()
         logger.error("Failed to seed admin user: %s", e)
