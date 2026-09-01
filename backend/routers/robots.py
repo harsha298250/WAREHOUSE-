@@ -97,16 +97,17 @@ class RobotTelemetrySchema(BaseModel):
 # Robot State Transition Rules
 # ---------------------------------------------------------------------------
 ALLOWED_ROBOT_TRANSITIONS = {
-    "IDLE": ["AVAILABLE", "ASSIGNED", "OFFLINE"],
-    "AVAILABLE": ["ASSIGNED", "CHARGING", "OFFLINE", "IDLE"],
-    "ASSIGNED": ["MOVING", "PAUSED", "OFFLINE", "AVAILABLE", "FAILED", "WAITING"],
-    "MOVING": ["PICKING", "PAUSED", "FAILED", "OFFLINE", "RETURNING", "AVAILABLE", "CHARGING", "WAITING", "DROPPING"],
-    "PICKING": ["RETURNING", "PAUSED", "FAILED", "OFFLINE", "AVAILABLE"],
-    "RETURNING": ["AVAILABLE", "IDLE", "PAUSED", "FAILED", "OFFLINE", "CHARGING", "WAITING", "DROPPING"],
-    "DROPPING": ["AVAILABLE", "FAILED", "OFFLINE"],
-    "CHARGING": ["AVAILABLE", "IDLE", "OFFLINE", "FAILED"],
-    "PAUSED": ["MOVING", "PICKING", "RETURNING", "ASSIGNED", "CHARGING", "OFFLINE", "FAILED", "AVAILABLE", "WAITING", "DROPPING"],
-    "WAITING": ["MOVING", "RETURNING", "PAUSED", "AVAILABLE", "FAILED", "OFFLINE", "DROPPING"],
+    "IDLE": ["AVAILABLE", "ASSIGNED", "OFFLINE", "WAITING_FOR_CHARGER", "CHARGING"],
+    "AVAILABLE": ["ASSIGNED", "CHARGING", "OFFLINE", "IDLE", "WAITING_FOR_CHARGER"],
+    "ASSIGNED": ["MOVING", "PAUSED", "OFFLINE", "AVAILABLE", "FAILED", "WAITING", "WAITING_FOR_CHARGER"],
+    "MOVING": ["PICKING", "PAUSED", "FAILED", "OFFLINE", "RETURNING", "AVAILABLE", "CHARGING", "WAITING", "DROPPING", "WAITING_FOR_CHARGER"],
+    "PICKING": ["RETURNING", "PAUSED", "FAILED", "OFFLINE", "AVAILABLE", "WAITING_FOR_CHARGER"],
+    "RETURNING": ["AVAILABLE", "IDLE", "PAUSED", "FAILED", "OFFLINE", "CHARGING", "WAITING", "DROPPING", "WAITING_FOR_CHARGER"],
+    "DROPPING": ["AVAILABLE", "FAILED", "OFFLINE", "WAITING_FOR_CHARGER"],
+    "CHARGING": ["AVAILABLE", "IDLE", "OFFLINE", "FAILED", "WAITING_FOR_CHARGER"],
+    "PAUSED": ["MOVING", "PICKING", "RETURNING", "ASSIGNED", "CHARGING", "OFFLINE", "FAILED", "AVAILABLE", "WAITING", "DROPPING", "WAITING_FOR_CHARGER"],
+    "WAITING": ["MOVING", "RETURNING", "PAUSED", "AVAILABLE", "FAILED", "OFFLINE", "DROPPING", "WAITING_FOR_CHARGER"],
+    "WAITING_FOR_CHARGER": ["CHARGING", "AVAILABLE", "FAILED", "OFFLINE", "PAUSED", "IDLE"],
     "OFFLINE": ["AVAILABLE", "IDLE", "MAINTENANCE"],
     # Allow FAILED robots to recover to AVAILABLE so the simulation can revive them
     "FAILED": ["MAINTENANCE", "OFFLINE", "AVAILABLE"],
@@ -161,6 +162,12 @@ def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGEST
         "status": r.status, "x": r.current_x, "y": r.current_y, "battery": r.battery_level, "warehouse_id": r.warehouse_id
     } for r in db.query(Robot).all()}
     tasks_before = {t.id: {"status": t.status, "warehouse_id": t.warehouse_id} for t in db.query(Task).all()}
+
+    # Phase 11: Evaluate charging system (queue & lowest battery priority) per warehouse
+    active_whs = {r.warehouse_id for r in db.query(Robot).all() if r.warehouse_id}
+    from backend.charging_manager import evaluate_warehouse_charging_system
+    for wh_id in active_whs:
+        evaluate_warehouse_charging_system(db, wh_id, low_battery_threshold=effective_low_battery_thresh)
 
     # Recover FAILED robots: release their tasks back to QUEUED so the fleet can
     # pick them up again, then mark the robot as AVAILABLE.

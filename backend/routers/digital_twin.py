@@ -448,6 +448,7 @@ def _build_state(db: Session, warehouse_id: str, sim: DigitalTwinSimulation = No
         "replenishment_summary": replenishment_summary,
         "operational_alerts": alerts,
         "kpis": kpi_summary,
+        "charging_system": __import__("backend.charging_manager", fromlist=["get_warehouse_charging_queue_info"]).get_warehouse_charging_queue_info(db, warehouse_id),
         "fleet_summary": {
             "total": len(robot_list),
             "available": sum(1 for r in robot_list if r["status"] == "AVAILABLE"),

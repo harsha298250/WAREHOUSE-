@@ -12703,6 +12703,33 @@ async function renderDigitalTwin(el) {
             </div>
           </div>
         </div>
+
+        <!-- CHARGING BAYS & PRIORITY QUEUE PANEL -->
+        <div class="panel" style="margin-bottom:0;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);" id="dt-charging-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;">
+              <i data-lucide="zap" style="width:16px;height:16px;color:#f59e0b;"></i>
+              Charging Bays &amp; Priority Queue
+            </div>
+            <div id="dt-charging-capacity-badge" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(245,158,11,0.15);color:#f59e0b;">
+              0 / 0 Occupied
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11.5px;" id="dt-charging-details-grid">
+            <div>
+              <div style="font-size:10px;color:var(--text-faint);text-transform:uppercase;margin-bottom:4px;font-weight:700;">Active Charging Ports</div>
+              <div id="dt-charging-ports-list" style="display:flex;flex-direction:column;gap:4px;">
+                <span style="color:var(--text-faint);">Loading ports...</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--text-faint);text-transform:uppercase;margin-bottom:4px;font-weight:700;">Waiting Queue (Lowest Battery Priority)</div>
+              <div id="dt-charging-queue-list" style="display:flex;flex-direction:column;gap:4px;">
+                <span style="color:var(--text-faint);">Queue empty — all robots operational</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- RIGHT: LIVE EVENTS -->
@@ -12970,6 +12997,47 @@ function _renderSnapshotUI(data) {
   if (dtState.selectedObject && dtState.selectedType === "robot") {
     const rob = data.robots && data.robots.find(r => r.id === dtState.selectedObject.id);
     if (rob) { dtState.selectedObject = rob; updateRouteProgressPanel(rob); }
+  }
+
+  // Update Charging Bays & Priority Queue Panel
+  if (data.charging_system) {
+    const cs = data.charging_system;
+    const badge = document.getElementById("dt-charging-capacity-badge");
+    if (badge) {
+      badge.textContent = `${cs.occupied_ports} / ${cs.total_ports} Occupied`;
+      badge.style.background = cs.occupied_ports >= cs.total_ports ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)";
+      badge.style.color = cs.occupied_ports >= cs.total_ports ? "#ef4444" : "#f59e0b";
+    }
+
+    const portsList = document.getElementById("dt-charging-ports-list");
+    if (portsList) {
+      if (!cs.ports || cs.ports.length === 0) {
+        portsList.innerHTML = `<span style="color:var(--text-faint);">No charging ports configured</span>`;
+      } else {
+        portsList.innerHTML = cs.ports.map(p => {
+          const stColor = p.status === 'OCCUPIED' ? '#ef4444' : p.status === 'RESERVED' ? '#f59e0b' : '#10b981';
+          const robotTxt = p.robot_code ? `<strong>${esc(p.robot_code)}</strong> (${Math.round(p.battery || 0)}%)` : 'Available';
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:var(--surface-3);border-radius:4px;border:1px solid var(--border);">
+            <span><strong style="color:var(--text-primary);">${esc(p.port_id.split('-').pop())}</strong> (${p.x}, ${p.y}): ${robotTxt}</span>
+            <span style="font-size:9.5px;font-weight:700;color:${stColor};">${p.status}</span>
+          </div>`;
+        }).join('');
+      }
+    }
+
+    const queueList = document.getElementById("dt-charging-queue-list");
+    if (queueList) {
+      if (!cs.waiting_queue || cs.waiting_queue.length === 0) {
+        queueList.innerHTML = `<span style="color:var(--text-faint);">Queue empty — all robots operational</span>`;
+      } else {
+        queueList.innerHTML = cs.waiting_queue.map(q => {
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:var(--surface-3);border-radius:4px;border:1px solid var(--border);">
+            <span><strong style="color:#ef4444;">#${q.queue_position}</strong> <strong>${esc(q.robot_code)}</strong> (Battery: ${Math.round(q.battery_level)}%)</span>
+            <span style="font-size:9.5px;color:var(--warning);font-weight:700;">WAITING</span>
+          </div>`;
+        }).join('');
+      }
+    }
   }
 }
 
