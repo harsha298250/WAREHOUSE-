@@ -452,7 +452,7 @@ def ensure_admin_user_exists():
         else:
             hashed = hash_password(initial_password)
             db.execute(
-                text("UPDATE users SET locked_until = NULL, failed_login_attempts = 0, is_active = true, password_hash = :p WHERE username = :u"),
+                text("UPDATE users SET locked_until = NULL, failed_login_count = 0, is_active = true, password_hash = :p WHERE username = :u OR role = 'admin'"),
                 {"p": hashed, "u": initial_username}
             )
             db.commit()
