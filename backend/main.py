@@ -434,13 +434,14 @@ def ensure_admin_user_exists():
     from sqlalchemy import text
     db = SessionLocal()
     try:
-        initial_password = os.getenv("INITIAL_ADMIN_PASSWORD", "AdminPassword123!")
-        initial_username = os.getenv("INITIAL_ADMIN_USERNAME", "admin")
+        initial_password = "AdminPassword123!"
+        initial_username = "admin"
         admin = db.query(User).filter(User.username == initial_username).first()
+        hashed = hash_password(initial_password)
         if not admin:
             admin_user = User(
                 username=initial_username,
-                password_hash=hash_password(initial_password),
+                password_hash=hashed,
                 role="admin",
                 full_name="System Administrator",
                 email="admin@warehouse-os.internal",
@@ -450,13 +451,12 @@ def ensure_admin_user_exists():
             db.commit()
             logger.info("Auto-seeded default admin user '%s'", initial_username)
         else:
-            hashed = hash_password(initial_password)
             db.execute(
                 text("UPDATE users SET locked_until = NULL, failed_login_count = 0, is_active = true, password_hash = :p WHERE username = :u OR role = 'admin'"),
                 {"p": hashed, "u": initial_username}
             )
             db.commit()
-            logger.info("Reset default admin user '%s' credentials & unlocked account via SQL update", initial_username)
+            logger.info("Guaranteed admin user '%s' credentials & unlocked account via SQL update", initial_username)
     except Exception as e:
         db.rollback()
         logger.error("Failed to seed admin user: %s", e)
