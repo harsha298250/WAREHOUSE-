@@ -1,3 +1,4 @@
+from typing import Optional
 import logging
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -178,26 +179,81 @@ def update_warehouse(id: str, payload: WarehouseUpdate, request: Request, db: Se
     return {"status": "updated", "id": w.id}
 
 
+class WarehouseDeletePayload(BaseModel):
+    password: Optional[str] = None
+
+
 @router.delete("/warehouses/{id}")
-def delete_warehouse(id: str, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
+def delete_warehouse(
+    id: str,
+    request: Request,
+    payload: Optional[WarehouseDeletePayload] = None,
+    db: Session = Depends(get_db),
+    user=Depends(require_admin)
+):
     w = db.query(Warehouse).filter(Warehouse.id == id).first()
     if not w:
+        try:
+            ledger.append_entry(db, "WAREHOUSE_DELETE_NOT_FOUND", {
+                "actor": user.username,
+                "role": user.role,
+                "warehouse_id": id,
+                "action": "DELETE",
+                "result": "NOT_FOUND"
+            })
+        except Exception:
+            pass
         raise HTTPException(status_code=404, detail=f"Warehouse '{id}' not found")
 
-    # 1. Active Digital Twin Simulation Protection
+    wh_name = w.name
+    wh_id = w.id
+
+    # 1. Server-side Administrator Password Verification
+    provided_pw = payload.password if payload and payload.password else None
+    from backend.auth import verify_password
+    if not provided_pw or not verify_password(provided_pw, user.password_hash):
+        logger.warning("Failed admin password verification during delete warehouse %s by user %s", id, user.username)
+        try:
+            ledger.append_entry(db, "WAREHOUSE_DELETE_AUTH_FAILED", {
+                "actor": user.username,
+                "role": user.role,
+                "warehouse_id": wh_id,
+                "warehouse_name": wh_name,
+                "action": "DELETE",
+                "result": "FAILED",
+                "reason": "INVALID_PASSWORD"
+            })
+        except Exception as audit_err:
+            logger.warning("Audit ledger failure on password verification error: %s", audit_err)
+
+        raise HTTPException(
+            status_code=403,
+            detail="Incorrect administrator password. Warehouse was not deleted."
+        )
+
+    # 2. Active Digital Twin Simulation Protection
     from backend.models import DigitalTwinSimulation
     active_sim = db.query(DigitalTwinSimulation).filter(
         DigitalTwinSimulation.warehouse_id == id,
         DigitalTwinSimulation.simulation_status.in_(["RUNNING", "PAUSED"])
     ).first()
     if active_sim:
+        try:
+            ledger.append_entry(db, "WAREHOUSE_DELETE_BLOCKED_ACTIVE_SIMULATION", {
+                "actor": user.username,
+                "role": user.role,
+                "warehouse_id": wh_id,
+                "warehouse_name": wh_name,
+                "action": "DELETE",
+                "result": "BLOCKED",
+                "reason": f"Active simulation status: {active_sim.simulation_status}"
+            })
+        except Exception:
+            pass
         raise HTTPException(
             status_code=409,
-            detail=f"Cannot delete this warehouse while a simulation is active (Status: {active_sim.simulation_status}). Stop the simulation first."
+            detail=f"This warehouse cannot be deleted while its Digital Twin simulation is active. Stop the simulation first."
         )
-
-    wh_name = w.name
-    wh_id = w.id
 
     try:
         # Import models locally for dependent data cleanup
@@ -254,6 +310,18 @@ def delete_warehouse(id: str, request: Request, db: Session = Depends(get_db), u
     except Exception as e:
         db.rollback()
         logger.error("Failed to delete warehouse %s: %s", id, e, exc_info=True)
+        try:
+            ledger.append_entry(db, "WAREHOUSE_DELETE_FAILED", {
+                "actor": user.username,
+                "role": user.role,
+                "warehouse_id": wh_id,
+                "warehouse_name": wh_name,
+                "action": "DELETE",
+                "result": "FAILED",
+                "reason": str(e)
+            })
+        except Exception:
+            pass
         raise HTTPException(status_code=500, detail=f"Database error deleting warehouse: {str(e)}")
 
     # Audit ledger & Notification
@@ -261,9 +329,11 @@ def delete_warehouse(id: str, request: Request, db: Session = Depends(get_db), u
         log_access(db, user.username, "delete_warehouse", warehouse_id=id, request=request)
         ledger.append_entry(db, "WAREHOUSE_DELETED", {
             "actor": user.username,
+            "role": user.role,
             "warehouse_id": wh_id,
             "warehouse_name": wh_name,
-            "deleted_by": user.username
+            "action": "DELETE",
+            "result": "SUCCESS"
         })
         notifications.send_change_alert("WAREHOUSE_DELETED", {
             "warehouse_id": wh_id,

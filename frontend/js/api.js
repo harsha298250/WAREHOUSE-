@@ -128,7 +128,7 @@ const Api = {
   updateWarehouse(id, payload) { return this.put(`/warehouses/${encodeURIComponent(id)}`, payload); },
   patchWarehouseLocation(id, lat, lng) { return this.patch(`/warehouses/${encodeURIComponent(id)}/location`, { latitude: lat, longitude: lng }); },
   warehouseWeather(id) { return this.get(`/warehouses/${encodeURIComponent(id)}/weather`); },
-  deleteWarehouse(id) { return this.delete(`/warehouses/${encodeURIComponent(id)}`); },
+  deleteWarehouse(id, password) { return this.request("DELETE", `/warehouses/${encodeURIComponent(id)}`, { password: password }); },
   items() { return this.get("/items"); },
   getItem(id) { return this.get(`/items/${encodeURIComponent(id)}`); },
   createItem(payload) { return this.post("/items", payload); },

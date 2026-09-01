@@ -2751,6 +2751,118 @@ window.showWarehouseOnMap = function(whId) {
   navigate("map");
 };
 
+function showSecureWarehouseDeleteModal(id, name, locationStr, onSuccessCallback) {
+  const modalOverlay = document.createElement('div');
+  modalOverlay.className = 'modal-backdrop open';
+  modalOverlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:99999;';
+
+  const currentUser = (typeof state !== 'undefined' && state.currentUser) ? state.currentUser : { username: (typeof currentUser !== 'undefined' && currentUser ? currentUser : 'admin') };
+  const adminName = currentUser.username || (typeof currentUser === 'string' ? currentUser : 'admin');
+
+  modalOverlay.innerHTML = `
+    <div class="modal-card" style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; max-width:480px; width:90%; box-shadow:var(--shadow-lg);">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+        <div style="width:40px; height:40px; border-radius:50%; background:rgba(239,68,68,0.15); color:#ef4444; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <i data-lucide="alert-triangle" style="width:20px; height:20px;"></i>
+        </div>
+        <div>
+          <h3 style="margin:0; font-size:16px; color:var(--text); font-weight:700;" id="wh-del-modal-title">Delete Warehouse?</h3>
+          <div style="font-size:11.5px; color:var(--text-faint);">Permanent Administrative Action</div>
+        </div>
+      </div>
+
+      <div id="wh-del-step-1">
+        <div style="font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:16px;">
+          Are you sure you want to permanently delete:<br>
+          <strong style="color:var(--text); font-size:14px;">"${esc(name)}"</strong><br>
+          <span class="mono" style="font-size:12px; color:var(--text-faint);">ID: ${esc(id)}</span>
+          ${locationStr ? `<br><span style="font-size:12px; color:var(--text-faint);">Location: ${esc(locationStr)}</span>` : ''}
+        </div>
+        <div style="background:rgba(239,68,68,0.08); border-left:3px solid #ef4444; padding:10px 12px; border-radius:4px; font-size:12px; color:var(--text-muted); margin-bottom:20px;">
+          <strong>Warning:</strong> This action will permanently remove this warehouse and its associated warehouse-owned operational data.
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn btn-secondary modal-cancel-btn" style="font-size:12px; padding:6px 14px;">Cancel</button>
+          <button type="button" class="btn btn-danger modal-continue-btn" style="background:#ef4444; color:white; font-size:12px; padding:6px 14px; border:none; border-radius:4px; font-weight:700; cursor:pointer;">Continue to Delete</button>
+        </div>
+      </div>
+
+      <div id="wh-del-step-2" style="display:none;">
+        <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px; line-height:1.4;">
+          Warehouse deletion requires administrator authentication.<br>
+          Currently logged-in identity: <strong style="color:var(--text);">${esc(adminName)}</strong>
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-faint); display:block; margin-bottom:6px;">Enter Administrator Password</label>
+          <input type="password" id="wh-del-password-input" class="wh-select" placeholder="Enter your administrator password" style="width:100%; padding:9px 12px; font-size:13px; border-radius:4px; border:1px solid var(--border);" />
+          <div id="wh-del-error-text" style="color:#ef4444; font-size:11.5px; font-weight:600; margin-top:6px; display:none;"></div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn btn-secondary modal-cancel-btn" style="font-size:12px; padding:6px 14px;">Cancel</button>
+          <button type="button" class="btn btn-danger modal-verify-delete-btn" style="background:#ef4444; color:white; font-size:12px; padding:6px 14px; border:none; border-radius:4px; font-weight:700; cursor:pointer;">Verify &amp; Delete Warehouse</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modalOverlay);
+  if (window.lucide) lucide.createIcons();
+
+  modalOverlay.querySelectorAll(".modal-cancel-btn").forEach(btn => {
+    btn.addEventListener("click", () => modalOverlay.remove());
+  });
+
+  const step1 = modalOverlay.querySelector("#wh-del-step-1");
+  const step2 = modalOverlay.querySelector("#wh-del-step-2");
+  const title = modalOverlay.querySelector("#wh-del-modal-title");
+  const pwdInput = modalOverlay.querySelector("#wh-del-password-input");
+  const errText = modalOverlay.querySelector("#wh-del-error-text");
+  const verifyBtn = modalOverlay.querySelector(".modal-verify-delete-btn");
+
+  modalOverlay.querySelector(".modal-continue-btn").addEventListener("click", () => {
+    step1.style.display = "none";
+    step2.style.display = "block";
+    title.textContent = "Administrator Verification";
+    pwdInput.focus();
+  });
+
+  const doDelete = async () => {
+    const password = pwdInput.value;
+    if (!password) {
+      errText.textContent = "Please enter your administrator password.";
+      errText.style.display = "block";
+      pwdInput.focus();
+      return;
+    }
+
+    errText.style.display = "none";
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = "Verifying & Deleting...";
+
+    try {
+      const res = await Api.deleteWarehouse(id, password);
+      toast(res.message || `Warehouse '${name}' deleted successfully.`, "success");
+      modalOverlay.remove();
+      if (typeof onSuccessCallback === "function") await onSuccessCallback();
+    } catch (err) {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = "Verify & Delete Warehouse";
+      errText.textContent = err.message || "Warehouse deletion failed.";
+      errText.style.display = "block";
+      pwdInput.value = "";
+      pwdInput.focus();
+    }
+  };
+
+  verifyBtn.addEventListener("click", doDelete);
+  pwdInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      doDelete();
+    }
+  });
+}
+
 async function renderWarehouses(el) {
   const pageSize = (window.wmsSettings && window.wmsSettings.pref_items_per_page) || 10;
   const pag = paginate(warehousesCache, warehousesPage, pageSize);
@@ -2932,60 +3044,13 @@ async function renderWarehouses(el) {
       btn.addEventListener("click", (e) => {
         const id = btn.getAttribute("data-id");
         const name = btn.getAttribute("data-name");
-
-        const modalOverlay = document.createElement('div');
-        modalOverlay.className = 'modal-backdrop open';
-        modalOverlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:99999;';
-
-        modalOverlay.innerHTML = `
-          <div class="modal-card" style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; max-width:480px; width:90%; box-shadow:var(--shadow-lg);">
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-              <div style="width:40px; height:40px; border-radius:50%; background:rgba(239,68,68,0.15); color:#ef4444; display:flex; align-items:center; justify-content:center;">
-                <i data-lucide="trash-2" style="width:20px; height:20px;"></i>
-              </div>
-              <div>
-                <h3 style="margin:0; font-size:16px; color:var(--text); font-weight:700;">Delete Warehouse?</h3>
-                <div style="font-size:11.5px; color:var(--text-faint);">Permanent Administrative Action</div>
-              </div>
-            </div>
-            <p style="font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:16px;">
-              Are you sure you want to permanently delete:<br>
-              <strong style="color:var(--text); font-size:14px;">"${esc(name)}"</strong><br>
-              <span class="mono" style="font-size:12px; color:var(--text-faint);">ID: ${esc(id)}</span>
-            </p>
-            <div style="background:rgba(239,68,68,0.08); border-left:3px solid #ef4444; padding:10px 12px; border-radius:4px; font-size:12px; color:var(--text-muted); margin-bottom:20px;">
-              This action will permanently remove the warehouse and its associated simulation/operational data.
-            </div>
-            <div style="display:flex; justify-content:flex-end; gap:10px;">
-              <button type="button" class="btn btn-secondary modal-cancel-btn" style="font-size:12px; padding:6px 14px;">Cancel</button>
-              <button type="button" class="btn btn-danger modal-delete-btn" style="background:#ef4444; color:white; font-size:12px; padding:6px 14px; border:none; border-radius:4px; font-weight:700; cursor:pointer;">Delete Warehouse</button>
-            </div>
-          </div>
-        `;
-        document.body.appendChild(modalOverlay);
-        if (window.lucide) lucide.createIcons();
-
-        modalOverlay.querySelector(".modal-cancel-btn").addEventListener("click", () => modalOverlay.remove());
-
-        modalOverlay.querySelector(".modal-delete-btn").addEventListener("click", async () => {
-          modalOverlay.querySelector(".modal-delete-btn").disabled = true;
-          try {
-            const res = await Api.deleteWarehouse(id);
-            toast(res.message || `Warehouse '${name}' deleted successfully.`, "success");
-            modalOverlay.remove();
-            await refreshWarehouses();
-            if (currentWarehouse === id) {
-              currentWarehouse = warehousesCache.length > 0 ? warehousesCache[0].id : "";
-            }
-            renderWarehouses(el);
-          } catch (err) {
-            modalOverlay.querySelector(".modal-delete-btn").disabled = false;
-            if (err.message && err.message.includes("simulation is active")) {
-              toast("Cannot delete this warehouse while a simulation is active. Stop the simulation first.", "warning");
-            } else {
-              toast("Failed to delete warehouse: " + err.message, "danger");
-            }
+        const loc = btn.getAttribute("data-location") || "";
+        showSecureWarehouseDeleteModal(id, name, loc, async () => {
+          await refreshWarehouses();
+          if (currentWarehouse === id) {
+            currentWarehouse = warehousesCache.length > 0 ? warehousesCache[0].id : "";
           }
+          renderWarehouses(el);
         });
       });
     });
