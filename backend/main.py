@@ -450,9 +450,11 @@ def ensure_admin_user_exists():
             logger.info("Auto-seeded default admin user '%s'", initial_username)
         else:
             admin.is_active = True
+            admin.failed_login_attempts = 0
+            admin.locked_until = None
             admin.password_hash = hash_password(initial_password)
             db.commit()
-            logger.info("Reset default admin user '%s' credentials to guarantee access", initial_username)
+            logger.info("Reset default admin user '%s' credentials & unlocked account to guarantee access", initial_username)
     except Exception as e:
         db.rollback()
         logger.error("Failed to seed admin user: %s", e)
