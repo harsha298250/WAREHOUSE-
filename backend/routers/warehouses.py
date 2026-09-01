@@ -182,20 +182,98 @@ def update_warehouse(id: str, payload: WarehouseUpdate, request: Request, db: Se
 def delete_warehouse(id: str, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
     w = db.query(Warehouse).filter(Warehouse.id == id).first()
     if not w:
-        raise HTTPException(404, f"Warehouse '{id}' not found")
-    try:
-        db.delete(w)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        logger.error("Failed to delete warehouse %s: %s", id, e)
-        raise HTTPException(500, f"Database error deleting warehouse: {str(e)}")
+        raise HTTPException(status_code=404, detail=f"Warehouse '{id}' not found")
+
+    # 1. Active Digital Twin Simulation Protection
+    from backend.models import DigitalTwinSimulation
+    active_sim = db.query(DigitalTwinSimulation).filter(
+        DigitalTwinSimulation.warehouse_id == id,
+        DigitalTwinSimulation.simulation_status.in_(["RUNNING", "PAUSED"])
+    ).first()
+    if active_sim:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Cannot delete this warehouse while a simulation is active (Status: {active_sim.simulation_status}). Stop the simulation first."
+        )
+
+    wh_name = w.name
+    wh_id = w.id
 
     try:
+        # Import models locally for dependent data cleanup
+        from backend.models import (
+            SimulationEvent, RobotTelemetryEvent,
+            RobotRoute, RobotReservation, Task, Order, OrderItem, Inventory,
+            StockMovement, InventoryMovement, WarehouseObstacle, WarehouseGridCell,
+            WarehouseLocation, Robot, FinancialTransaction, TransferRequest
+        )
+
+        # A. Clean up simulation & telemetry records
+        db.query(SimulationEvent).filter(SimulationEvent.warehouse_id == id).delete(synchronize_session=False)
+        db.query(DigitalTwinSimulation).filter(DigitalTwinSimulation.warehouse_id == id).delete(synchronize_session=False)
+        
+        # B. Clean up robot telemetry, routes & reservations
+        db.query(RobotTelemetryEvent).filter(RobotTelemetryEvent.robot_id.in_(
+            db.query(Robot.id).filter(Robot.warehouse_id == id)
+        )).delete(synchronize_session=False)
+        db.query(RobotRoute).filter(RobotRoute.warehouse_id == id).delete(synchronize_session=False)
+        db.query(RobotReservation).filter(RobotReservation.warehouse_id == id).delete(synchronize_session=False)
+        
+        # C. Clean up tasks
+        db.query(Task).filter(Task.warehouse_id == id).delete(synchronize_session=False)
+        
+        # D. Clean up order items and orders
+        order_ids = [o.id for o in db.query(Order.id).filter(Order.warehouse_id == id).all()]
+        if order_ids:
+            db.query(OrderItem).filter(OrderItem.order_id.in_(order_ids)).delete(synchronize_session=False)
+        db.query(Order).filter(Order.warehouse_id == id).delete(synchronize_session=False)
+        
+        # E. Clean up stock movements, inventory & transfers
+        db.query(StockMovement).filter(StockMovement.warehouse_id == id).delete(synchronize_session=False)
+        db.query(InventoryMovement).filter(
+            (InventoryMovement.source_location_id.like(f"WH-{id}%")) |
+            (InventoryMovement.destination_location_id.like(f"WH-{id}%"))
+        ).delete(synchronize_session=False)
+        db.query(Inventory).filter(Inventory.warehouse_id == id).delete(synchronize_session=False)
+        db.query(TransferRequest).filter(
+            (TransferRequest.source_warehouse_id == id) |
+            (TransferRequest.destination_warehouse_id == id)
+        ).delete(synchronize_session=False)
+        
+        # F. Clean up obstacles, grid cells, locations, robots, financial transactions
+        db.query(WarehouseObstacle).filter(WarehouseObstacle.warehouse_id == id).delete(synchronize_session=False)
+        db.query(WarehouseGridCell).filter(WarehouseGridCell.warehouse_id == id).delete(synchronize_session=False)
+        db.query(WarehouseLocation).filter(WarehouseLocation.warehouse_id == id).delete(synchronize_session=False)
+        db.query(Robot).filter(Robot.warehouse_id == id).delete(synchronize_session=False)
+        db.query(FinancialTransaction).filter(FinancialTransaction.warehouse_id == id).delete(synchronize_session=False)
+
+        # G. Delete parent warehouse
+        db.delete(w)
+        db.commit()
+
+    except Exception as e:
+        db.rollback()
+        logger.error("Failed to delete warehouse %s: %s", id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Database error deleting warehouse: {str(e)}")
+
+    # Audit ledger & Notification
+    try:
         log_access(db, user.username, "delete_warehouse", warehouse_id=id, request=request)
-    except Exception:
-        pass
-    return {"status": "deleted", "id": id}
+        ledger.append_entry(db, "WAREHOUSE_DELETED", {
+            "actor": user.username,
+            "warehouse_id": wh_id,
+            "warehouse_name": wh_name,
+            "deleted_by": user.username
+        })
+        notifications.send_change_alert("WAREHOUSE_DELETED", {
+            "warehouse_id": wh_id,
+            "name": wh_name,
+            "deleted_by": user.username
+        })
+    except Exception as audit_err:
+        logger.warning("Non-fatal audit/notification error on warehouse deletion: %s", audit_err)
+
+    return {"status": "deleted", "id": id, "name": wh_name, "message": f"Warehouse '{wh_name}' ({wh_id}) deleted successfully."}
 
 
 @router.patch("/warehouses/{id}/location")
