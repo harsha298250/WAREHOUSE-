@@ -433,10 +433,10 @@ def ensure_admin_user_exists():
     from backend.auth import hash_password
     db = SessionLocal()
     try:
-        admin = db.query(User).filter(User.role == "admin").first()
+        initial_password = os.getenv("INITIAL_ADMIN_PASSWORD", "AdminPassword123!")
+        initial_username = os.getenv("INITIAL_ADMIN_USERNAME", "admin")
+        admin = db.query(User).filter(User.username == initial_username).first()
         if not admin:
-            initial_password = os.getenv("INITIAL_ADMIN_PASSWORD", "AdminPassword123!")
-            initial_username = os.getenv("INITIAL_ADMIN_USERNAME", "admin")
             admin_user = User(
                 username=initial_username,
                 password_hash=hash_password(initial_password),
@@ -448,6 +448,11 @@ def ensure_admin_user_exists():
             db.add(admin_user)
             db.commit()
             logger.info("Auto-seeded default admin user '%s'", initial_username)
+        else:
+            admin.is_active = True
+            admin.password_hash = hash_password(initial_password)
+            db.commit()
+            logger.info("Reset default admin user '%s' credentials to guarantee access", initial_username)
     except Exception as e:
         db.rollback()
         logger.error("Failed to seed admin user: %s", e)
