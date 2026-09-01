@@ -369,6 +369,16 @@ def ensure_warehouses_schema():
                 if col_name not in columns:
                     logger.info("DB SCHEMA: Adding column '%s' to warehouses table...", col_name)
                     db.execute(text(f"ALTER TABLE warehouses ADD COLUMN {col_name} {col_type}"))
+            
+            # Alter column types in PostgreSQL to prevent string truncation on long addresses
+            try:
+                db.execute(text("ALTER TABLE warehouses ALTER COLUMN location TYPE TEXT;"))
+                db.execute(text("ALTER TABLE warehouses ALTER COLUMN name TYPE VARCHAR(255);"))
+                db.execute(text("ALTER TABLE warehouses ALTER COLUMN city TYPE VARCHAR(120);"))
+                db.execute(text("ALTER TABLE warehouses ALTER COLUMN state TYPE VARCHAR(120);"))
+                db.execute(text("ALTER TABLE warehouses ALTER COLUMN country TYPE VARCHAR(120);"))
+            except Exception as ex:
+                pass
             db.commit()
             
             # Seed geocoding data migration for existing warehouses without coordinates

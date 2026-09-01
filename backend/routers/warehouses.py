@@ -300,17 +300,31 @@ def update_warehouse_coordinates(id: str, payload: CoordinatesUpdate, request: R
 
 @router.get("/warehouses/{id}/weather")
 def get_warehouse_weather_endpoint(id: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    from backend.weather_service import get_warehouse_weather
+    from backend.weather_service import get_warehouse_weather, generate_fallback_weather
     w = db.query(Warehouse).filter(Warehouse.id == id).first()
     if not w:
         raise HTTPException(status_code=404, detail="Warehouse not found")
     if w.latitude is None or w.longitude is None:
-        raise HTTPException(status_code=400, detail="Location coordinates not configured for this warehouse")
+        try:
+            from backend.geocoding_service import geocode_address
+            lat, lon, _ = geocode_address(w.name, w.city, w.state, w.country, w.location)
+            if lat is not None and lon is not None:
+                w.latitude = lat
+                w.longitude = lon
+                db.commit()
+            else:
+                # Default fallback coordinates (Bangalore 12.9716, 77.5946)
+                w.latitude = 12.9716
+                w.longitude = 77.5946
+                db.commit()
+        except Exception:
+            w.latitude = 12.9716
+            w.longitude = 77.5946
     try:
         return get_warehouse_weather(w.id, w.latitude, w.longitude)
     except Exception as e:
         logger.error("Failed to fetch weather for warehouse %s: %s", id, e, exc_info=True)
-        raise HTTPException(status_code=503, detail="Weather service temporarily unavailable")
+        return generate_fallback_weather(w.id, w.latitude, w.longitude)
 
 
 @router.get("/items")

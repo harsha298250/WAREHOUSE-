@@ -1,5 +1,8 @@
-/* api.js — thin fetch wrapper with JWT auth handling */
-const API_BASE = ""; // same-origin, backend serves the frontend
+const API_BASE = typeof window !== "undefined" && window.__API_BASE_URL__ ? window.__API_BASE_URL__ : ""; // same-origin, backend serves the frontend
+const API_BASE_URL = API_BASE;
+if (typeof window !== "undefined") {
+  window.API_BASE_URL = API_BASE;
+}
 
 const Api = {
   token: localStorage.getItem("wh_token") || null,

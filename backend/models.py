@@ -45,12 +45,12 @@ class User(Base):
 
 class Warehouse(Base):
     __tablename__ = "warehouses"
-    id = Column(String(20), primary_key=True)          # e.g. WH-CHN-01
-    name = Column(String(120), nullable=False)
-    location = Column(String(120), default="")
-    city = Column(String(50), nullable=True)
-    state = Column(String(50), nullable=True)
-    country = Column(String(50), nullable=True)
+    id = Column(String(50), primary_key=True)          # e.g. WH-CHN-01
+    name = Column(String(255), nullable=False)
+    location = Column(Text, default="")
+    city = Column(String(120), nullable=True)
+    state = Column(String(120), nullable=True)
+    country = Column(String(120), nullable=True)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))

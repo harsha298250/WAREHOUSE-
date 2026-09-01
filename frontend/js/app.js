@@ -13022,7 +13022,8 @@ function connectDTSyncStream() {
   if (!token) return;
 
   _updateConnectionBadge("CONNECTING");
-  const url = `${API_BASE_URL}/digital-twin/${encodeURIComponent(wh)}/sync?token=${encodeURIComponent(token)}`;
+  const baseUrl = window.API_BASE_URL || (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '');
+  const url = `${baseUrl}/digital-twin/${encodeURIComponent(wh)}/sync?token=${encodeURIComponent(token)}`;
 
   try {
     const es = new EventSource(url);

@@ -972,5 +972,16 @@ def export_analytics_csv(
     return list_to_csv_response(rows, headers, f"analytics_export_{period}_{warehouse_id or 'all'}.csv")
 
 
+@router.get("/currency-rates", summary="Get live currency exchange rates")
+def get_currency_rates_endpoint(
+    base: str = Query("INR"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieves live currency exchange rates from Open Exchange Rates API."""
+    from backend.currency_service import fetch_live_exchange_rates
+    return fetch_live_exchange_rates(base=base.upper())
+
+
 
 
