@@ -486,11 +486,19 @@ def get_executive_kpis(db: Session, user_role: str, warehouse_id: Optional[str] 
     robots = engine.compute_robot_analytics(db, warehouse_id, start, end)
     
     # Live Financial / Revenue Queries
-    from backend.models import FinancialTransaction
-    query = db.query(FinancialTransaction)
-    if warehouse_id:
-        query = query.filter(FinancialTransaction.warehouse_id == warehouse_id)
-    txns = query.all()
+    txns = []
+    try:
+        from backend.models import FinancialTransaction
+        query = db.query(FinancialTransaction)
+        if warehouse_id:
+            query = query.filter(FinancialTransaction.warehouse_id == warehouse_id)
+        txns = query.all()
+    except Exception as fe:
+        logger.warning("FinancialTransaction query warning: %s", fe)
+        try:
+            db.rollback()
+        except Exception:
+            pass
     
     gross_revenue = sum(t.amount for t in txns if t.transaction_type == "SALE")
     total_refunds = sum(t.amount for t in txns if t.transaction_type == "REFUND")

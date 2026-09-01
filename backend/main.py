@@ -404,6 +404,12 @@ def ensure_warehouses_schema():
                         db.execute(text("ALTER TABLE financial_transactions ADD COLUMN warehouse_id VARCHAR(20)"))
                     except Exception:
                         pass
+                if "description" not in fin_cols:
+                    logger.info("DB SCHEMA: Adding column 'description' to financial_transactions table...")
+                    try:
+                        db.execute(text("ALTER TABLE financial_transactions ADD COLUMN description VARCHAR(255)"))
+                    except Exception:
+                        pass
 
             db.commit()
             
