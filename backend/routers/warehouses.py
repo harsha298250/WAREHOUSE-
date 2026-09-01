@@ -32,8 +32,25 @@ def list_warehouses(db: Session = Depends(get_db), user=Depends(get_current_user
 
 @router.post("/warehouses")
 def create_warehouse(payload: WarehouseCreate, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
-    if db.query(Warehouse).filter(Warehouse.id == payload.id).first():
-        raise HTTPException(400, "Warehouse ID already exists")
+    wh_id = (payload.id or "").strip()
+    wh_name = (payload.name or "").strip()
+
+    if not wh_id:
+        raise HTTPException(400, "Warehouse ID is required")
+    if len(wh_id) > 20:
+        raise HTTPException(400, "Warehouse ID cannot exceed 20 characters")
+    if not wh_name:
+        raise HTTPException(400, "Warehouse Name is required")
+    if len(wh_name) > 120:
+        raise HTTPException(400, "Warehouse Name cannot exceed 120 characters")
+
+    if payload.latitude is not None and (payload.latitude < -90.0 or payload.latitude > 90.0):
+        raise HTTPException(400, "Latitude must be between -90.0 and 90.0")
+    if payload.longitude is not None and (payload.longitude < -180.0 or payload.longitude > 180.0):
+        raise HTTPException(400, "Longitude must be between -180.0 and 180.0")
+
+    if db.query(Warehouse).filter(Warehouse.id == wh_id).first():
+        raise HTTPException(409, f"Warehouse ID '{wh_id}' already exists")
     
     lat = payload.latitude
     lon = payload.longitude
@@ -42,29 +59,48 @@ def create_warehouse(payload: WarehouseCreate, request: Request, db: Session = D
     
     # Geocoding fallback sequence if coordinates are not manually entered
     if lat is None or lon is None:
-        lat, lon, resolved_addr = geocode_address(
-            payload.name, payload.city, payload.state, payload.country, payload.location
-        )
+        try:
+            lat, lon, resolved_addr = geocode_address(
+                wh_name, payload.city, payload.state, payload.country, payload.location
+            )
+        except Exception as ge_err:
+            logger.warning("Geocoding failed for warehouse %s: %s", wh_id, ge_err)
+            lat, lon, resolved_addr = None, None, None
+
         if lat is None or lon is None:
             warning_msg = "Location could not be automatically resolved. Please enter coordinates or select the location on the map."
             
     w = Warehouse(
-        id=payload.id, name=payload.name, location=resolved_addr or payload.location,
+        id=wh_id, name=wh_name, location=resolved_addr or payload.location or "",
         city=payload.city or "", state=payload.state or "", country=payload.country or "",
         latitude=lat, longitude=lon
     )
-    db.add(w)
-    db.commit()
-    log_access(db, user.username, "add_warehouse", warehouse_id=w.id, request=request)
+    
+    try:
+        db.add(w)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error("Failed to insert warehouse into database: %s", e)
+        raise HTTPException(500, f"Database error creating warehouse: {str(e)}")
+
+    try:
+        log_access(db, user.username, "add_warehouse", warehouse_id=w.id, request=request)
+    except Exception as log_err:
+        logger.warning("Failed to log access for warehouse creation: %s", log_err)
+
     logger.info("Warehouse created: id=%s name=%s by=%s", w.id, w.name, user.username)
     
-    notifications.send_change_alert("New Warehouse Added", {
-        "warehouse_id": w.id,
-        "name": w.name,
-        "location": f"{w.city}, {w.country}" if w.city else w.location,
-        "coordinates": f"{w.latitude}, {w.longitude}" if w.latitude else "Pending",
-        "created_by": user.username
-    })
+    try:
+        notifications.send_change_alert("New Warehouse Added", {
+            "warehouse_id": w.id,
+            "name": w.name,
+            "location": f"{w.city}, {w.country}" if w.city else w.location,
+            "coordinates": f"{w.latitude}, {w.longitude}" if w.latitude else "Pending",
+            "created_by": user.username
+        })
+    except Exception as notif_err:
+        logger.warning("Failed to send warehouse creation notification alert: %s", notif_err)
     
     res = {"status": "created", "id": w.id, "latitude": lat, "longitude": lon, "warning": warning_msg}
     return res
@@ -91,9 +127,21 @@ def get_warehouse(id: str, db: Session = Depends(get_db), user=Depends(get_curre
 def update_warehouse(id: str, payload: WarehouseUpdate, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
     w = db.query(Warehouse).filter(Warehouse.id == id).first()
     if not w:
-        raise HTTPException(404, "Warehouse not found")
-    w.name = payload.name
-    w.location = payload.location
+        raise HTTPException(404, f"Warehouse '{id}' not found")
+
+    wh_name = (payload.name or "").strip()
+    if not wh_name:
+        raise HTTPException(400, "Warehouse Name cannot be empty")
+    if len(wh_name) > 120:
+        raise HTTPException(400, "Warehouse Name cannot exceed 120 characters")
+
+    if payload.latitude is not None and (payload.latitude < -90.0 or payload.latitude > 90.0):
+        raise HTTPException(400, "Latitude must be between -90.0 and 90.0")
+    if payload.longitude is not None and (payload.longitude < -180.0 or payload.longitude > 180.0):
+        raise HTTPException(400, "Longitude must be between -180.0 and 180.0")
+
+    w.name = wh_name
+    w.location = payload.location or ""
     w.city = payload.city or ""
     w.state = payload.state or ""
     w.country = payload.country or ""
@@ -102,16 +150,31 @@ def update_warehouse(id: str, payload: WarehouseUpdate, request: Request, db: Se
     lon = payload.longitude
     resolved_addr = None
     if lat is None or lon is None:
-        lat, lon, resolved_addr = geocode_address(
-            payload.name, payload.city or "", payload.state or "", payload.country or "", payload.location
-        )
-    w.latitude = lat
-    w.longitude = lon
+        try:
+            lat, lon, resolved_addr = geocode_address(
+                wh_name, payload.city or "", payload.state or "", payload.country or "", payload.location
+            )
+        except Exception as ge_err:
+            logger.warning("Geocoding failed during warehouse update for %s: %s", id, ge_err)
+            lat, lon, resolved_addr = None, None, None
+
+    w.latitude = lat if lat is not None else w.latitude
+    w.longitude = lon if lon is not None else w.longitude
     if resolved_addr:
         w.location = resolved_addr
 
-    db.commit()
-    log_access(db, user.username, "update_warehouse", warehouse_id=w.id, request=request)
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error("Failed to update warehouse %s in database: %s", id, e)
+        raise HTTPException(500, f"Database error updating warehouse: {str(e)}")
+
+    try:
+        log_access(db, user.username, "update_warehouse", warehouse_id=w.id, request=request)
+    except Exception as log_err:
+        logger.warning("Failed to log access for warehouse update: %s", log_err)
+
     return {"status": "updated", "id": w.id}
 
 
@@ -119,10 +182,19 @@ def update_warehouse(id: str, payload: WarehouseUpdate, request: Request, db: Se
 def delete_warehouse(id: str, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
     w = db.query(Warehouse).filter(Warehouse.id == id).first()
     if not w:
-        raise HTTPException(404, "Warehouse not found")
-    db.delete(w)
-    db.commit()
-    log_access(db, user.username, "delete_warehouse", warehouse_id=id, request=request)
+        raise HTTPException(404, f"Warehouse '{id}' not found")
+    try:
+        db.delete(w)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error("Failed to delete warehouse %s: %s", id, e)
+        raise HTTPException(500, f"Database error deleting warehouse: {str(e)}")
+
+    try:
+        log_access(db, user.username, "delete_warehouse", warehouse_id=id, request=request)
+    except Exception:
+        pass
     return {"status": "deleted", "id": id}
 
 
@@ -131,11 +203,13 @@ def delete_warehouse(id: str, request: Request, db: Session = Depends(get_db), u
 def update_warehouse_location_coords(id: str, payload: CoordinatesUpdate, request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
     w = db.query(Warehouse).filter(Warehouse.id == id).first()
     if not w:
-        raise HTTPException(status_code=404, detail="Warehouse not found")
-        
-    old_lat = w.latitude
-    old_lng = w.longitude
-    
+        raise HTTPException(status_code=404, detail=f"Warehouse '{id}' not found")
+
+    if payload.latitude < -90.0 or payload.latitude > 90.0:
+        raise HTTPException(400, "Latitude must be between -90.0 and 90.0")
+    if payload.longitude < -180.0 or payload.longitude > 180.0:
+        raise HTTPException(400, "Longitude must be between -180.0 and 180.0")
+
     w.latitude = payload.latitude
     w.longitude = payload.longitude
     
@@ -146,8 +220,13 @@ def update_warehouse_location_coords(id: str, payload: CoordinatesUpdate, reques
             w.location = resolved_addr
     except Exception as e:
         logger.warning("Reverse geocoding failed during coordinate patch: %s", e)
-        
-    db.commit()
+
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error("Failed to patch warehouse location coords for %s: %s", id, e)
+        raise HTTPException(500, f"Database error updating coordinates: {str(e)}")
     log_access(db, user.username, "update_warehouse_location", warehouse_id=id, request=request)
     logger.info("Warehouse coordinates updated via map: id=%s lat=%s lng=%s by=%s", id, payload.latitude, payload.longitude, user.username)
     

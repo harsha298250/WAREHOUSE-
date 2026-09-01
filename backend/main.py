@@ -438,6 +438,9 @@ async def lifespan(app: FastAPI):
     ensure_warehouses_schema()
     init_sentry()
     seed_default_thresholds()
+
+    from data_pipeline.provisioner import ensure_all_datasets_provisioned
+    ensure_all_datasets_provisioned()
     
     # Launch background backup threads only outside testing to avoid SQLite database locks & leaked loops
     if os.getenv("ENVIRONMENT") != "testing":

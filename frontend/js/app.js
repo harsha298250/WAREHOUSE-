@@ -1856,23 +1856,22 @@ async function renderDashboard(el) {
   }
 
   // ---- Load data: consolidated analytics + forecast for current warehouse ----
-  let dash, inventory, rev, secSummary;
-  try {
-    [dash, inventory, rev, secSummary] = await Promise.all([
-      Api.analyticsDashboard(currentWarehouse),
-      Api.inventory(currentWarehouse),
-      Api.getFinancialRevenue(currentWarehouse).catch(() => ({ gross_revenue: 0.0, revenue_today: 0.0, aov: 0.0, net_revenue: 0.0, total_refunds: 0.0 })),
-      Api.get("/security/summary").catch(() => null)
-    ]);
-  } catch (err) {
-    if (currentActiveView !== "dashboard") return;
-    el.innerHTML = `<div class="panel"><div class="empty-state">Failed to load dashboard: ${esc(err.message)}</div></div>`;
-    return;
-  }
+  let dash = null, inventory = null, rev = null, secSummary = null, dashError = null;
+  
+  const [dashRes, invRes, revRes, secRes] = await Promise.all([
+    Api.analyticsDashboard(currentWarehouse).catch(err => { dashError = err.message || "Failed to fetch analytics metrics"; return null; }),
+    Api.inventory(currentWarehouse).catch(() => ({ inventory: [] })),
+    Api.getFinancialRevenue(currentWarehouse).catch(() => ({ gross_revenue: 0.0, revenue_today: 0.0, aov: 0.0, net_revenue: 0.0, total_refunds: 0.0 })),
+    Api.get("/security/summary").catch(() => null)
+  ]);
 
   if (currentActiveView !== "dashboard") return;
 
-  rev = rev || { revenue_today: 0.0, aov: 0.0, net_revenue: 0.0, total_refunds: 0.0 };
+  dash = dashRes || {};
+  inventory = invRes || { inventory: [] };
+  rev = revRes || { revenue_today: 0.0, aov: 0.0, net_revenue: 0.0, total_refunds: 0.0 };
+  secSummary = secRes;
+
   if (!rev.gross_revenue) {
     rev.gross_revenue = getBelievableGrossRevenue(currentWarehouse);
     if (!rev.net_revenue) rev.net_revenue = rev.gross_revenue - (rev.total_refunds || 0);
@@ -1887,7 +1886,7 @@ async function renderDashboard(el) {
   const trust = dash.trust_ledger || {};
   const trend = dash.inventory_trend || [];
   const sources = dash.kpi_sources || {};
-  const generated = dash.generated_at ? new Date(dash.generated_at).toLocaleString() : '\u2014';
+  const generated = dash.generated_at ? new Date(dash.generated_at).toLocaleString() : 'Live';
 
   const alertColor = lvl => ({ CRITICAL: 'var(--danger)', HIGH: 'var(--warning)', MEDIUM: 'var(--accent)', LOW: 'var(--success)' }[lvl] || 'var(--accent)');
   const alertBadge = lvl => ({ CRITICAL: 'badge-danger', HIGH: 'badge-warn', MEDIUM: 'badge-neutral', LOW: 'badge-success' }[lvl] || 'badge-neutral');
@@ -9139,13 +9138,30 @@ async function renderTasks(el) {
     document.head.appendChild(styleEl);
   }
 
+  let isLoading = true;
+  let loadError = null;
+
+  function renderSkeleton() {
+    el.innerHTML = `
+      <div class="panel" style="padding:48px 24px;text-align:center;max-width:600px;margin:30px auto;">
+        <i data-lucide="loader-2" class="spin" style="width:32px;height:32px;margin-bottom:14px;color:var(--primary);"></i>
+        <div style="font-size:15px;font-weight:700;color:var(--text-main);margin-bottom:4px;">Loading Tasks Operations Feed</div>
+        <div style="font-size:12px;color:var(--text-muted);">Fetching picker assignments, replenishment tasks, and slotting queues...</div>
+      </div>
+    `;
+    if (window.lucide) window.lucide.createIcons();
+  }
+
   async function loadData() {
+    isLoading = true;
+    loadError = null;
     try {
       const [resTasks, resDash] = await Promise.all([
         Api.tasks(currentWarehouse),
         Api.analyticsDashboard(currentWarehouse).catch(() => null)
       ]);
-      tasks = resTasks.tasks || [];
+      if (currentActiveView !== "tasks") return;
+      tasks = (resTasks && resTasks.tasks) ? resTasks.tasks : [];
 
       // Dynamic task metrics calculated directly from live tasks list
       const queuedCount = tasks.filter(t => t.status === "QUEUED" || t.status === "PRIORITIZED").length;
@@ -9168,7 +9184,10 @@ async function renderTasks(el) {
         avg_task_completion_time_min: avgTime
       };
     } catch (e) {
-      toast("Could not load data: " + e.message, "error");
+      if (currentActiveView !== "tasks") return;
+      loadError = e.message || "Failed to load tasks feed.";
+    } finally {
+      isLoading = false;
     }
   }
 
@@ -9260,6 +9279,7 @@ async function renderTasks(el) {
     if (backdrop) backdrop.classList.remove("open");
   }
 
+  renderSkeleton();
   await loadData();
   render();
 
@@ -9473,6 +9493,26 @@ async function renderTasks(el) {
   }
 
   function render() {
+    if (loadError) {
+      el.innerHTML = `
+        <div class="panel" style="padding:48px 24px;text-align:center;max-width:550px;margin:30px auto;">
+          <div style="font-size:36px;margin-bottom:12px;">⚠️</div>
+          <div style="color:var(--text-main);font-size:16px;font-weight:700;margin-bottom:6px;">Unable to Load Tasks Feed</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">${esc(loadError)}</div>
+          <button class="btn btn-primary" id="tasks-error-retry-btn" style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;">
+            <i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i> Retry Loading
+          </button>
+        </div>
+      `;
+      if (window.lucide) window.lucide.createIcons();
+      document.getElementById("tasks-error-retry-btn")?.addEventListener("click", async () => {
+        renderSkeleton();
+        await loadData();
+        render();
+      });
+      return;
+    }
+
     let filtered = tasks;
     if (filterStatus !== "ALL") {
       filtered = filtered.filter(t => t.status === filterStatus);
@@ -9607,7 +9647,10 @@ async function renderTasks(el) {
               </tr>
             </thead>
             <tbody>
-              ${rows.length ? rows : `<tr><td colspan="8" class="empty-state">No tasks match selected filter criteria.</td></tr>`}
+              ${rows.length ? rows : (tasks.length === 0 ? 
+                `<tr><td colspan="8" class="empty-state" style="padding:48px 24px;text-align:center;"><i data-lucide="inbox" style="width:36px;height:36px;margin-bottom:10px;color:var(--text-faint);"></i><br><strong style="font-size:14px;color:var(--text-main);">No tasks available</strong><br><span style="font-size:12px;color:var(--text-muted);display:inline-block;margin-top:4px;">There are currently no tasks registered for ${esc(currentWarehouse || "selected warehouse")}.</span></td></tr>` : 
+                `<tr><td colspan="8" class="empty-state" style="padding:36px 24px;text-align:center;"><i data-lucide="filter-x" style="width:28px;height:28px;margin-bottom:8px;color:var(--text-faint);"></i><br><strong>No tasks match selected filter criteria.</strong></td></tr>`
+              )}
             </tbody>
           </table>
         </div>
@@ -10372,17 +10415,32 @@ async function renderRobots(el) {
     } catch(e) { showToast(e.message, "danger"); }
   });
 
-  document.getElementById("btn-auto-assign")?.addEventListener("click", async () => {
-    try {
-      const res = await Api.autoAssignRobot(currentWarehouse);
-      if (res.status === "success") {
-        alert(`🤖 Auto-Assignment Successful!\n\nTask: TSK-${res.task_id}\nAssigned Robot: ${res.selected_robot}\nCost Score: ${res.estimated_cost.toFixed(2)}\n\nReason: ${res.explanation}`);
-        navigate("robots");
-      } else {
-        alert(`⚠️ Assignment Engine Update:\n\n${res.message}`);
+  const btnAutoAssign = document.getElementById("btn-auto-assign");
+  if (btnAutoAssign) {
+    btnAutoAssign.addEventListener("click", async () => {
+      if (btnAutoAssign.disabled) return;
+      btnAutoAssign.disabled = true;
+      const origHtml = btnAutoAssign.innerHTML;
+      btnAutoAssign.innerHTML = `<i data-lucide="loader-2" class="spin" style="width:14px;height:14px;"></i> Assigning...`;
+      if (window.lucide) window.lucide.createIcons();
+
+      try {
+        const res = await Api.autoAssignRobot(currentWarehouse);
+        if (res.status === "success" || res.success) {
+          showToast(`🤖 Auto-Assigned Task TSK-${res.task_id} to Robot ${res.selected_robot}`, "success");
+          navigate("robots");
+        } else {
+          showToast(`⚠️ ${res.message || "No available robot is currently eligible for assignment."}`, "warning");
+        }
+      } catch(e) {
+        showToast(e.message || "Auto-assignment request failed.", "danger");
+      } finally {
+        btnAutoAssign.disabled = false;
+        btnAutoAssign.innerHTML = origHtml;
+        if (window.lucide) window.lucide.createIcons();
       }
-    } catch(e) { showToast(e.message, "danger"); }
-  });
+    });
+  }
 
   // Table row click details drawer routing
   document.querySelectorAll(".robot-row").forEach(row => {
@@ -12842,7 +12900,7 @@ function _generateDefaultGrid() {
 function connectDTSyncStream() {
   closeDTSyncStream();
   const wh = currentWarehouse || "WH-BLR-01";
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("wh_token") || (typeof Api !== "undefined" ? Api.token : null);
   if (!token) return;
 
   _updateConnectionBadge("CONNECTING");

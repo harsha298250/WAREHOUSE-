@@ -1302,27 +1302,42 @@ def auto_assign_task(
     ).order_by(Task.priority_score.desc()).with_for_update().first()
 
     if not task:
-        return {"status": "no_tasks_queued", "message": "No unassigned tasks found in queue"}
+        return {
+            "status": "no_tasks_queued",
+            "success": False,
+            "message": "No unassigned tasks found in queue."
+        }
 
-    # 2. Fetch candidates
+    # 2. Fetch candidates (only AVAILABLE, IDLE, or fully-charged CHARGING robots)
     robots = db.query(Robot).filter(
         Robot.warehouse_id == warehouse_id,
         Robot.enabled == True,
-        ~Robot.status.in_(["OFFLINE", "FAILED", "MAINTENANCE"]),
-        Robot.assigned_task_id.is_(None)
+        Robot.assigned_task_id.is_(None),
+        Robot.status.in_(["AVAILABLE", "IDLE", "CHARGING"])
     ).with_for_update().all()
 
     if not robots:
         return {
             "status": "no_available_robots",
-            "message": "No eligible idle robots found in warehouse queue",
+            "success": False,
+            "message": "No available robot is currently eligible for assignment.",
             "task_id": task.id
         }
 
-    # Retrieve source location coords
+    # Retrieve location coords ONCE outside loop
     source_loc = db.query(WarehouseLocation).filter(WarehouseLocation.id == task.source_location_id).first()
     tx = source_loc.x if source_loc else 0.0
     ty = source_loc.y if source_loc else 0.0
+
+    dest_loc = db.query(WarehouseLocation).filter(WarehouseLocation.id == task.destination_location_id).first()
+    dx_dest = dest_loc.x if dest_loc else 1.0
+    dy_dest = dest_loc.y if dest_loc else 1.0
+
+    charge_loc = db.query(WarehouseLocation).filter(
+        WarehouseLocation.warehouse_id == warehouse_id,
+        WarehouseLocation.location_type == "CHARGING"
+    ).first()
+    dist_to_charge = calculate_manhattan_distance(dx_dest, dy_dest, charge_loc.x, charge_loc.y) if charge_loc else 0.0
 
     candidates = []
     selected_robot = None
@@ -1334,29 +1349,23 @@ def auto_assign_task(
     for r in robots:
         rejection_reason = None
 
+        # Check status constraint: CHARGING robots must be fully charged (>= 95%)
+        if r.status == "CHARGING" and r.battery_level < 95.0:
+            rejection_reason = f"Robot is currently charging ({r.battery_level:.1f}% battery)"
+        elif r.status not in ("AVAILABLE", "IDLE", "CHARGING"):
+            rejection_reason = f"Robot is currently in '{r.status}' state"
+
         # Check payload constraints
-        if task_weight > r.max_payload:
+        if not rejection_reason and task_weight > r.max_payload:
             rejection_reason = f"Payload capacity exceeded (requires {task_weight:.1f}kg, max {r.max_payload:.1f}kg)"
         
         # Check battery constraints
-        dist_to_src = calculate_manhattan_distance(r.current_x, r.current_y, tx, ty)
-        dest_loc = db.query(WarehouseLocation).filter(WarehouseLocation.id == task.destination_location_id).first()
-        dx_dest = dest_loc.x if dest_loc else 1.0
-        dy_dest = dest_loc.y if dest_loc else 1.0
-        dist_to_dest = calculate_manhattan_distance(tx, ty, dx_dest, dy_dest)
-
-        charge_loc = db.query(WarehouseLocation).filter(
-            WarehouseLocation.warehouse_id == r.warehouse_id,
-            WarehouseLocation.location_type == "CHARGING"
-        ).first()
-        dist_to_charge = 0.0
-        if charge_loc:
-            dist_to_charge = calculate_manhattan_distance(dx_dest, dy_dest, charge_loc.x, charge_loc.y)
-
-        total_dist_est = dist_to_src + dist_to_dest + dist_to_charge
-        battery_needed = (total_dist_est * 0.5) + 5.0
-
         if not rejection_reason:
+            dist_to_src = calculate_manhattan_distance(r.current_x, r.current_y, tx, ty)
+            dist_to_dest = calculate_manhattan_distance(tx, ty, dx_dest, dy_dest)
+            total_dist_est = dist_to_src + dist_to_dest + dist_to_charge
+            battery_needed = (total_dist_est * 0.5) + 5.0
+
             if r.battery_level < battery_needed:
                 rejection_reason = f"Insufficient battery to safely complete task & return (needs {battery_needed:.1f}%, has {r.battery_level:.1f}%)"
             elif r.battery_level < 10.0:
@@ -1390,38 +1399,55 @@ def auto_assign_task(
     if not selected_robot:
         return {
             "status": "rejections_only",
-            "message": "All active robots rejected due to eligibility check constraints.",
+            "success": False,
+            "message": "No available robot is currently eligible for assignment.",
             "candidates": candidates
         }
 
-    # Execute Assignment
-    selected_robot.assigned_task_id = task.id
-    transition_robot_status(db, selected_robot, "ASSIGNED", user.id, f"Auto-assigned task {task.task_number}")
-    task.assigned_robot_id = selected_robot.robot_code
-    task.status = "ASSIGNED"
+    # Execute Assignment atomically respecting state machine
+    try:
+        if selected_robot.status == "CHARGING":
+            transition_robot_status(db, selected_robot, "AVAILABLE", user.id, "Fully charged: Transitioning from CHARGING to AVAILABLE for auto-assignment")
+        
+        selected_robot.assigned_task_id = task.id
+        transition_robot_status(db, selected_robot, "ASSIGNED", user.id, f"Auto-assigned task {task.task_number}")
+        selected_robot.updated_at = datetime.now(UTC).replace(tzinfo=None)
 
-    ledger.append_entry(db, "ROBOT_AUTO_ASSIGNMENT", {
-        "robot_code": selected_robot.robot_code,
-        "task_number": task.task_number,
-        "candidates": candidates,
-        "cost": min_cost
-    })
-    db.commit()
+        task.assigned_robot_id = selected_robot.robot_code
+        task.status = "ASSIGNED"
+        task.updated_at = datetime.now(UTC).replace(tzinfo=None)
 
-    notifications.send_change_alert("ROBOT_ASSIGNED", {
-        "robot_code": selected_robot.robot_code,
-        "task_number": task.task_number,
-        "assigned_by": "Auto-Assign Engine"
-    })
+        ledger.append_entry(db, "ROBOT_AUTO_ASSIGNMENT", {
+            "robot_code": selected_robot.robot_code,
+            "task_number": task.task_number,
+            "candidates": candidates,
+            "cost": min_cost
+        })
+        db.commit()
 
-    return {
-        "status": "success",
-        "task_id": task.id,
-        "selected_robot": selected_robot.robot_code,
-        "estimated_cost": min_cost,
-        "explanation": f"Selected {selected_robot.robot_code} because it is enabled, available, has sufficient battery, and has the lowest Estimated Assignment Cost of {min_cost:.1f}.",
-        "candidates": candidates
-    }
+        notifications.send_change_alert("ROBOT_ASSIGNED", {
+            "robot_code": selected_robot.robot_code,
+            "task_number": task.task_number,
+            "assigned_by": "Auto-Assign Engine"
+        })
+
+        return {
+            "status": "success",
+            "success": True,
+            "task_id": task.id,
+            "selected_robot": selected_robot.robot_code,
+            "estimated_cost": min_cost,
+            "explanation": f"Selected {selected_robot.robot_code} because it is enabled, available, has sufficient battery, and has the lowest Estimated Assignment Cost of {min_cost:.1f}.",
+            "candidates": candidates
+        }
+    except Exception as exc:
+        db.rollback()
+        logger.error("Auto-assignment transaction failed: %s", exc, exc_info=True)
+        return {
+            "status": "error",
+            "success": False,
+            "message": "Unable to assign robot due to a temporary database conflict. Please try again."
+        }
 
 @router.post("/recommend-assignment", summary="Generate explainable intelligent robot recommendation for a task (Non-mutating)")
 def recommend_robot_assignment(

@@ -516,10 +516,16 @@ def run_abc_classification(
             
     elif source == "online_retail":
         # UCI Online Retail II raw/processed dataset
-        meta = engine.models.DatasetSource.get_id_or_none(db, "online_retail_ii")
-        # Just compute it on the processed CSV if present
         import os
-        csv_path = os.path.join("data", "processed", "online_retail_ii", "online_retail_II_processed.csv")
+        from pathlib import Path
+        root = Path(__file__).resolve().parent.parent.parent
+        csv_path = str(root / "data" / "processed" / "online_retail_ii" / "online_retail_II_processed.csv")
+        if not os.path.isfile(csv_path):
+            try:
+                from data_pipeline.provisioner import ensure_online_retail_dataset
+                ensure_online_retail_dataset()
+            except Exception:
+                pass
         if not os.path.isfile(csv_path):
             raise HTTPException(status_code=400, detail="UCI Online Retail II processed file not found.")
         try:
@@ -534,8 +540,16 @@ def run_abc_classification(
             
     elif source == "mlzc":
         import os
-        csv_path = os.path.join("data", "processed", "retail_sales_forecasting", "sales_processed.csv")
-        catalog_path = os.path.join("data", "processed", "retail_sales_forecasting", "catalog_processed.csv")
+        from pathlib import Path
+        root = Path(__file__).resolve().parent.parent.parent
+        csv_path = str(root / "data" / "processed" / "retail_sales_forecasting" / "sales_processed.csv")
+        catalog_path = str(root / "data" / "processed" / "retail_sales_forecasting" / "catalog_processed.csv")
+        if not os.path.isfile(csv_path):
+            try:
+                from data_pipeline.provisioner import ensure_mlzc_dataset
+                ensure_mlzc_dataset()
+            except Exception:
+                pass
         if not os.path.isfile(csv_path):
             raise HTTPException(status_code=400, detail="MLZC processed sales.csv file not found.")
         try:

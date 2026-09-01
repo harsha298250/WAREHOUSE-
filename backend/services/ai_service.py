@@ -1318,6 +1318,10 @@ class GeminiService:
         if any(kw in query_lower for kw in ["bottleneck", "congestion", "constraint", "delay"]):
             selected_tools.append("get_bottleneck_analysis")
 
+        # Replenishment / recommendations / reorder
+        if any(kw in query_lower for kw in ["replenish", "recommend", "reorder", "restock"]):
+            selected_tools.append("get_replenishment_analytics")
+
         # 2. Check permissions
         if user.role != "admin":
             from backend.models import UserWarehouseAccess
@@ -1341,10 +1345,10 @@ class GeminiService:
                 }
             
         if not selected_tools:
-            # Fallback help message
+            # Welcome help message
             help_msg = (
-                f"Hello! I am your AI Assistant (running in Offline Fallback Mode).\n\n"
-                f"I am fully connected to the active database for **{wh_id}** and can help you with:\n"
+                f"Hello! I am your AI Operations Assistant (Connected to WMS Database Engine).\n\n"
+                f"I am fully connected to the active database for **{wh_id}** and can answer deterministic operational queries:\n"
                 f"1. **Executive WMS KPIs & Revenue**: e.g., 'What is the gross revenue of {wh_id}?' or 'What is the revenue today?'\n"
                 f"2. **Inventory levels & stock status**: e.g., 'Show inventory levels' or 'Are there stockouts?'\n"
                 f"3. **Order fulfillment metrics**: e.g., 'Show order performance' or 'How many orders are delayed?'\n"
@@ -1357,7 +1361,7 @@ class GeminiService:
             return {
                 "status": "success",
                 "response": help_msg,
-                "engine": "Fallback Rule-Based (Greeting)",
+                "engine": "Deterministic WMS Database Engine (Connected)",
                 "tool_calls": [],
                 "sources": []
             }

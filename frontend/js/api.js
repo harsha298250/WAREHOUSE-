@@ -10,16 +10,25 @@ const Api = {
     else localStorage.removeItem("wh_token");
   },
 
-  async request(method, path, body) {
+  async request(method, path, body, timeoutMs = 20000) {
     const headers = { "Content-Type": "application/json" };
     if (this.token) headers["Authorization"] = "Bearer " + this.token;
+    
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     let res;
     try {
       res = await fetch(API_BASE + path, {
         method, headers, body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal
       });
     } catch (err) {
-      throw new Error("Cannot reach the server. Please check your connection.");
+      if (err.name === "AbortError") {
+        throw new Error("Warehouse service timed out. The server took too long to respond.");
+      }
+      throw new Error("Cannot reach the warehouse server. Please check your network connection.");
+    } finally {
+      clearTimeout(timer);
     }
     if (res.status === 401) {
       this.setToken(null);
@@ -30,16 +39,22 @@ const Api = {
     try { data = await res.json(); } catch (e) { data = null; }
     if (!res.ok) {
       let errMsg = `Request failed (${res.status})`;
-      if (data && data.detail) {
-        if (typeof data.detail === "string") {
-          errMsg = data.detail;
-        } else if (Array.isArray(data.detail)) {
-          errMsg = data.detail.map(err => {
-            const loc = err.loc ? err.loc.slice(1).join(".") : "";
-            return `${loc ? loc + ": " : ""}${err.msg}`;
-          }).join("; ");
-        } else if (typeof data.detail === "object") {
-          errMsg = JSON.stringify(data.detail);
+      if (data) {
+        if (data.detail) {
+          if (typeof data.detail === "string") {
+            errMsg = data.detail;
+          } else if (Array.isArray(data.detail)) {
+            errMsg = data.detail.map(err => {
+              const loc = err.loc ? err.loc.slice(1).join(".") : "";
+              return `${loc ? loc + ": " : ""}${err.msg}`;
+            }).join("; ");
+          } else if (typeof data.detail === "object") {
+            errMsg = JSON.stringify(data.detail);
+          }
+        } else if (data.message) {
+          errMsg = data.message;
+        } else if (data.error) {
+          errMsg = typeof data.error === "string" ? data.error : JSON.stringify(data.error);
         }
       }
       throw new Error(errMsg);

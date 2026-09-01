@@ -18,16 +18,25 @@ import logging
 import pandas as pd
 import numpy as np
 
+from pathlib import Path
+
 logger = logging.getLogger("warehouse.ml.demand")
 
-# Paths relative to the project root (warehouse_v3/)
-_PROC_DIR = os.path.join("data", "processed", "store_sales_forecasting")
+# Absolute path relative to project root
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_PROC_DIR = os.path.join(str(_PROJECT_ROOT), "data", "processed", "store_sales_forecasting")
 _TRAIN_FILE = os.path.join(_PROC_DIR, "train_processed.csv")
 _OIL_FILE = os.path.join(_PROC_DIR, "oil_processed.csv")
 
 
 def _load_oil_series() -> pd.Series:
     """Loads oil price series, forward-fills NaN. Returns pd.Series indexed by date string."""
+    if not os.path.isfile(_OIL_FILE):
+        try:
+            from data_pipeline.provisioner import ensure_store_sales_dataset
+            ensure_store_sales_dataset()
+        except Exception:
+            pass
     if not os.path.isfile(_OIL_FILE):
         logger.warning("oil_processed.csv not found — oil feature will be omitted.")
         return pd.Series(dtype=float)
@@ -38,7 +47,7 @@ def _load_oil_series() -> pd.Series:
         oil.index = oil["date"].dt.strftime("%Y-%m-%d")
         return oil["dcoilwtico"]
     except Exception as e:
-        logger.warning(f"Failed to load oil data: {e}")
+        logger.warning(f"Failed to load oil series: {e}")
         return pd.Series(dtype=float)
 
 
@@ -56,6 +65,13 @@ def build_family_series(
     Raises:
         FileNotFoundError if train_processed.csv is missing.
     """
+    if not os.path.isfile(train_path):
+        try:
+            from data_pipeline.provisioner import ensure_store_sales_dataset
+            ensure_store_sales_dataset()
+        except Exception:
+            pass
+
     if not os.path.isfile(train_path):
         raise FileNotFoundError(f"train_processed.csv not found at {train_path}")
 

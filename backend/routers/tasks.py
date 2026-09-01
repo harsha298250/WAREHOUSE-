@@ -724,17 +724,20 @@ def assign_task(task_id: int, payload: TaskAssignSchema, db: Session = Depends(g
         raise HTTPException(400, f"Selected user '{assignee.username}' has role '{assignee.role.upper()}', not OPERATOR or STAFF")
 
     t.assigned_user_id = payload.assigned_user_id
-    event = TaskEvent(
-        task_id=task_id,
-        event_type="TASK_ASSIGNED",
-        previous_status=t.status,
-        new_status=t.status,
-        user_id=user.id,
-        created_at=datetime.now(UTC).replace(tzinfo=None),
-        reason=f"Assigned to {assignee.username}",
-        event_metadata=json.dumps({"assigned_username": assignee.username, "assigned_user_id": assignee.id})
-    )
-    db.add(event)
+    if t.status in ("QUEUED", "PRIORITIZED", "FAILED", "REASSIGNED"):
+        transition_status(db, t, "ASSIGNED", user.id, user.username, f"Assigned to {assignee.username}")
+    else:
+        event = TaskEvent(
+            task_id=task_id,
+            event_type="TASK_ASSIGNED",
+            previous_status=t.status,
+            new_status=t.status,
+            user_id=user.id,
+            created_at=datetime.now(UTC).replace(tzinfo=None),
+            reason=f"Assigned to {assignee.username}",
+            event_metadata=json.dumps({"assigned_username": assignee.username, "assigned_user_id": assignee.id})
+        )
+        db.add(event)
     ledger.append_entry(db, "TASK_ASSIGNED", {
         "task_id": t.id,
         "task_number": t.task_number,
@@ -1065,13 +1068,29 @@ def complete_task(task_id: int, payload: TaskCompleteSchema, db: Session = Depen
         if is_sim_task:
             t.completed_quantity = payload.completed_quantity
             transition_status(db, t, "COMPLETED", user.id, user.username, "Sim task completed")
-            db.flush()
+            if t.assigned_robot_id:
+                from backend.models import Robot
+                robot = db.query(Robot).filter(Robot.robot_code == t.assigned_robot_id).first()
+                if robot and robot.assigned_task_id == t.id:
+                    robot.assigned_task_id = None
+                    if robot.status in ("ASSIGNED", "MOVING", "PICKING", "RETURNING", "WAITING"):
+                        robot.status = "AVAILABLE"
+                    robot.total_tasks_completed += 1
+            db.commit()
             return {"status": "completed", "task_id": t.id}
 
         if not t.order_id:
             t.completed_quantity = payload.completed_quantity
             transition_status(db, t, "COMPLETED", user.id, user.username, "Standalone task completed")
-            db.flush()
+            if t.assigned_robot_id:
+                from backend.models import Robot
+                robot = db.query(Robot).filter(Robot.robot_code == t.assigned_robot_id).first()
+                if robot and robot.assigned_task_id == t.id:
+                    robot.assigned_task_id = None
+                    if robot.status in ("ASSIGNED", "MOVING", "PICKING", "RETURNING", "WAITING"):
+                        robot.status = "AVAILABLE"
+                    robot.total_tasks_completed += 1
+            db.commit()
             return {"status": "completed", "task_id": t.id}
 
         order = db.query(Order).filter(Order.id == t.order_id).with_for_update().first()
