@@ -7066,61 +7066,13 @@ async function renderSettings(el) {
         btn.addEventListener("click", () => {
           const targetId = btn.dataset.id;
           const targetName = btn.dataset.name;
-
-          const modalOverlay = document.createElement('div');
-          modalOverlay.className = 'modal-backdrop open';
-          modalOverlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:99999;';
-
-          modalOverlay.innerHTML = `
-            <div class="modal-card" style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; max-width:480px; width:90%; box-shadow:var(--shadow-lg);">
-              <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                <div style="width:40px; height:40px; border-radius:50%; background:rgba(239,68,68,0.15); color:#ef4444; display:flex; align-items:center; justify-content:center;">
-                  <i data-lucide="trash-2" style="width:20px; height:20px;"></i>
-                </div>
-                <div>
-                  <h3 style="margin:0; font-size:16px; color:var(--text); font-weight:700;">Delete Warehouse?</h3>
-                  <div style="font-size:11.5px; color:var(--text-faint);">Permanent Administrative Action</div>
-                </div>
-              </div>
-              <p style="font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:16px;">
-                Are you sure you want to permanently delete:<br>
-                <strong style="color:var(--text); font-size:14px;">"${esc(targetName)}"</strong><br>
-                <span class="mono" style="font-size:12px; color:var(--text-faint);">ID: ${esc(targetId)}</span>
-              </p>
-              <div style="background:rgba(239,68,68,0.08); border-left:3px solid #ef4444; padding:10px 12px; border-radius:4px; font-size:12px; color:var(--text-muted); margin-bottom:20px;">
-                This action will permanently remove the warehouse and its associated simulation/operational data.
-              </div>
-              <div style="display:flex; justify-content:flex-end; gap:10px;">
-                <button type="button" class="btn btn-secondary modal-cancel-btn" style="font-size:12px; padding:6px 14px;">Cancel</button>
-                <button type="button" class="btn btn-danger modal-delete-btn" style="background:#ef4444; color:white; font-size:12px; padding:6px 14px; border:none; border-radius:4px; font-weight:700; cursor:pointer;">Delete Warehouse</button>
-              </div>
-            </div>
-          `;
-          document.body.appendChild(modalOverlay);
-          lucide.createIcons();
-
-          modalOverlay.querySelector(".modal-cancel-btn").addEventListener("click", () => modalOverlay.remove());
-
-          modalOverlay.querySelector(".modal-delete-btn").addEventListener("click", async () => {
-            modalOverlay.querySelector(".modal-delete-btn").disabled = true;
-            try {
-              const res = await Api.deleteWarehouse(targetId);
-              showToast(res.message || `Warehouse '${targetName}' deleted successfully.`, "success");
-              modalOverlay.remove();
-              await refreshWarehouses();
-              if (currentWarehouse === targetId) {
-                currentWarehouse = warehousesCache.length > 0 ? warehousesCache[0].id : "";
-                navigate(currentActiveView);
-              } else {
-                renderActiveTabContent();
-              }
-            } catch (err) {
-              modalOverlay.querySelector(".modal-delete-btn").disabled = false;
-              if (err.message && err.message.includes("simulation is active")) {
-                showToast("Cannot delete this warehouse while a simulation is active. Stop the simulation first.", "warning");
-              } else {
-                showToast("Failed to delete warehouse: " + err.message, "danger");
-              }
+          showSecureWarehouseDeleteModal(targetId, targetName, "", async () => {
+            await refreshWarehouses();
+            if (currentWarehouse === targetId) {
+              currentWarehouse = warehousesCache.length > 0 ? warehousesCache[0].id : "";
+              navigate(currentActiveView);
+            } else {
+              renderActiveTabContent();
             }
           });
         });
