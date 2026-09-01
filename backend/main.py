@@ -427,6 +427,34 @@ def seed_default_thresholds():
         db.close()
 
 
+def ensure_admin_user_exists():
+    from backend.database import SessionLocal
+    from backend.models import User
+    from backend.auth import hash_password
+    db = SessionLocal()
+    try:
+        admin = db.query(User).filter(User.role == "admin").first()
+        if not admin:
+            initial_password = os.getenv("INITIAL_ADMIN_PASSWORD", "AdminPassword123!")
+            initial_username = os.getenv("INITIAL_ADMIN_USERNAME", "admin")
+            admin_user = User(
+                username=initial_username,
+                password_hash=hash_password(initial_password),
+                role="admin",
+                full_name="System Administrator",
+                email="admin@warehouse-os.internal",
+                is_active=True
+            )
+            db.add(admin_user)
+            db.commit()
+            logger.info("Auto-seeded default admin user '%s'", initial_username)
+    except Exception as e:
+        db.rollback()
+        logger.error("Failed to seed admin user: %s", e)
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Initialize DB schema migrations, Sentry SDK, and seed health thresholds
@@ -438,6 +466,7 @@ async def lifespan(app: FastAPI):
     ensure_warehouses_schema()
     init_sentry()
     seed_default_thresholds()
+    ensure_admin_user_exists()
 
     from data_pipeline.provisioner import ensure_all_datasets_provisioned
     ensure_all_datasets_provisioned()
