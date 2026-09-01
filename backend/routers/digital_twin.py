@@ -763,28 +763,19 @@ def setup_scenario_conditions(db: Session, warehouse_id: str, scenario_type: str
     from backend.models import Robot, WarehouseObstacle, Item, WarehouseLocation, Order, OrderItem, Task, RobotRoute, RobotTelemetryEvent, RobotReservation, InventoryMovement
     
     # Ensure there are 6 robots for the simulation across any registered warehouse
-    existing_robot_count = db.query(Robot).filter(Robot.warehouse_id == warehouse_id).count()
-    if existing_robot_count < 4 or warehouse_id == "WH-BLR-01":
+    existing_robots = db.query(Robot).filter(Robot.warehouse_id == warehouse_id).all()
+    if len(existing_robots) < 4:
         wh_code = warehouse_id.split("-")[1] if "-" in warehouse_id else warehouse_id[:3].upper()
         # 1. Clean up route, reservation, and telemetry tables referencing these robots
         db.query(RobotRoute).filter(RobotRoute.warehouse_id == warehouse_id).delete(synchronize_session=False)
         db.query(RobotReservation).filter(RobotReservation.warehouse_id == warehouse_id).delete(synchronize_session=False)
-        db.query(RobotTelemetryEvent).filter(RobotTelemetryEvent.robot_id.in_(
-            db.query(Robot.id).filter(Robot.warehouse_id == warehouse_id)
-        )).delete(synchronize_session=False)
         
-        # 2. Reset robot codes in InventoryMovement
-        robot_codes = [f"RB-{wh_code}-01", f"RB-{wh_code}-02", f"RB-{wh_code}-03", f"RB-{wh_code}-04", f"RB-{wh_code}-05", f"RB-{wh_code}-06"]
-        db.query(InventoryMovement).filter(InventoryMovement.robot_id.in_(robot_codes)).update(
-            {InventoryMovement.robot_id: None}, synchronize_session=False
-        )
-        
-        # 3. Reset task assignments
+        # 2. Reset task assignments
         db.query(Task).filter(Task.warehouse_id == warehouse_id).update(
             {Task.assigned_robot_id: None, Task.assigned_at: None}, synchronize_session=False
         )
         
-        # 4. Now safely delete robots
+        # 3. Now safely delete robots
         db.query(Robot).filter(Robot.warehouse_id == warehouse_id).delete(synchronize_session=False)
         
         initial_robots = [
@@ -815,6 +806,15 @@ def setup_scenario_conditions(db: Session, warehouse_id: str, scenario_type: str
                 total_distance=0.0,
                 total_tasks_completed=0
             ))
+        db.commit()
+    else:
+        # Reset existing robots to healthy baseline without expensive table deletions
+        for r in existing_robots:
+            r.enabled = True
+            if r.status in ["FAILED", "OFFLINE"]:
+                r.status = "AVAILABLE"
+                r.battery_level = 90.0
+            db.add(r)
         db.commit()
 
     # 1. Seeding tasks/orders if there are fewer than 3 queued/prioritized tasks
