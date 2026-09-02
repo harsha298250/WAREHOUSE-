@@ -567,20 +567,21 @@ def ensure_core_warehouses_exist(db):
             loc_count = db.query(WarehouseLocation).filter(WarehouseLocation.warehouse_id == wh_id).count()
             if loc_count == 0:
                 locations_data = [
-                    {"id": f"WH-{wh_id}-CHARGING-1", "x": 11.0, "y": 5.0, "type": "CHARGING", "zone": "CHARGING", "aisle": "C-1"},
-                    {"id": f"WH-{wh_id}-CHARGING-2", "x": 12.0, "y": 5.0, "type": "CHARGING", "zone": "CHARGING", "aisle": "C-2"},
-                    {"id": f"WH-{wh_id}-RECEIVING", "x": 1.0, "y": 5.0, "type": "RECEIVING", "zone": "RECEIVING", "aisle": "R-1"},
-                    {"id": f"WH-{wh_id}-AISLE-4-5", "x": 4.0, "y": 5.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "A-4"},
-                    {"id": f"WH-{wh_id}-AISLE-6-5", "x": 6.0, "y": 5.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "A-6"},
-                    {"id": f"WH-{wh_id}-AISLE-8-5", "x": 8.0, "y": 5.0, "type": "PACKING", "zone": "PACKING", "aisle": "P-8"},
-                    {"id": f"WH-{wh_id}-STORAGE-1", "x": 2.0, "y": 2.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "S-1"},
-                    {"id": f"WH-{wh_id}-STORAGE-2", "x": 5.0, "y": 2.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "S-2"},
-                    {"id": f"WH-{wh_id}-PACKING-1", "x": 10.0, "y": 2.0, "type": "PACKING", "zone": "PACKING", "aisle": "P-1"},
+                    {"id": f"{wh_id}-CHARGING-1", "x": 11.0, "y": 5.0, "type": "CHARGING", "zone": "CHARGING", "aisle": "C-1"},
+                    {"id": f"{wh_id}-CHARGING-2", "x": 12.0, "y": 5.0, "type": "CHARGING", "zone": "CHARGING", "aisle": "C-2"},
+                    {"id": f"{wh_id}-RECEIVING", "x": 1.0, "y": 5.0, "type": "RECEIVING", "zone": "RECEIVING", "aisle": "R-1"},
+                    {"id": f"{wh_id}-AISLE-4-5", "x": 4.0, "y": 5.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "A-4"},
+                    {"id": f"{wh_id}-AISLE-6-5", "x": 6.0, "y": 5.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "A-6"},
+                    {"id": f"{wh_id}-AISLE-8-5", "x": 8.0, "y": 5.0, "type": "PACKING", "zone": "PACKING", "aisle": "P-8"},
+                    {"id": f"{wh_id}-STORAGE-1", "x": 2.0, "y": 2.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "S-1"},
+                    {"id": f"{wh_id}-STORAGE-2", "x": 5.0, "y": 2.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "S-2"},
+                    {"id": f"{wh_id}-PACKING-1", "x": 10.0, "y": 2.0, "type": "PACKING", "zone": "PACKING", "aisle": "P-1"},
                 ]
                 for ld in locations_data:
                     db.add(WarehouseLocation(
                         id=ld["id"], warehouse_id=wh_id, x=ld["x"], y=ld["y"],
-                        location_type=ld["type"], zone=ld["zone"], aisle=ld["aisle"]
+                        location_type=ld["type"], zone=ld["zone"], aisle=ld["aisle"],
+                        rack=ld["aisle"], shelf="1", capacity=500
                     ))
                 db.commit()
 
@@ -606,14 +607,16 @@ def ensure_core_warehouses_exist(db):
             if bot_count < 4:
                 wh_code = wh_id.split("-")[1] if "-" in wh_id else wh_id[:3].upper()
                 initial_robots = [
-                    {"code": f"RB-{wh_code}-01", "x": 11.0, "y": 5.0, "status": "CHARGING", "loc": f"WH-{wh_id}-CHARGING-1", "battery": 100.0},
-                    {"code": f"RB-{wh_code}-02", "x": 12.0, "y": 5.0, "status": "CHARGING", "loc": f"WH-{wh_id}-CHARGING-2", "battery": 100.0},
-                    {"code": f"RB-{wh_code}-03", "x": 1.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{wh_id}-RECEIVING", "battery": 92.5},
-                    {"code": f"RB-{wh_code}-04", "x": 4.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{wh_id}-AISLE-4-5", "battery": 88.0},
-                    {"code": f"RB-{wh_code}-05", "x": 6.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{wh_id}-AISLE-6-5", "battery": 95.0},
-                    {"code": f"RB-{wh_code}-06", "x": 8.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{wh_id}-AISLE-8-5", "battery": 90.0},
+                    {"code": f"RB-{wh_code}-01", "x": 11.0, "y": 5.0, "status": "CHARGING", "loc": f"{wh_id}-CHARGING-1", "battery": 100.0},
+                    {"code": f"RB-{wh_code}-02", "x": 12.0, "y": 5.0, "status": "CHARGING", "loc": f"{wh_id}-CHARGING-2", "battery": 100.0},
+                    {"code": f"RB-{wh_code}-03", "x": 1.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{wh_id}-RECEIVING", "battery": 92.5},
+                    {"code": f"RB-{wh_code}-04", "x": 4.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{wh_id}-AISLE-4-5", "battery": 88.0},
+                    {"code": f"RB-{wh_code}-05", "x": 6.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{wh_id}-AISLE-6-5", "battery": 95.0},
+                    {"code": f"RB-{wh_code}-06", "x": 8.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{wh_id}-AISLE-8-5", "battery": 90.0},
                 ]
+                valid_locs = {l.id for l in db.query(WarehouseLocation).filter(WarehouseLocation.warehouse_id == wh_id).all()}
                 for idx, r_data in enumerate(initial_robots):
+                    loc_id = r_data["loc"] if r_data["loc"] in valid_locs else None
                     if not db.query(Robot).filter(Robot.robot_code == r_data["code"]).first():
                         db.add(Robot(
                             robot_code=r_data["code"],
@@ -621,7 +624,7 @@ def ensure_core_warehouses_exist(db):
                             warehouse_id=wh_id,
                             status=r_data["status"],
                             battery_level=r_data["battery"],
-                            current_location_id=r_data["loc"],
+                            current_location_id=loc_id,
                             current_x=r_data["x"],
                             current_y=r_data["y"],
                             target_x=0.0, target_y=0.0,

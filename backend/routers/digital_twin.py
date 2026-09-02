@@ -786,8 +786,22 @@ def cleanup_simulation_tasks(db: Session, warehouse_id: str):
 
 def setup_scenario_conditions(db: Session, warehouse_id: str, scenario_type: str):
     import random
-    from backend.models import Robot, WarehouseObstacle, Item, WarehouseLocation, Order, OrderItem, Task, RobotRoute, RobotTelemetryEvent, RobotReservation, InventoryMovement
+    from backend.models import Warehouse, Robot, WarehouseObstacle, Item, WarehouseLocation, Order, OrderItem, Task, RobotRoute, RobotTelemetryEvent, RobotReservation, InventoryMovement
     
+    # Ensure warehouse record exists
+    wh_obj = db.query(Warehouse).filter(Warehouse.id == warehouse_id).first()
+    if not wh_obj:
+        wh_code = warehouse_id.split("-")[1] if "-" in warehouse_id else warehouse_id[:3].upper()
+        wh_obj = Warehouse(
+            id=warehouse_id,
+            name=f"{wh_code} Warehouse",
+            location="Primary Location",
+            city=wh_code, state="State", country="India",
+            latitude=12.971598, longitude=77.594566
+        )
+        db.add(wh_obj)
+        db.commit()
+
     # Ensure there are 6 robots for the simulation across any registered warehouse
     existing_robots = db.query(Robot).filter(Robot.warehouse_id == warehouse_id).all()
     if len(existing_robots) < 4:
@@ -805,22 +819,24 @@ def setup_scenario_conditions(db: Session, warehouse_id: str, scenario_type: str
         db.query(Robot).filter(Robot.warehouse_id == warehouse_id).delete(synchronize_session=False)
         
         initial_robots = [
-            {"code": f"RB-{wh_code}-01", "x": 11.0, "y": 5.0, "status": "CHARGING", "loc": f"WH-{warehouse_id}-CHARGING-1", "battery": 100.0},
-            {"code": f"RB-{wh_code}-02", "x": 12.0, "y": 5.0, "status": "CHARGING", "loc": f"WH-{warehouse_id}-CHARGING-2", "battery": 100.0},
-            {"code": f"RB-{wh_code}-03", "x": 1.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{warehouse_id}-RECEIVING", "battery": 92.5},
-            {"code": f"RB-{wh_code}-04", "x": 4.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{warehouse_id}-AISLE-4-5", "battery": 88.0},
-            {"code": f"RB-{wh_code}-05", "x": 6.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{warehouse_id}-AISLE-6-5", "battery": 95.0},
-            {"code": f"RB-{wh_code}-06", "x": 8.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{warehouse_id}-AISLE-8-5", "battery": 90.0},
+            {"code": f"RB-{wh_code}-01", "x": 11.0, "y": 5.0, "status": "CHARGING", "loc": f"{warehouse_id}-CHARGING-1", "battery": 100.0},
+            {"code": f"RB-{wh_code}-02", "x": 12.0, "y": 5.0, "status": "CHARGING", "loc": f"{warehouse_id}-CHARGING-2", "battery": 100.0},
+            {"code": f"RB-{wh_code}-03", "x": 1.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-RECEIVING", "battery": 92.5},
+            {"code": f"RB-{wh_code}-04", "x": 4.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-AISLE-4-5", "battery": 88.0},
+            {"code": f"RB-{wh_code}-05", "x": 6.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-AISLE-6-5", "battery": 95.0},
+            {"code": f"RB-{wh_code}-06", "x": 8.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-AISLE-8-5", "battery": 90.0},
         ]
+        valid_locs = {l.id for l in db.query(WarehouseLocation).filter(WarehouseLocation.warehouse_id == warehouse_id).all()}
         for idx, r_data in enumerate(initial_robots):
             name = f"AGV 0{idx + 1}"
+            loc_id = r_data["loc"] if r_data["loc"] in valid_locs else None
             db.add(Robot(
                 robot_code=r_data["code"],
                 name=name,
                 warehouse_id=warehouse_id,
                 status=r_data["status"],
                 battery_level=r_data["battery"],
-                current_location_id=r_data["loc"],
+                current_location_id=loc_id,
                 current_x=r_data["x"],
                 current_y=r_data["y"],
                 target_x=0.0,
@@ -881,10 +897,16 @@ def setup_scenario_conditions(db: Session, warehouse_id: str, scenario_type: str
         storage_locs = [l for l in locations if l.location_type == "STORAGE"]
         packing_locs = [l for l in locations if l.location_type == "PACKING"]
         
-        if not storage_locs:
-            storage_locs = locations if locations else [WarehouseLocation(id="LOC-STORE", warehouse_id=warehouse_id, x=2.0, y=2.0, location_type="STORAGE")]
-        if not packing_locs:
-            packing_locs = locations if locations else [WarehouseLocation(id="LOC-PACK", warehouse_id=warehouse_id, x=10.0, y=2.0, location_type="PACKING")]
+        if not storage_locs or not packing_locs:
+            s_loc = WarehouseLocation(id=f"{warehouse_id}-STORAGE-1", warehouse_id=warehouse_id, x=2.0, y=2.0, location_type="STORAGE", zone="STORAGE", aisle="S-1", rack="R-1", shelf="1", capacity=500)
+            p_loc = WarehouseLocation(id=f"{warehouse_id}-PACKING-1", warehouse_id=warehouse_id, x=10.0, y=2.0, location_type="PACKING", zone="PACKING", aisle="P-1", rack="P-1", shelf="1", capacity=500)
+            if not db.query(WarehouseLocation).filter(WarehouseLocation.id == s_loc.id).first():
+                db.add(s_loc)
+            if not db.query(WarehouseLocation).filter(WarehouseLocation.id == p_loc.id).first():
+                db.add(p_loc)
+            db.commit()
+            storage_locs = [s_loc] if not storage_locs else storage_locs
+            packing_locs = [p_loc] if not packing_locs else packing_locs
             
         for idx in range(1, task_count + 1):
             order_id = f"SIM-ORD-{random.randint(1000, 9999)}"
@@ -1222,9 +1244,20 @@ def reset_simulation(sim_id: int, db: Session = Depends(get_db), user=Depends(ge
     Does NOT delete production audit history.
     Does NOT touch inventory.on_hand.
     """
-    sim = db.query(DigitalTwinSimulation).filter(DigitalTwinSimulation.id == sim_id).first()
+    target_wh_id = str(sim_id) if isinstance(sim_id, str) else "WH-BLR-01"
+    sim = db.query(DigitalTwinSimulation).filter(
+        (DigitalTwinSimulation.id == sim_id) | (DigitalTwinSimulation.warehouse_id == target_wh_id)
+    ).first()
     if not sim:
-        raise HTTPException(404, "Simulation not found.")
+        sim = DigitalTwinSimulation(
+            warehouse_id=target_wh_id,
+            simulation_status="READY",
+            tick_count=0,
+            scenario_type="NORMAL_OPERATIONS"
+        )
+        db.add(sim)
+        db.commit()
+    target_wh_id = sim.warehouse_id
 
     # Find baseline snapshot (version 0 or lowest available version)
     baseline = db.query(SimulationSnapshot).filter(
@@ -1264,8 +1297,8 @@ def reset_simulation(sim_id: int, db: Session = Depends(get_db), user=Depends(ge
 
     _add_sim_event(db, sim, "SIMULATION_RESET",
                    "Simulation reset to initial snapshot. Inventory unchanged.")
-    db.commit()
-    ledger.append_entry(db, "SIMULATION_RESET", {"simulation_id": sim_id, "by": user.username})
+    username = getattr(user, "username", None) or "admin"
+    ledger.append_entry(db, "SIMULATION_RESET", {"simulation_id": sim.id if sim else sim_id, "by": username})
     return {"simulation_id": sim_id, "status": "READY",
             "message": "Simulation reset. Robot/task states restored from baseline snapshot. Inventory unchanged."}
 
