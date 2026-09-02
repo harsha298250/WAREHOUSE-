@@ -14452,11 +14452,12 @@ function buildStaticScene(data) {
         rackGroup.add(board);
       });
 
-      const locId = Object.keys(data.location_inventory).find(k => {
-        const l = data.location_inventory[k];
-        return Math.round(l.x) === c.x && Math.round(l.y) === c.y;
+      const locInv = data.location_inventory || {};
+      const locId = Object.keys(locInv).find(k => {
+        const l = locInv[k];
+        return l && Math.round(l.x) === c.x && Math.round(l.y) === c.y;
       });
-      const loc = locId ? data.location_inventory[locId] : null;
+      const loc = locId ? locInv[locId] : null;
 
       if (loc) {
         let itemColor = 0xd97706; // standard cardboard brown
@@ -14579,6 +14580,11 @@ function updateThreeScene(data) {
   const scene = dtState.three.scene;
   if (!scene || !data) return;
 
+  const robots = Array.isArray(data.robots) ? data.robots : [];
+  const routes = Array.isArray(data.routes) ? data.routes : [];
+  const obstacles = Array.isArray(data.obstacles) ? data.obstacles : [];
+  const locInv = data.location_inventory || {};
+
   const whId = data.warehouse_id || data.warehouse || currentWarehouse || "WH-BLR-01";
   if (dtState.three.currentWarehouseId !== whId) {
     dtState.three.currentWarehouseId = whId;
@@ -14596,7 +14602,7 @@ function updateThreeScene(data) {
   };
 
   // Update Robots
-  data.robots.forEach(r => {
+  robots.forEach(r => {
     const coords = get3DCoords(r.current_x, r.current_y);
     let robotMesh = dtState.three.robots[r.robot_code];
 
@@ -14709,7 +14715,7 @@ function updateThreeScene(data) {
     labelEl.innerHTML = `${esc(r.robot_code)} <span style="color:${batteryColor}; margin-left:4px;">${Math.round(r.battery_level)}%</span>`;
   });
 
-  const currentRobotCodes = new Set(data.robots.map(r => r.robot_code));
+  const currentRobotCodes = new Set(robots.map(r => r.robot_code));
   Object.keys(dtState.three.robots).forEach(code => {
     if (!currentRobotCodes.has(code)) {
       scene.remove(dtState.three.robots[code].group);
@@ -14723,7 +14729,7 @@ function updateThreeScene(data) {
   dtState.three.paths = [];
 
   if (dtState.layers.routes) {
-    data.routes.forEach(r => {
+    routes.forEach(r => {
       if (!r.path_data || r.path_data.length < 2) return;
       
       let pathColor = 0x3b82f6;
