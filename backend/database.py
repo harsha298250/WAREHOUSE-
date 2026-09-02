@@ -25,7 +25,7 @@ else:
     if os.getenv("ENVIRONMENT") == "testing":
         DATABASE_URL = "sqlite:///:memory:"
     else:
-        raise ValueError("DATABASE_URL environment variable is not configured. Database connection cannot be initialized.")
+        DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///warehouse.db")
 
 
 # Setup connection arguments

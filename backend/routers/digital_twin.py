@@ -1039,6 +1039,7 @@ def start_simulation(
             db.rollback()
 
 
+    username = getattr(user, "username", "admin") or "admin"
     sim = DigitalTwinSimulation(
         warehouse_id=req.warehouse_id,
         simulation_status="READY",
@@ -1046,7 +1047,7 @@ def start_simulation(
         seed=req.seed,
         mode=req.mode,
         scenario_type=req.scenario_type,
-        created_by=user.username,
+        created_by=username,
         simulation_time_seconds=0.0,
         tick_count=0,
     )
@@ -1055,17 +1056,23 @@ def start_simulation(
     db.refresh(sim)
 
     # Take initial snapshot (version 0 = baseline)
-    _take_snapshot(db, sim, version=0)
+    try:
+        _take_snapshot(db, sim, version=0)
+    except Exception as snap_err:
+        logger.warning("Initial snapshot warning on start: %s", snap_err)
 
     # Transition to RUNNING
     sim.simulation_status = "RUNNING"
     sim.started_at = datetime.now(UTC).replace(tzinfo=None)
     db.add(sim)
 
-    _add_sim_event(db, sim, "SIMULATION_STARTED",
-                   f"Simulation started. Scenario: {sim.scenario_type}. Seed: {sim.seed}.",
-                   metadata={"scenario": sim.scenario_type, "speed": sim.speed_multiplier})
-    db.commit()
+    try:
+        _add_sim_event(db, sim, "SIMULATION_STARTED",
+                       f"Simulation started. Scenario: {sim.scenario_type}. Seed: {sim.seed}.",
+                       metadata={"scenario": sim.scenario_type, "speed": sim.speed_multiplier})
+        db.commit()
+    except Exception as evt_err:
+        logger.warning("Sim event warning: %s", evt_err)
 
     # Execute one initial tick
     try:
@@ -1081,7 +1088,7 @@ def start_simulation(
     try:
         ledger.append_entry(db, "SIMULATION_STARTED", {
             "simulation_id": sim.id, "warehouse_id": req.warehouse_id,
-            "by": user.username, "scenario": req.scenario_type
+            "by": username, "scenario": req.scenario_type
         })
     except Exception as le:
         logger.warning("Ledger entry failed for SIMULATION_STARTED: %s", le)
@@ -1190,6 +1197,12 @@ def step_simulation(sim_id: int, db: Session = Depends(get_db), user=Depends(get
         db.add(sim)
         db.commit()
         _emit_tick_events(db, sim)
+        try:
+            notifications.send_change_alert("SIMULATION_STEP", {
+                "warehouse_id": sim.warehouse_id, "simulation_id": sim.id, "tick_count": sim.tick_count
+            })
+        except Exception:
+            pass
     except Exception as e:
         logger.error("Step simulation error: %s", e)
         sim.simulation_status = "ERROR"

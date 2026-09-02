@@ -24,6 +24,7 @@ WAREHOUSES = [
     {"id": "WH-BOM-01", "name": "Mumbai Container Terminal", "location": "Mumbai, Maharashtra", "city": "Mumbai", "state": "Maharashtra", "country": "India", "latitude": 19.076090, "longitude": 72.877701},
     {"id": "WH-DEL-01", "name": "Delhi NCR Logistics Park", "location": "Noida, Uttar Pradesh", "city": "Noida", "state": "Uttar Pradesh", "country": "India", "latitude": 28.535517, "longitude": 77.391029},
     {"id": "WH-CCU-01", "name": "Kolkata Gateway Depot", "location": "Kolkata, West Bengal", "city": "Kolkata", "state": "West Bengal", "country": "India", "latitude": 22.572646, "longitude": 88.363895},
+    {"id": "WH-AMR-01", "name": "Amaravati Logistics Hub", "location": "Amaravati, Andhra Pradesh", "city": "Amaravati", "state": "Andhra Pradesh", "country": "India", "latitude": 16.513100, "longitude": 80.516500},
 ]
 
 ITEMS = [

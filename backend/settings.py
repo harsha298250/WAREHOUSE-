@@ -114,12 +114,12 @@ DEFAULT_SETTINGS = {
   "notif_maintenance": True,
 
   # 12. EMAIL
-  "sender_email": "",
-  "smtp_host": "",
+  "sender_email": "joyboy56211@gmail.com",
+  "smtp_host": "smtp.gmail.com",
   "smtp_port": 587,
-  "smtp_username": "",
-  "smtp_password": "",
-  "enable_email_notifs": False,
+  "smtp_username": "joyboy56211@gmail.com",
+  "smtp_password": "xgmmumehdjguzhsz",
+  "enable_email_notifs": True,
 
   # 13. CURRENCY
   "primary_currency": "INR",

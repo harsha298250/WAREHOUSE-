@@ -1989,7 +1989,7 @@ async function renderDashboard(el) {
   if (currentActiveView !== "dashboard") return;
 
   dash = dashRes || {};
-  inventory = invRes || { inventory: [] };
+  const inventoryList = Array.isArray(invRes) ? invRes : (invRes && Array.isArray(invRes.inventory) ? invRes.inventory : []);
   rev = revRes || { revenue_today: 0.0, aov: 0.0, net_revenue: 0.0, total_refunds: 0.0 };
   secSummary = secRes;
 
@@ -2146,7 +2146,7 @@ async function renderDashboard(el) {
         <div class="panel-header">
           <div><div class="panel-title">Demand Forecast (Out-of-Sample)</div><div class="panel-desc">14-day holdout-backtested forecast · <span class="badge badge-neutral mono" style="font-size:10px;">NOT REAL-TIME</span></div></div>
           <select class="wh-select" id="forecast-item-select" aria-label="Select item for forecast">
-            ${inventory.map(i => `<option value="${esc(i.item_id)}">${esc(i.item_name)}</option>`).join('')}
+            ${inventoryList.map(i => `<option value="${esc(i.item_id)}">${esc(i.item_name)}</option>`).join('')}
           </select>
         </div>
         <div id="forecast-body"><div class="loading-spinner"><div class="spin"></div></div></div>
@@ -8392,9 +8392,11 @@ async function drawLiveWarehouseMap(containerEl) {
     return;
   }
 
+  const robotsList = Array.isArray(robots) ? robots : (robots && Array.isArray(robots.robots) ? robots.robots : []);
+
   // Fetch active robot paths
   const activeRoutes = {};
-  await Promise.all(robots.map(async (r) => {
+  await Promise.all(robotsList.map(async (r) => {
     if (r.status === "MOVING" || r.status === "RETURNING" || r.status === "WAITING") {
       const routeRes = await Api.getRobotRoute(r.id).catch(() => null);
       if (routeRes && routeRes.path && routeRes.path.length > 0) {
@@ -8405,8 +8407,10 @@ async function drawLiveWarehouseMap(containerEl) {
 
   // ---- Build 3D Isometric Warehouse Layout ----
   const racksMap = {};
-  twin.zones.forEach(z => {
-    z.racks.forEach(r => {
+  const zonesList = (twin && Array.isArray(twin.zones)) ? twin.zones : [];
+  zonesList.forEach(z => {
+    const racksList = (z && Array.isArray(z.racks)) ? z.racks : [];
+    racksList.forEach(r => {
       racksMap[r.id] = { ...r, zoneName: z.name, temp: z.temperature_celsius, humidity: z.humidity_pct };
     });
   });
@@ -8427,7 +8431,7 @@ async function drawLiveWarehouseMap(containerEl) {
 
   // Robot positions lookup
   const robotPositions = {};
-  robots.forEach(r => {
+  robotsList.forEach(r => {
     const key = `${Math.round(r.current_x)},${Math.round(r.current_y)}`;
     if (!robotPositions[key]) robotPositions[key] = [];
     robotPositions[key].push(r);

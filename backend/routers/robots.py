@@ -1081,6 +1081,13 @@ def create_robot(
     db.add(r)
     db.commit()
     db.refresh(r)
+    try:
+        notifications.send_change_alert("New Robot Added", {
+            "warehouse_id": payload.warehouse_id, "robot_code": r.robot_code, "name": r.name, "type": r.robot_type
+        })
+    except Exception:
+        pass
+
     return {"status": "created", "robot_id": r.id, "robot_code": r.robot_code}
 
 @router.patch("/{robot_id}", summary="Edit robot fields")
