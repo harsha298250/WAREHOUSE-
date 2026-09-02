@@ -1095,14 +1095,18 @@ def complete_task(task_id: int, payload: TaskCompleteSchema, db: Session = Depen
         order = db.query(Order).filter(Order.id == t.order_id).with_for_update().first()
 
         # Verify reserved quantity if reservation exists
-        res = db.query(InventoryReservation).filter(
+        res_q = db.query(InventoryReservation).filter(
             InventoryReservation.order_id == t.order_id,
-            InventoryReservation.item_id == t.product_id,
-            InventoryReservation.location_id == t.source_location_id
-        ).with_for_update().first()
+            InventoryReservation.item_id == t.product_id
+        )
+        res = None
+        if t.source_location_id:
+            res = res_q.filter(InventoryReservation.location_id == t.source_location_id).first()
+        if not res:
+            res = res_q.first()
 
-        if res and payload.completed_quantity > (res.reserved_qty - res.released_qty):
-            raise HTTPException(400, "Completed quantity exceeds unpicked reserved quantity")
+        if res and payload.completed_quantity > max(res.reserved_qty, (res.reserved_qty - res.released_qty)):
+            res.reserved_qty = payload.completed_quantity
 
         # Mutate inventory
         inv = db.query(Inventory).filter(
