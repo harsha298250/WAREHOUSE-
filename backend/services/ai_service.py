@@ -14,7 +14,7 @@ logger = logging.getLogger("warehouse.ai_service")
 
 # Centralized configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip()
+GEMINI_MODEL = (os.getenv("GEMINI_MODEL", "") or "gemini-3.6-flash").strip()
 GEMINI_TEMPERATURE = float(os.getenv("GEMINI_TEMPERATURE", "0.3"))
 GEMINI_MAX_OUTPUT_TOKENS = int(os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "400"))
 from backend.timeout_policy import GEMINI_TIMEOUT
@@ -1112,7 +1112,15 @@ class GeminiService:
                 "sources": []
             }
 
-        if not GEMINI_API_KEY:
+        effective_api_key = (os.getenv("GEMINI_API_KEY", "") or "").strip()
+        if not effective_api_key and db:
+            try:
+                from backend.settings import get_setting_value
+                effective_api_key = str(get_setting_value(db, "gemini_api_key", "") or "").strip()
+            except Exception:
+                pass
+
+        if not effective_api_key:
             return await GeminiService.run_offline_fallback(db, message, warehouse_id, user)
 
         system_instruction = (
@@ -1130,7 +1138,7 @@ class GeminiService:
         )
 
         headers = {"Content-Type": "application/json"}
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={effective_api_key}"
 
         # Initialize multi-tool reasoning conversation history
         history_contents = [
