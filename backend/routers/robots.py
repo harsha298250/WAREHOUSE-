@@ -153,6 +153,8 @@ def calculate_manhattan_distance(x1: float, y1: float, x2: float, y2: float) -> 
 WAIT_TICKS = {}
 
 def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGESTION_AWARE"):
+    import random
+    from backend.models import Robot, Task, Order, OrderItem, Item, WarehouseLocation, RobotRoute, RobotTelemetryEvent, RobotReservation, InventoryMovement, WarehouseObstacle, WarehouseGridCell
     from backend.settings import get_settings
     app_settings = get_settings(db)
     effective_robot_speed = float(app_settings.get("robot_speed", 1.2))
@@ -196,8 +198,60 @@ def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGEST
         })
         db.flush()
 
-    # Auto-dispatch QUEUED/PRIORITIZED tasks to AVAILABLE robots per warehouse
+    # Auto-replenish tasks & dispatch to AVAILABLE robots per warehouse
     for wh_id in active_whs:
+        # 1. Maintain at least 5 queued picking tasks per warehouse
+        q_cnt = db.query(Task).filter(
+            Task.warehouse_id == wh_id,
+            Task.status.in_(["QUEUED", "PRIORITIZED"])
+        ).count()
+        if q_cnt < 3:
+            items = db.query(Item).all()
+            if not items:
+                dummy = Item(id="ITM-DUMMY", name="Standard Parcel", unit_cost=10.0, safety_stock=5, sku="SKU-DUMMY")
+                db.add(dummy)
+                db.flush()
+                items = [dummy]
+            storage_locs = db.query(WarehouseLocation).filter(WarehouseLocation.warehouse_id == wh_id, WarehouseLocation.location_type == "STORAGE").all()
+            packing_locs = db.query(WarehouseLocation).filter(WarehouseLocation.warehouse_id == wh_id, WarehouseLocation.location_type == "PACKING").all()
+            if not storage_locs or not packing_locs:
+                s_loc = WarehouseLocation(id=f"{wh_id}-STORAGE-1", warehouse_id=wh_id, x=2.0, y=2.0, location_type="STORAGE", zone="STORAGE", aisle="S-1", rack="R-1", shelf="1", capacity=500)
+                p_loc = WarehouseLocation(id=f"{wh_id}-PACKING-1", warehouse_id=wh_id, x=10.0, y=2.0, location_type="PACKING", zone="PACKING", aisle="P-1", rack="P-1", shelf="1", capacity=500)
+                if not db.query(WarehouseLocation).filter(WarehouseLocation.id == s_loc.id).first():
+                    db.add(s_loc)
+                if not db.query(WarehouseLocation).filter(WarehouseLocation.id == p_loc.id).first():
+                    db.add(p_loc)
+                db.flush()
+                storage_locs = [s_loc] if not storage_locs else storage_locs
+                packing_locs = [p_loc] if not packing_locs else packing_locs
+
+            for k in range(5 - q_cnt):
+                order_id = f"SIM-ORD-{random.randint(1000, 9999)}"
+                order = Order(id=order_id, customer_ref=f"Auto Sim Order {k+1}", warehouse_id=wh_id, status="CREATED", priority="MEDIUM")
+                db.add(order)
+                db.flush()
+                rand_item = random.choice(items)
+                db.add(OrderItem(order_id=order_id, item_id=rand_item.id, requested_qty=1))
+                src = random.choice(storage_locs)
+                dest = random.choice(packing_locs)
+                new_task = Task(
+                    task_number=f"SIM-TSK-{random.randint(10000, 99999)}",
+                    warehouse_id=wh_id,
+                    task_type="PICK",
+                    priority="MEDIUM",
+                    priority_score=50,
+                    status="QUEUED",
+                    order_id=order_id,
+                    product_id=rand_item.id,
+                    source_location_id=src.id,
+                    destination_location_id=dest.id,
+                    requested_quantity=1,
+                    completed_quantity=0
+                )
+                db.add(new_task)
+            db.flush()
+
+        # 2. Dispatch queued tasks to available robots
         unassigned_tasks = db.query(Task).filter(
             Task.warehouse_id == wh_id,
             Task.status.in_(["QUEUED", "PRIORITIZED"]),
@@ -235,6 +289,23 @@ def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGEST
                 task.status = "ASSIGNED"
                 task.assigned_at = datetime.now(UTC).replace(tzinfo=None)
                 db.add(task)
+
+        # 3. Assign dynamic patrol targets to any remaining idle robots
+        idle_robots = db.query(Robot).filter(
+            Robot.warehouse_id == wh_id,
+            Robot.enabled == True,
+            Robot.status == "AVAILABLE",
+            Robot.assigned_task_id == None,
+            Robot.battery_level > 20.0
+        ).all()
+        patrol_points = [(1.0, 5.0), (4.0, 5.0), (6.0, 5.0), (8.0, 5.0), (10.0, 5.0), (2.0, 2.0), (5.0, 2.0), (8.0, 2.0)]
+        for idx, ir in enumerate(idle_robots):
+            pt = patrol_points[(idx + int(ir.current_x)) % len(patrol_points)]
+            if abs(ir.current_x - pt[0]) > 0.5 or abs(ir.current_y - pt[1]) > 0.5:
+                ir.target_x = pt[0]
+                ir.target_y = pt[1]
+                ir.status = "MOVING"
+                db.add(ir)
 
     db.flush()
 
