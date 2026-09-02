@@ -198,18 +198,18 @@ def send_email_alert(subject: str, body: str, recipient: str = None) -> bool:
         
         server = None
         if use_ssl:
-            server = smtplib.SMTP_SSL(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=10)
+            server = smtplib.SMTP_SSL(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=4.0)
             server.ehlo()
         else:
             try:
-                server = smtplib.SMTP(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=6)
+                server = smtplib.SMTP(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=4.0)
                 server.ehlo()
                 if server.has_extn("starttls"):
                     server.starttls()
                     server.ehlo()
             except Exception as tls_err:
                 logger.warning("SMTP TLS port %s failed (%s) — attempting SSL port 465 fallback", cfg["SMTP_PORT"], tls_err)
-                server = smtplib.SMTP_SSL(cfg["SMTP_HOST"], 465, timeout=10)
+                server = smtplib.SMTP_SSL(cfg["SMTP_HOST"], 465, timeout=4.0)
                 server.ehlo()
 
         with server:

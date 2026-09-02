@@ -769,6 +769,7 @@ def confirm_change_password(
 def request_add_admin(
     payload: AdminCreateRequest,
     request: Request,
+    background_tasks: BackgroundTasks,
     user=Depends(require_admin),
     db: Session = Depends(get_db)
 ):
@@ -799,19 +800,22 @@ def request_add_admin(
     })
 
     main_admin_email = notifications.get_smtp_config().get("ALERT_EMAIL_TO") or "joyboy56211@gmail.com"
-    try:
-        email_sent = notifications.send_admin_otp_email(
-            admin_username=user.username,
-            new_admin_username=target_email,
-            otp_code=otp_code,
-            target_email=main_admin_email
-        )
-    except Exception as smtp_err:
-        logger.error("Failed to dispatch Admin Creation OTP email: %s", smtp_err)
-        email_sent = False
+
+    def _async_email_dispatch():
+        try:
+            notifications.send_admin_otp_email(
+                admin_username=user.username,
+                new_admin_username=target_email,
+                otp_code=otp_code,
+                target_email=main_admin_email
+            )
+        except Exception as smtp_err:
+            logger.error("Failed to dispatch Admin Creation OTP email: %s", smtp_err)
+
+    background_tasks.add_task(_async_email_dispatch)
 
     log_access(db, user.username, "request_admin_creation", request=request)
-    logger.info("Admin creation OTP generated for %s (%s) by %s (Email sent: %s)", target_username, target_email, user.username, email_sent)
+    logger.info("Admin creation OTP generated for %s (%s) by %s (Queued background email dispatch)", target_username, target_email, user.username)
 
     return {
         "status": "otp_sent",
