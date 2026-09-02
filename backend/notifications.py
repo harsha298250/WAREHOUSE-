@@ -310,7 +310,10 @@ def send_change_alert(event_type: str, details: dict, recipient: str = None) -> 
         db = SessionLocal()
         try:
             app_settings = get_settings(db)
-            # Flag checks to suppress alerts based on user configuration
+            # Suppress high-frequency simulation tick events from clogging SMTP and DB connection pool
+            if std_event in ("ROUTE_REPLANNED", "ROBOT_WAITING", "SIMULATION_STEP", "SIMULATION_TICK", "POSITION_UPDATED"):
+                return
+
             if std_event in ("ROBOT_BATTERY_LOW", "ROBOT_BATTERY_CRITICAL") and not app_settings.get("notif_low_battery", True):
                 logger.info("Notification %s suppressed per notif_low_battery setting", std_event)
                 return

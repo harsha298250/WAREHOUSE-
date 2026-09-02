@@ -13157,7 +13157,7 @@ async function refreshDTState() {
   } catch (err) {
     dtConsecutiveFailures++;
     console.error("Failed to load Digital Twin state", err);
-    if (dtConsecutiveFailures >= 3) {
+    if (dtConsecutiveFailures >= 10) {
       const errBanner = document.getElementById("dt-map-error-banner");
       if (errBanner) errBanner.style.display = "block";
     }
