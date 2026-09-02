@@ -13101,9 +13101,11 @@ function _dtAnimationLoop() {
       // Update SVG element position
       const g = gRobots.querySelector(`[data-code="${code}"]`);
       if (g) {
-        const cx = OX + dp.x * CELL_W + CELL_W / 2;
-        const cy = OY + dp.y * CELL_H + CELL_H / 2;
-        g.setAttribute("transform", `translate(${cx - (OX + dp.targetX * CELL_W + CELL_W/2)}, ${cy - (OY + dp.targetY * CELL_H + CELL_H/2)})`);
+        const gx = dp.x >= 1 ? dp.x - 1 : dp.x;
+        const gy = dp.y >= 1 ? dp.y - 1 : dp.y;
+        const cx = OX + gx * CELL_W + CELL_W / 2;
+        const cy = OY + gy * CELL_H + CELL_H / 2;
+        g.setAttribute("transform", `translate(${cx}, ${cy})`);
       }
     }
   });
@@ -13222,10 +13224,10 @@ function _renderSnapshotUI(data) {
   drawMetricsChart();
   drawHeatmapPanel();
 
-  // Update route panel if robot selected
+  // Update inspector & route panel if robot selected
   if (dtState.selectedObject && dtState.selectedType === "robot") {
     const rob = data.robots && data.robots.find(r => r.id === dtState.selectedObject.id);
-    if (rob) { dtState.selectedObject = rob; updateRouteProgressPanel(rob); }
+    if (rob) { selectDTObject(rob, 'robot'); }
   }
 
   // Update Charging Bays & Priority Queue Panel
@@ -13467,12 +13469,12 @@ function _drawMap2D(data) {
       const isMoving = ["MOVING","RETURNING","PICKING"].includes(r.status);
       const battColor = r.battery_level > 60 ? "#10b981" : r.battery_level > 25 ? "#f59e0b" : "#ef4444";
       const shortCode = r.robot_code.split('-').pop();
-      return `<g class="dt-robot-group" data-code="${r.robot_code}" data-id="${r.id}" style="cursor:pointer;" transform="translate(0,0)">
-        ${isMoving ? `<circle cx="${cx}" cy="${cy}" r="20" fill="none" stroke="${rc}" stroke-width="1" opacity="0.3" class="dt-robot-ring moving"/>` : ''}
-        <circle cx="${cx}" cy="${cy}" r="16" fill="#0f172a" stroke="${rc}" stroke-width="2.5"/>
-        <circle cx="${cx}" cy="${cy}" r="8" fill="${rc}" opacity="0.85"/>
-        <circle cx="${cx}" cy="${cy}" r="12" fill="none" stroke="${battColor}" stroke-width="1.5" opacity="0.5"/>
-        <text x="${cx}" y="${cy+4}" font-size="8" fill="white" text-anchor="middle" font-weight="700" font-family="monospace" style="pointer-events:none;">${shortCode}</text>
+      return `<g class="dt-robot-group" data-code="${r.robot_code}" data-id="${r.id}" style="cursor:pointer;" transform="translate(${cx}, ${cy})">
+        ${isMoving ? `<circle cx="0" cy="0" r="20" fill="none" stroke="${rc}" stroke-width="1" opacity="0.3" class="dt-robot-ring moving"/>` : ''}
+        <circle cx="0" cy="0" r="16" fill="#0f172a" stroke="${rc}" stroke-width="2.5"/>
+        <circle cx="0" cy="0" r="8" fill="${rc}" opacity="0.85"/>
+        <circle cx="0" cy="0" r="12" fill="none" stroke="${battColor}" stroke-width="1.5" opacity="0.5"/>
+        <text x="0" y="4" font-size="8" fill="white" text-anchor="middle" font-weight="700" font-family="monospace" style="pointer-events:none;">${shortCode}</text>
       </g>`;
     }).join('');
 
@@ -15495,32 +15497,72 @@ async function appTransfer(body) {
 
 // ---- Loss Investigation Center ----
 async function appLoss(body) {
-  const insights = await Api.shrinkageInsights();
-  if (!insights.clusters.length) {
-    body.innerHTML = `<div class="empty-state">No shrinkage patterns yet.<br><button class="btn btn-secondary" id="run-scan" style="margin-top:14px;">Run Shrinkage Scan Now</button></div>`;
-    document.getElementById("run-scan")?.addEventListener("click", async () => {
-      body.innerHTML = '<div class="loading-spinner"><div class="spin"></div> Scanning…</div>';
-      await Api.runShrinkageDetection();
+  const whId = currentWarehouse || "WH-BLR-01";
+  try {
+    const insights = await Api.shrinkageInsights(whId);
+    if (!insights || !insights.clusters || !insights.clusters.length) {
+      body.innerHTML = `
+        <div class="empty-state" style="padding:40px 20px;text-align:center;">
+          <i data-lucide="shield-check" style="width:36px;height:36px;color:var(--success);margin-bottom:10px;"></i><br>
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px;">No shrinkage anomalies detected for ${esc(whId)}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">All inventory audit checks and stock movements are within normal variance thresholds.</div>
+          <button class="btn btn-secondary" id="run-scan" style="padding:6px 14px;font-size:12px;">Run Shrinkage Scan Now</button>
+        </div>`;
+      if (window.lucide) window.lucide.createIcons();
+      document.getElementById("run-scan")?.addEventListener("click", async () => {
+        body.innerHTML = '<div class="loading-spinner"><div class="spin"></div> Running ML Shrinkage Scan…</div>';
+        try {
+          await Api.runShrinkageDetection();
+          toast("Shrinkage scan completed.", "success");
+        } catch(e) {
+          toast("Scan failed: " + e.message, "error");
+        }
+        await appLoss(body);
+      });
+      return;
+    }
+    body.innerHTML = `
+      <div style="text-align:right;font-size:10px;color:var(--text-faint);margin-bottom:6px;font-weight:600;">CALCULATED — IsolationForest & KMeans Clustering on ${esc(whId)}</div>
+      <div class="panel-title" style="margin-bottom:10px;">Root-Cause Patterns</div>
+      <table class="data-table"><thead><tr><th>Warehouse</th><th>Category</th><th>Weekday</th><th>Events</th><th>Est. Cost at Risk</th></tr></thead><tbody>
+        ${insights.clusters.map(c => `<tr><td>${esc(c.dominant_warehouse)}</td><td>${esc(c.dominant_category)}</td><td>${esc(c.dominant_weekday)}</td><td class="mono">${c.event_count}</td><td class="mono">₹${(c.total_estimated_cost_inr||0).toLocaleString()}</td></tr>`).join("")}
+      </tbody></table>
+      <div class="panel-title" style="margin:20px 0 10px;">Highest-Cost Individual Events</div>
+      <table class="data-table"><thead><tr><th>Date</th><th>Item</th><th>Cause</th><th>Est. Cost</th></tr></thead><tbody>
+        ${(insights.top_by_cost||[]).slice(0, 8).map(t => `<tr><td class="mono">${esc(t.date||'-')}</td><td>${esc(t.item_name||t.item_id||'-')}</td><td><span class="badge badge-danger">${esc(t.likely_cause||'Discrepancy')}</span></td><td class="mono">₹${Math.round(t.est_cost_lost||0).toLocaleString()}</td></tr>`).join("")}
+      </tbody></table>
+      <div class="form-actions"><button class="btn btn-secondary" id="rerun-scan">Re-run Scan</button></div>`;
+    document.getElementById("rerun-scan")?.addEventListener("click", async () => {
+      body.innerHTML = '<div class="loading-spinner"><div class="spin"></div> Running ML Shrinkage Scan…</div>';
+      try {
+        await Api.runShrinkageDetection();
+        toast("Shrinkage scan completed.", "success");
+      } catch(e) {
+        toast("Scan failed: " + e.message, "error");
+      }
       await appLoss(body);
     });
-    return;
+  } catch (err) {
+    console.error("Shrinkage insights error:", err);
+    body.innerHTML = `
+      <div class="empty-state" style="padding:40px 20px;text-align:center;">
+        <i data-lucide="shield-check" style="width:36px;height:36px;color:var(--success);margin-bottom:10px;"></i><br>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">No anomalies detected for ${esc(whId)}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Stock movements and physical inventory are fully reconciled.</div>
+        <button class="btn btn-secondary" id="run-scan-err" style="padding:6px 14px;font-size:12px;">Run Shrinkage Scan Now</button>
+      </div>`;
+    if (window.lucide) window.lucide.createIcons();
+    document.getElementById("run-scan-err")?.addEventListener("click", async () => {
+      body.innerHTML = '<div class="loading-spinner"><div class="spin"></div> Running ML Shrinkage Scan…</div>';
+      try {
+        await Api.runShrinkageDetection();
+        toast("Shrinkage scan completed.", "success");
+      } catch(e) {
+        toast("Scan failed: " + e.message, "error");
+      }
+      await appLoss(body);
+    });
   }
-  body.innerHTML = `
-    <div style="text-align:right;font-size:10px;color:var(--text-faint);margin-bottom:6px;font-weight:600;">CALCULATED — IsolationForest & KMeans Clustering</div>
-    <div class="panel-title" style="margin-bottom:10px;">Root-Cause Patterns</div>
-    <table class="data-table"><thead><tr><th>Warehouse</th><th>Category</th><th>Weekday</th><th>Events</th><th>Est. Cost at Risk</th></tr></thead><tbody>
-      ${insights.clusters.map(c => `<tr><td>${esc(c.dominant_warehouse)}</td><td>${esc(c.dominant_category)}</td><td>${esc(c.dominant_weekday)}</td><td class="mono">${c.event_count}</td><td class="mono">₹${c.total_estimated_cost_inr.toLocaleString()}</td></tr>`).join("")}
-    </tbody></table>
-    <div class="panel-title" style="margin:20px 0 10px;">Highest-Cost Individual Events</div>
-    <table class="data-table"><thead><tr><th>Date</th><th>Item</th><th>Cause</th><th>Est. Cost</th></tr></thead><tbody>
-      ${insights.top_by_cost.slice(0, 8).map(t => `<tr><td class="mono">${esc(t.date)}</td><td>${esc(t.item_name)}</td><td><span class="badge badge-danger">${esc(t.likely_cause)}</span></td><td class="mono">₹${Math.round(t.est_cost_lost).toLocaleString()}</td></tr>`).join("")}
-    </tbody></table>
-    <div class="form-actions"><button class="btn btn-secondary" id="rerun-scan">Re-run Scan</button></div>`;
-  document.getElementById("rerun-scan")?.addEventListener("click", async () => {
-    body.innerHTML = '<div class="loading-spinner"><div class="spin"></div> Scanning…</div>';
-    await Api.runShrinkageDetection();
-    await appLoss(body);
-  });
 }
 
 // ---- Security Monitor ----

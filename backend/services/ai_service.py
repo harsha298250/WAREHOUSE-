@@ -739,6 +739,13 @@ def get_decision_insights(db: Session, user_role: str, warehouse_id: Optional[st
         "source": "AI Decision Intelligence Core"
     }
 
+def get_charging_analytics(db: Session, user_role: str, warehouse_id: str, period: str = "30d") -> Dict[str, Any]:
+    check_tool_permission(user_role, ["admin", "manager", "operator", "auditor", "viewer"])
+    from backend.charging_manager import get_warehouse_charging_queue_info
+    info = get_warehouse_charging_queue_info(db, warehouse_id)
+    info["source"] = "PostgreSQL Charging Manager Engine"
+    return info
+
 # Registry mapping function names to implementations
 TOOL_REGISTRY = {
     "get_warehouse_status": get_warehouse_status,
@@ -762,6 +769,7 @@ TOOL_REGISTRY = {
     "get_order_analytics": get_order_analytics,
     "get_inventory_analytics": get_inventory_analytics,
     "get_robot_analytics": get_robot_analytics,
+    "get_charging_analytics": get_charging_analytics,
     "get_forecast_analytics": get_forecast_analytics,
     "get_anomaly_analytics": get_anomaly_analytics,
     "get_replenishment_analytics": get_replenishment_analytics,
@@ -1314,9 +1322,10 @@ class GeminiService:
         if any(kw in query_lower for kw in ["order", "fulfillment", "delayed"]):
             selected_tools.append("get_order_analytics")
             
-        # Robots / AGVs / battery / robot status
-        if any(kw in query_lower for kw in ["robot", "agv", "fleet", "battery", "batteries"]):
+        # Robots / AGVs / battery / robot status / charging
+        if any(kw in query_lower for kw in ["robot", "agv", "fleet", "battery", "batteries", "charg", "port", "lowest"]):
             selected_tools.append("get_robot_analytics")
+            selected_tools.append("get_charging_analytics")
             
         # Anomalies / unusual behavior
         if any(kw in query_lower for kw in ["anomal", "unusual", "discrepanc", "shrinkage", "flag"]):
@@ -1465,6 +1474,30 @@ class GeminiService:
                         lines.append("\n**Active Robots Details:**")
                         for r in comp:
                             lines.append(f"- **{r.get('robot_code')}** ({r.get('name')}): Status: **{r.get('status')}** | Avg Battery: **{r.get('avg_battery')}%** | Completed: {r.get('tasks_completed')} tasks | Distance: {r.get('distance_travelled')}m")
+                    formatted = "\n".join(lines)
+                elif tool_name == "get_charging_analytics":
+                    ports_cnt = data.get("total_ports", 0)
+                    occ_cnt = data.get("occupied_ports", 0)
+                    avail_cnt = data.get("available_ports", 0)
+                    q_cnt = data.get("waiting_queue_count", 0)
+                    lines = [
+                        f"**AGV Charging System Status for {wh_id}:**",
+                        f"- Total Charging Ports: {ports_cnt}",
+                        f"- Occupied/Reserved Ports: {occ_cnt}",
+                        f"- Available Charging Ports: {avail_cnt}",
+                        f"- Robots Waiting in Queue: {q_cnt}"
+                    ]
+                    ports_list = data.get("ports", [])
+                    charging_now = [p for p in ports_list if p.get("robot_code")]
+                    if charging_now:
+                        lines.append("\n**Currently Charging Robots:**")
+                        for p in charging_now:
+                            lines.append(f"- **{p['robot_code']}** at Port {p['port_id']} (Battery: {p.get('battery') or 0}%)")
+                    q_list = data.get("waiting_queue", [])
+                    if q_list:
+                        lines.append("\n**Priority Waiting Queue (Lowest Battery First):**")
+                        for q_item in q_list:
+                            lines.append(f"- #{q_item['queue_position']}: **{q_item['robot_code']}** — Battery: **{q_item['battery_level']}%**")
                     formatted = "\n".join(lines)
                 elif tool_name == "get_anomaly_analytics":
                     lines = [

@@ -486,6 +486,17 @@ async def lifespan(app: FastAPI):
     seed_default_thresholds()
     ensure_admin_user_exists()
 
+    try:
+        from backend.database import SessionLocal
+        from backend.seed_demo_data import ensure_core_warehouses_exist
+        db_start = SessionLocal()
+        try:
+            ensure_core_warehouses_exist(db_start)
+        finally:
+            db_start.close()
+    except Exception as e_seed:
+        logger.warning("Startup ensure_core_warehouses_exist failed: %s", e_seed)
+
     from data_pipeline.provisioner import ensure_all_datasets_provisioned
     threading.Thread(target=ensure_all_datasets_provisioned, daemon=True, name="DatasetProvisionerWorker").start()
     

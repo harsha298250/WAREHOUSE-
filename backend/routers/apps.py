@@ -3,7 +3,8 @@ import json
 import pandas as pd
 from datetime import datetime, date
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -207,8 +208,8 @@ def app_event_calendar(horizon_days: int = 60, user=Depends(get_current_user)):
 
 
 @router.get("/apps/shrinkage-insights")
-def app_shrinkage_insights(user=Depends(get_current_user)):
-    return build_shrinkage_insights()
+def app_shrinkage_insights(warehouse_id: Optional[str] = Query(None), user=Depends(get_current_user)):
+    return build_shrinkage_insights(warehouse_id=warehouse_id)
 
 
 @router.get("/apps/security-monitor")

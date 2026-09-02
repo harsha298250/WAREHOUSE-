@@ -263,7 +263,10 @@ const Api = {
   getCloudBackupStatus() { return this.get("/apps/cloud-backup/status"); },
   runCloudBackup() { return this.post("/apps/cloud-backup/run", {}); },
   eventCalendar() { return this.get("/apps/event-calendar"); },
-  shrinkageInsights() { return this.get("/apps/shrinkage-insights"); },
+  shrinkageInsights(whId) {
+    const wh = whId || window.currentWarehouse || localStorage.getItem("current_warehouse");
+    return this.get("/apps/shrinkage-insights" + (wh ? `?warehouse_id=${encodeURIComponent(wh)}` : ""));
+  },
   securityMonitor() { return this.get("/apps/security-monitor"); },
   trustLedger() { return this.get("/apps/trust-ledger"); },
   storageTiering() { return this.get("/apps/cloud-cost/storage"); },

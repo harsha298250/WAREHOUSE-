@@ -600,6 +600,18 @@ def get_dt_state_query(
         DigitalTwinSimulation.simulation_status.in_(["RUNNING", "PAUSED", "READY"])
     ).order_by(DigitalTwinSimulation.id.desc()).first()
 
+    if sim and sim.simulation_status == "RUNNING":
+        try:
+            execute_simulation_tick(db)
+            sim.tick_count += 1
+            sim.simulation_time_seconds += 1.0 * sim.speed_multiplier
+            db.add(sim)
+            db.commit()
+            _emit_tick_events(db, sim)
+        except Exception as e_tick:
+            logger.warning("Auto-tick in get_dt_state_query failed: %s", e_tick)
+            db.rollback()
+
     return _build_state(db, warehouse_id, sim)
 
 
@@ -622,6 +634,18 @@ def get_dt_state(
         DigitalTwinSimulation.warehouse_id == warehouse_id,
         DigitalTwinSimulation.simulation_status.in_(["RUNNING", "PAUSED", "READY"])
     ).order_by(DigitalTwinSimulation.id.desc()).first()
+
+    if sim and sim.simulation_status == "RUNNING":
+        try:
+            execute_simulation_tick(db)
+            sim.tick_count += 1
+            sim.simulation_time_seconds += 1.0 * sim.speed_multiplier
+            db.add(sim)
+            db.commit()
+            _emit_tick_events(db, sim)
+        except Exception as e_tick:
+            logger.warning("Auto-tick in get_dt_state failed: %s", e_tick)
+            db.rollback()
 
     return _build_state(db, warehouse_id, sim)
 
@@ -810,13 +834,28 @@ def setup_scenario_conditions(db: Session, warehouse_id: str, scenario_type: str
             ))
         db.commit()
     else:
-        # Reset existing robots to healthy baseline without expensive table deletions
-        for r in existing_robots:
+        # Disperse existing robots to unique, non-overlapping coordinates along traversable aisle
+        distinct_starts = [
+            (1.0, 5.0), (4.0, 5.0), (6.0, 5.0), (8.0, 5.0), (10.0, 5.0), (11.0, 5.0), (12.0, 5.0), (3.0, 5.0), (2.0, 5.0), (5.0, 5.0)
+        ]
+        for idx, r in enumerate(existing_robots):
             r.enabled = True
+            pos = distinct_starts[idx % len(distinct_starts)]
+            r.current_x = pos[0]
+            r.current_y = pos[1]
+            r.target_x = 0.0
+            r.target_y = 0.0
+            r.assigned_task_id = None
             if r.status in ["FAILED", "OFFLINE"]:
                 r.status = "AVAILABLE"
                 r.battery_level = 90.0
+            elif r.battery_level is None or r.battery_level < 20.0:
+                r.battery_level = 95.0
             db.add(r)
+
+        # Clear stale routes and reservations so robots start fresh
+        db.query(RobotRoute).filter(RobotRoute.warehouse_id == warehouse_id).delete(synchronize_session=False)
+        db.query(RobotReservation).filter(RobotReservation.warehouse_id == warehouse_id).delete(synchronize_session=False)
         db.commit()
 
     # 1. Seeding tasks/orders if there are fewer than 3 queued/prioritized tasks
@@ -1187,15 +1226,24 @@ def reset_simulation(sim_id: int, db: Session = Depends(get_db), user=Depends(ge
     if not sim:
         raise HTTPException(404, "Simulation not found.")
 
-    # Find baseline snapshot (version 0)
+    # Find baseline snapshot (version 0 or lowest available version)
     baseline = db.query(SimulationSnapshot).filter(
-        SimulationSnapshot.simulation_id == sim_id,
-        SimulationSnapshot.snapshot_version == 0
-    ).first()
-    if not baseline:
-        raise HTTPException(404, "Baseline snapshot not found. Cannot reset.")
+        SimulationSnapshot.simulation_id == sim_id
+    ).order_by(SimulationSnapshot.snapshot_version.asc()).first()
 
-    _restore_snapshot(db, baseline)
+    if not baseline:
+        baseline = db.query(SimulationSnapshot).filter(
+            SimulationSnapshot.warehouse_id == sim.warehouse_id
+        ).order_by(SimulationSnapshot.snapshot_version.asc()).first()
+
+    if baseline:
+        _restore_snapshot(db, baseline)
+    else:
+        # Re-initialize baseline scenario conditions for this warehouse
+        try:
+            setup_scenario_conditions(db, sim.warehouse_id, sim.scenario_type or "NORMAL_OPERATIONS")
+        except Exception as e_res:
+            logger.warning("Reset scenario re-setup warning: %s", e_res)
 
     # Delete simulation events, telemetry records, and routes to start empty
     db.query(SimulationEvent).filter(SimulationEvent.simulation_id == sim_id).delete(synchronize_session=False)

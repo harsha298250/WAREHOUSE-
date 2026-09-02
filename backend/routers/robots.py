@@ -196,6 +196,48 @@ def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGEST
         })
         db.flush()
 
+    # Auto-dispatch QUEUED/PRIORITIZED tasks to AVAILABLE robots per warehouse
+    for wh_id in active_whs:
+        unassigned_tasks = db.query(Task).filter(
+            Task.warehouse_id == wh_id,
+            Task.status.in_(["QUEUED", "PRIORITIZED"]),
+            Task.assigned_robot_id == None
+        ).order_by(Task.priority_score.desc(), Task.id.asc()).all()
+
+        if unassigned_tasks:
+            avail_robots = db.query(Robot).filter(
+                Robot.warehouse_id == wh_id,
+                Robot.enabled == True,
+                Robot.status == "AVAILABLE",
+                Robot.assigned_task_id == None,
+                Robot.battery_level > 20.0
+            ).all()
+
+            for task in unassigned_tasks:
+                if not avail_robots:
+                    break
+                src_loc = db.query(WarehouseLocation).filter(WarehouseLocation.id == task.source_location_id).first()
+                src_x = float(src_loc.x) if src_loc else 1.0
+                src_y = float(src_loc.y) if src_loc else 1.0
+
+                best_robot = min(avail_robots, key=lambda r: abs(r.current_x - src_x) + abs(r.current_y - src_y))
+                avail_robots.remove(best_robot)
+
+                best_robot.assigned_task_id = task.id
+                best_robot.status = "ASSIGNED"
+                best_robot.target_location_id = task.source_location_id
+                best_robot.target_x = src_x
+                best_robot.target_y = src_y
+                best_robot.updated_at = datetime.now(UTC).replace(tzinfo=None)
+                db.add(best_robot)
+
+                task.assigned_robot_id = best_robot.id
+                task.status = "ASSIGNED"
+                task.assigned_at = datetime.now(UTC).replace(tzinfo=None)
+                db.add(task)
+
+    db.flush()
+
     # Get active robots
     robots = db.query(Robot).filter(
         Robot.enabled == True,

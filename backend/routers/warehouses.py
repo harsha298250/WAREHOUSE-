@@ -358,6 +358,9 @@ def update_warehouse_location_coords(id: str, payload: CoordinatesUpdate, reques
     if payload.longitude < -180.0 or payload.longitude > 180.0:
         raise HTTPException(400, "Longitude must be between -180.0 and 180.0")
 
+    old_lat = w.latitude
+    old_lng = w.longitude
+
     w.latitude = payload.latitude
     w.longitude = payload.longitude
     

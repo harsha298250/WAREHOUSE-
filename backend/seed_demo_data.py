@@ -532,6 +532,114 @@ def seed(force: bool = False):
         db.close()
 
 
+def ensure_core_warehouses_exist(db):
+    """Ensure all core warehouses (WH-BLR-01, WH-CHN-01, WH-BOM-01, WH-DEL-01, WH-CCU-01) exist with full working data."""
+    try:
+        items = db.query(Item).all()
+        if not items:
+            for itm in ITEMS:
+                db.add(Item(
+                    id=itm["id"], name=itm["name"], category=itm["category"],
+                    unit_cost=itm["unit_cost"], lead_time_days=itm["lead_time_days"],
+                    safety_stock=itm["safety_stock"], sku=itm["id"]
+                ))
+            db.commit()
+            items = db.query(Item).all()
+
+        for wh_data in WAREHOUSES:
+            wh_id = wh_data["id"]
+            existing_wh = db.query(Warehouse).filter(Warehouse.id == wh_id).first()
+            if not existing_wh:
+                print(f"Auto-restoring missing core warehouse: {wh_id} ({wh_data['name']})")
+                db.add(Warehouse(
+                    id=wh_id,
+                    name=wh_data["name"],
+                    location=wh_data["location"],
+                    city=wh_data["city"],
+                    state=wh_data["state"],
+                    country=wh_data["country"],
+                    latitude=wh_data["latitude"],
+                    longitude=wh_data["longitude"],
+                ))
+                db.commit()
+
+            # Ensure baseline locations exist for this warehouse
+            loc_count = db.query(WarehouseLocation).filter(WarehouseLocation.warehouse_id == wh_id).count()
+            if loc_count == 0:
+                locations_data = [
+                    {"id": f"WH-{wh_id}-CHARGING-1", "x": 11.0, "y": 5.0, "type": "CHARGING", "zone": "CHARGING", "aisle": "C-1"},
+                    {"id": f"WH-{wh_id}-CHARGING-2", "x": 12.0, "y": 5.0, "type": "CHARGING", "zone": "CHARGING", "aisle": "C-2"},
+                    {"id": f"WH-{wh_id}-RECEIVING", "x": 1.0, "y": 5.0, "type": "RECEIVING", "zone": "RECEIVING", "aisle": "R-1"},
+                    {"id": f"WH-{wh_id}-AISLE-4-5", "x": 4.0, "y": 5.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "A-4"},
+                    {"id": f"WH-{wh_id}-AISLE-6-5", "x": 6.0, "y": 5.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "A-6"},
+                    {"id": f"WH-{wh_id}-AISLE-8-5", "x": 8.0, "y": 5.0, "type": "PACKING", "zone": "PACKING", "aisle": "P-8"},
+                    {"id": f"WH-{wh_id}-STORAGE-1", "x": 2.0, "y": 2.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "S-1"},
+                    {"id": f"WH-{wh_id}-STORAGE-2", "x": 5.0, "y": 2.0, "type": "STORAGE", "zone": "STORAGE", "aisle": "S-2"},
+                    {"id": f"WH-{wh_id}-PACKING-1", "x": 10.0, "y": 2.0, "type": "PACKING", "zone": "PACKING", "aisle": "P-1"},
+                ]
+                for ld in locations_data:
+                    db.add(WarehouseLocation(
+                        id=ld["id"], warehouse_id=wh_id, x=ld["x"], y=ld["y"],
+                        location_type=ld["type"], zone=ld["zone"], aisle=ld["aisle"]
+                    ))
+                db.commit()
+
+            # Ensure inventory records exist
+            inv_count = db.query(Inventory).filter(Inventory.warehouse_id == wh_id).count()
+            if inv_count == 0 and items:
+                locs = db.query(WarehouseLocation).filter(WarehouseLocation.warehouse_id == wh_id).all()
+                for idx, item in enumerate(items):
+                    target_loc = locs[idx % len(locs)]
+                    db.add(Inventory(
+                        warehouse_id=wh_id,
+                        location_id=target_loc.id,
+                        item_id=item.id,
+                        on_hand=150,
+                        reserved=10,
+                        available=140,
+                        damaged=0
+                    ))
+                db.commit()
+
+            # Ensure baseline robots exist for this warehouse
+            bot_count = db.query(Robot).filter(Robot.warehouse_id == wh_id).count()
+            if bot_count < 4:
+                wh_code = wh_id.split("-")[1] if "-" in wh_id else wh_id[:3].upper()
+                initial_robots = [
+                    {"code": f"RB-{wh_code}-01", "x": 11.0, "y": 5.0, "status": "CHARGING", "loc": f"WH-{wh_id}-CHARGING-1", "battery": 100.0},
+                    {"code": f"RB-{wh_code}-02", "x": 12.0, "y": 5.0, "status": "CHARGING", "loc": f"WH-{wh_id}-CHARGING-2", "battery": 100.0},
+                    {"code": f"RB-{wh_code}-03", "x": 1.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{wh_id}-RECEIVING", "battery": 92.5},
+                    {"code": f"RB-{wh_code}-04", "x": 4.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{wh_id}-AISLE-4-5", "battery": 88.0},
+                    {"code": f"RB-{wh_code}-05", "x": 6.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{wh_id}-AISLE-6-5", "battery": 95.0},
+                    {"code": f"RB-{wh_code}-06", "x": 8.0, "y": 5.0, "status": "AVAILABLE", "loc": f"WH-{wh_id}-AISLE-8-5", "battery": 90.0},
+                ]
+                for idx, r_data in enumerate(initial_robots):
+                    if not db.query(Robot).filter(Robot.robot_code == r_data["code"]).first():
+                        db.add(Robot(
+                            robot_code=r_data["code"],
+                            name=f"AGV 0{idx+1}",
+                            warehouse_id=wh_id,
+                            status=r_data["status"],
+                            battery_level=r_data["battery"],
+                            current_location_id=r_data["loc"],
+                            current_x=r_data["x"],
+                            current_y=r_data["y"],
+                            target_x=0.0, target_y=0.0,
+                            enabled=True, robot_type="AGV",
+                            max_payload=200.0, max_speed=1.5,
+                            total_distance=0.0, total_tasks_completed=0
+                        ))
+                db.commit()
+
+            # Ensure digital twin grid cells exist
+            from backend.routers.pathfinding import initialize_warehouse_grid_if_empty
+            initialize_warehouse_grid_if_empty(db, wh_id)
+
+    except Exception as e:
+        db.rollback()
+        print(f"ensure_core_warehouses_exist warning: {e}")
+
+
 if __name__ == "__main__":
     force_flag = "--force" in sys.argv
     seed(force=force_flag)
