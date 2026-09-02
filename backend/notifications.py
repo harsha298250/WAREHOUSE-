@@ -194,23 +194,22 @@ def send_email_alert(subject: str, body: str, recipient: str = None) -> bool:
             html_body = body.replace("\n", "<br/>")
             msg.attach(MIMEText(f"<html><body>{html_body}</body></html>", "html"))
 
-        use_ssl = (cfg["SMTP_PORT"] == 465)
-        
+        # Primary fast path: SMTP_SSL (port 465) for instant connection without STARTTLS roundtrips
         server = None
-        if use_ssl:
-            server = smtplib.SMTP_SSL(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=4.0)
+        try:
+            server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=5.0)
             server.ehlo()
-        else:
+        except Exception as ssl_err:
+            logger.warning("SMTP SSL port 465 failed (%s) — attempting TLS port 587 fallback", ssl_err)
             try:
-                server = smtplib.SMTP(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=4.0)
+                server = smtplib.SMTP(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=5.0)
                 server.ehlo()
                 if server.has_extn("starttls"):
                     server.starttls()
                     server.ehlo()
             except Exception as tls_err:
-                logger.warning("SMTP TLS port %s failed (%s) — attempting SSL port 465 fallback", cfg["SMTP_PORT"], tls_err)
-                server = smtplib.SMTP_SSL(cfg["SMTP_HOST"], 465, timeout=4.0)
-                server.ehlo()
+                logger.error("All SMTP connection attempts failed: SSL (%s), TLS (%s)", ssl_err, tls_err)
+                raise tls_err
 
         with server:
             server.login(cfg["SMTP_USER"], cfg["SMTP_PASSWORD"])
