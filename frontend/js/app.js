@@ -13118,22 +13118,36 @@ function _dtAnimationLoop() {
   window.dtAnimRAF = requestAnimationFrame(_dtAnimationLoop);
 }
 
+let dtConsecutiveFailures = 0;
+
 // ── Refresh DT state from API
 async function refreshDTState() {
   const wh = currentWarehouse || "WH-BLR-01";
   try {
     const data = await Api.getDTState(wh);
     dtState.snapshot = data;
-    _renderSnapshotUI(data);
-    if (dtState.activeSimId) {
-      _refreshSimEvents(dtState.activeSimId);
+    try {
+      _renderSnapshotUI(data);
+    } catch (renderErr) {
+      console.warn("Snapshot UI render warning:", renderErr);
     }
+    if (dtState.activeSimId) {
+      try {
+        await _refreshSimEvents(dtState.activeSimId);
+      } catch (evtErr) {
+        console.warn("Sim events refresh warning:", evtErr);
+      }
+    }
+    dtConsecutiveFailures = 0;
     const errBanner = document.getElementById("dt-map-error-banner");
     if (errBanner) errBanner.style.display = "none";
   } catch (err) {
+    dtConsecutiveFailures++;
     console.error("Failed to load Digital Twin state", err);
-    const errBanner = document.getElementById("dt-map-error-banner");
-    if (errBanner) errBanner.style.display = "block";
+    if (dtConsecutiveFailures >= 3) {
+      const errBanner = document.getElementById("dt-map-error-banner");
+      if (errBanner) errBanner.style.display = "block";
+    }
   }
 }
 
