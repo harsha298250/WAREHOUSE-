@@ -2306,11 +2306,11 @@ async function renderDashboard(el) {
       <div class="panel-header">
         <div><div class="panel-title">Current Inventory</div><div class="panel-desc">Live closing stock from PostgreSQL stock_movements — this warehouse</div></div>
       </div>
-      ${inventory.length === 0 ? `<div class="empty-state">No stock recorded yet for this warehouse.</div>` : `
+      ${inventoryList.length === 0 ? `<div class="empty-state">No stock recorded yet for this warehouse.</div>` : `
       <div class="table-scroll"><table class="data-table">
         <thead><tr><th>Item</th><th>Category</th><th>Current Stock</th><th>Safety Stock</th><th>Unit Cost</th><th>Value</th><th>Status</th></tr></thead>
         <tbody>
-          ${inventory.map(i => `<tr>
+          ${inventoryList.map(i => `<tr>
             <td><strong>${esc(i.item_name)}</strong> <span class="mono" style="color:var(--text-faint);font-size:11px;">${esc(i.item_id)}</span></td>
             <td>${esc(i.category)}</td>
             <td class="mono">${i.current_stock}</td>
@@ -2617,7 +2617,7 @@ async function renderDashboard(el) {
   }
 
   // ---- Forecast chart (per-item, on-demand) ----
-  if (inventory.length) {
+  if (inventoryList.length) {
     const itemSel = document.getElementById("forecast-item-select");
     const loadForecast = async () => {
       const body = document.getElementById("forecast-body");
@@ -5106,9 +5106,10 @@ async function renderDemandForecast(el) {
     btnDataset.className = "btn btn-secondary";
     provTag.innerText = "🔮 PREDICTED · 14-day holdout WMS SKU forecast";
 
-    let inventory;
+    let inventory = [];
     try {
-      inventory = await Api.inventory(currentWarehouse);
+      const invRes = await Api.inventory(currentWarehouse);
+      inventory = Array.isArray(invRes) ? invRes : (invRes && Array.isArray(invRes.inventory) ? invRes.inventory : []);
     } catch (err) {
       contentArea.innerHTML = `<div class="panel"><div class="empty-state">Failed to load WMS inventory: ${esc(err.message)}</div></div>`;
       return;
