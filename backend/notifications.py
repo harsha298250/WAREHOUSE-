@@ -51,7 +51,7 @@ def get_smtp_config():
     smtp_user = db_settings.get("smtp_username") or os.getenv("SMTP_USER", "joyboy56211@gmail.com")
     smtp_password = db_settings.get("smtp_password") or os.getenv("SMTP_PASSWORD", "xgmmumehdjguzhsz")
     alert_email_to = db_settings.get("sender_email") or os.getenv("ALERT_EMAIL_TO", "joyboy56211@gmail.com")
-    enabled = db_settings.get("enable_email_notifs", True)
+    enabled = True
     
     return {
         "SMTP_HOST": smtp_host,
