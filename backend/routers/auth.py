@@ -807,7 +807,7 @@ def request_add_admin(
                 admin_username=user.username,
                 new_admin_username=target_email,
                 otp_code=otp_code,
-                target_email=main_admin_email
+                target_email=target_email
             )
         except Exception as smtp_err:
             logger.error("Failed to dispatch Admin Creation OTP email: %s", smtp_err)
@@ -819,8 +819,8 @@ def request_add_admin(
 
     return {
         "status": "otp_sent",
-        "message": f"Security verification passkey sent to {main_admin_email}",
-        "recipient": main_admin_email,
+        "message": f"Security verification passkey sent to {target_email}",
+        "recipient": target_email,
         "expires_in_seconds": OTP_EXPIRY_SECONDS,
     }
 
