@@ -776,36 +776,46 @@ def request_add_admin(
         validate_password_strength(payload.password, db)
 
     target_email = payload.email.strip().lower()
-    google_admin_email = os.getenv("GOOGLE_ADMIN_EMAIL", "").strip().lower()
-    if not (target_email.endswith("@gmail.com") or (google_admin_email and target_email == google_admin_email)):
-        raise HTTPException(status_code=400, detail="Target email must be a valid Google email address ending in @gmail.com")
+    if "@" not in target_email or "." not in target_email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Target email must be a valid email address (e.g. user@example.com)")
 
-    existing = db.query(User).filter(User.username == target_email).first()
+    target_username = payload.username.strip() if hasattr(payload, "username") and payload.username else target_email.split("@")[0]
+
+    existing = db.query(User).filter(sa.or_(User.username == target_username, User.email == target_email)).first()
     if existing:
-        raise HTTPException(status_code=400, detail=f"Google account '{target_email}' is already registered")
+        raise HTTPException(status_code=400, detail=f"Account '{target_username}' ({target_email}) is already registered")
 
     ip = request.client.host if request and request.client else ""
     target_role = payload.role if hasattr(payload, "role") and payload.role else "admin"
+    raw_pw = payload.password if hasattr(payload, "password") and payload.password else ""
+    pw_hash = hash_password(raw_pw) if raw_pw else "GOOGLE_OAUTH_ONLY"
+
     otp_code = _create_db_otp(db, user, "ADMIN_CREATION", ip, {
         "target_email": target_email,
+        "target_username": target_username,
         "full_name": payload.full_name.strip(),
         "target_role": target_role,
+        "pw_hash": pw_hash,
     })
 
-    main_admin_email = notifications.get_smtp_config().get("ALERT_EMAIL_TO") or os.getenv("ALERT_EMAIL_TO", "")
-    email_sent = notifications.send_admin_otp_email(
-        admin_username=user.username,
-        new_admin_username=target_email,
-        otp_code=otp_code,
-        target_email=main_admin_email
-    )
+    main_admin_email = notifications.get_smtp_config().get("ALERT_EMAIL_TO") or "joyboy56211@gmail.com"
+    try:
+        email_sent = notifications.send_admin_otp_email(
+            admin_username=user.username,
+            new_admin_username=target_email,
+            otp_code=otp_code,
+            target_email=main_admin_email
+        )
+    except Exception as smtp_err:
+        logger.error("Failed to dispatch Admin Creation OTP email: %s", smtp_err)
+        email_sent = False
 
     log_access(db, user.username, "request_admin_creation", request=request)
-    logger.info("Admin creation OTP generated for %s by %s (Email sent: %s)", target_email, user.username, email_sent)
+    logger.info("Admin creation OTP generated for %s (%s) by %s (Email sent: %s)", target_username, target_email, user.username, email_sent)
 
     return {
         "status": "otp_sent",
-        "message": f"Security verification code sent to {main_admin_email}",
+        "message": f"Security verification passkey sent to {main_admin_email}",
         "recipient": main_admin_email,
         "expires_in_seconds": OTP_EXPIRY_SECONDS,
     }
@@ -822,25 +832,27 @@ def confirm_add_admin(
     context = json.loads(record.context_data or "{}")
 
     target_email = context.get("target_email", "")
+    target_username = context.get("target_username", target_email)
     full_name = context.get("full_name", "")
     target_role = context.get("target_role", "admin")
+    pw_hash = context.get("pw_hash", "GOOGLE_OAUTH_ONLY")
 
-    if not target_email:
+    if not target_email and not target_username:
         raise HTTPException(status_code=400, detail="Admin creation context lost. Please initiate the request again.")
 
     # Check again (might have been created between request and confirm)
-    if db.query(User).filter(User.username == target_email).first():
-        raise HTTPException(status_code=400, detail=f"Account '{target_email}' was already created.")
+    if db.query(User).filter(sa.or_(User.username == target_username, User.email == target_email)).first():
+        raise HTTPException(status_code=400, detail=f"Account '{target_username}' ({target_email}) was already created.")
 
     new_user = User(
-        username=target_email,
+        username=target_username,
         email=target_email,
-        password_hash="GOOGLE_OAUTH_ONLY",
+        password_hash=pw_hash,
         role=target_role,
         full_name=full_name,
         google_subject_id=None,
         is_active=True,
-        is_verified=False,
+        is_verified=True,
     )
     db.add(new_user)
     db.commit()
