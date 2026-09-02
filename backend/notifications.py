@@ -67,29 +67,24 @@ def send_admin_otp_email(admin_username: str, new_admin_username: str, otp_code:
     """Send a 6-digit security OTP passkey to the administrator to confirm creating a new admin account."""
     cfg = get_smtp_config()
     recipient = target_email or cfg["ALERT_EMAIL_TO"]
-    subject = f"🔒 Security Passkey: Confirm New Admin ({new_admin_username}) - [{otp_code}]"
+    subject = f"Security Verification Code for New Admin ({new_admin_username})"
     
-    body = f"""Cloud Warehouse Platform — Security Alert
-------------------------------------------------------------
+    body = f"""Cloud Warehouse Platform — Security Verification
+
 A request was made to create a new Administrator account.
 
 Requesting Admin: {admin_username}
-New Admin Username: {new_admin_username}
+New Admin Email: {new_admin_username}
 
-YOUR 6-DIGIT VERIFICATION PASSKEY:
-====================================
-           {otp_code}
-====================================
+YOUR 6-DIGIT VERIFICATION PASSKEY: {otp_code}
 
 Enter this 6-digit code in the Cloud Warehouse Platform to confirm and authorize the creation of this new Administrator account.
 
 This passkey is valid for 10 minutes.
-If you did NOT initiate this request, please log into your account and change your password immediately.
-
-This is an automated security verification message.
+If you did NOT initiate this request, please change your account password immediately.
 """
     logger.info("Sending admin creation OTP passkey email for %s to %s", new_admin_username, recipient)
-    return send_email_alert(subject, body, recipient)
+    return send_email_alert(subject, body, recipient, force_send=True)
 
 
 

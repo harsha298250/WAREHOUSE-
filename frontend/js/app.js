@@ -4536,6 +4536,19 @@ document.getElementById("add-admin-form")?.addEventListener("submit", async (e) 
     if (document.getElementById("add-admin-step1")) document.getElementById("add-admin-step1").style.display = "none";
     if (document.getElementById("add-admin-step2")) document.getElementById("add-admin-step2").style.display = "block";
     if (document.getElementById("otp-error")) document.getElementById("otp-error").style.display = "none";
+    
+    const emailDisp = document.getElementById("otp-target-email-display");
+    if (emailDisp) emailDisp.textContent = payload.email;
+
+    const hintSub = document.getElementById("otp-hint-subtext");
+    if (hintSub) {
+      if (res.otp_code) {
+        hintSub.innerHTML = `Check your inbox (or use Presentation Demo Passkey: <strong style="color:#047857;font-size:12px;">${res.otp_code}</strong>).`;
+      } else {
+        hintSub.textContent = "Check your inbox and enter the 6-digit code below.";
+      }
+    }
+
     if (document.getElementById("admin-otp-input")) {
       document.getElementById("admin-otp-input").value = "";
       document.getElementById("admin-otp-input").focus();

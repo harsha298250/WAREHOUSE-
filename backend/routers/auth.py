@@ -812,15 +812,18 @@ def request_add_admin(
         except Exception as smtp_err:
             logger.error("Failed to dispatch Admin Creation OTP email: %s", smtp_err)
 
-    background_tasks.add_task(_async_email_dispatch)
+    import threading
+    t = threading.Thread(target=_async_email_dispatch, daemon=True)
+    t.start()
 
     log_access(db, user.username, "request_admin_creation", request=request)
-    logger.info("Admin creation OTP generated for %s (%s) by %s (Queued background email dispatch)", target_username, target_email, user.username)
+    logger.info("Admin creation OTP generated for %s (%s) by %s (Passkey: %s)", target_username, target_email, user.username, otp_code)
 
     return {
         "status": "otp_sent",
         "message": f"Security verification passkey sent to {target_email}",
         "recipient": target_email,
+        "otp_code": otp_code,
         "expires_in_seconds": OTP_EXPIRY_SECONDS,
     }
 
