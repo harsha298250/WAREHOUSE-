@@ -863,7 +863,8 @@ def start_task(task_id: int, db: Session = Depends(get_db), user=Depends(get_cur
     if not t:
         raise HTTPException(404, "Task not found")
         
-    # Check dependencies: depends_on task must be COMPLETED
+    if t.status in ("QUEUED", "PRIORITIZED"):
+        raise HTTPException(409, f"Invalid task status transition from '{t.status}' to 'IN_PROGRESS'. Task must be transitioned to ASSIGNED state first.")
     if t.depends_on_task_id:
         parent = db.query(Task).filter(Task.id == t.depends_on_task_id).first()
         if parent and parent.status != "COMPLETED":
@@ -1053,10 +1054,15 @@ def complete_task(task_id: int, payload: TaskCompleteSchema, db: Session = Depen
     if not t:
         raise HTTPException(404, "Task not found")
         
-    if t.status == "ASSIGNED":
+    if t.status in ("QUEUED", "PRIORITIZED"):
+        if not t.order_id:
+            raise HTTPException(409, f"Invalid task status transition from '{t.status}' to 'COMPLETED'. Task must be assigned/claimed first.")
+        transition_status(db, t, "ASSIGNED", user.id, user.username, "Auto-assigned order task upon completion request")
+        transition_status(db, t, "IN_PROGRESS", user.id, user.username, "Auto-started order task upon completion request")
+    elif t.status == "ASSIGNED":
         transition_status(db, t, "IN_PROGRESS", user.id, user.username, "Auto-started upon completion request")
     elif t.status not in ("IN_PROGRESS", "PAUSED"):
-        raise HTTPException(409, f"Cannot complete task in state '{t.status}'. Task must be in ASSIGNED or IN_PROGRESS state.")
+        raise HTTPException(409, f"Invalid task status transition from '{t.status}' to 'COMPLETED'. Task must be in ASSIGNED or IN_PROGRESS state.")
 
     if payload.completed_quantity > t.requested_quantity:
         raise HTTPException(400, f"Completed quantity ({payload.completed_quantity}) cannot exceed requested quantity ({t.requested_quantity})")
