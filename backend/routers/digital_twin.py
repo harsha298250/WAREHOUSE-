@@ -821,10 +821,10 @@ def setup_scenario_conditions(db: Session, warehouse_id: str, scenario_type: str
         initial_robots = [
             {"code": f"RB-{wh_code}-01", "x": 11.0, "y": 5.0, "status": "CHARGING", "loc": f"{warehouse_id}-CHARGING-1", "battery": 100.0},
             {"code": f"RB-{wh_code}-02", "x": 12.0, "y": 5.0, "status": "CHARGING", "loc": f"{warehouse_id}-CHARGING-2", "battery": 100.0},
-            {"code": f"RB-{wh_code}-03", "x": 1.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-RECEIVING", "battery": 92.5},
-            {"code": f"RB-{wh_code}-04", "x": 4.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-AISLE-4-5", "battery": 88.0},
-            {"code": f"RB-{wh_code}-05", "x": 6.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-AISLE-6-5", "battery": 95.0},
-            {"code": f"RB-{wh_code}-06", "x": 8.0, "y": 5.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-AISLE-8-5", "battery": 90.0},
+            {"code": f"RB-{wh_code}-03", "x": 1.0, "y": 2.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-RECEIVING", "battery": 92.5},
+            {"code": f"RB-{wh_code}-04", "x": 4.0, "y": 4.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-AISLE-4-4", "battery": 88.0},
+            {"code": f"RB-{wh_code}-05", "x": 6.0, "y": 2.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-AISLE-6-2", "battery": 95.0},
+            {"code": f"RB-{wh_code}-06", "x": 8.0, "y": 4.0, "status": "AVAILABLE", "loc": f"{warehouse_id}-AISLE-8-4", "battery": 90.0},
         ]
         valid_locs = {l.id for l in db.query(WarehouseLocation).filter(WarehouseLocation.warehouse_id == warehouse_id).all()}
         for idx, r_data in enumerate(initial_robots):
@@ -850,9 +850,9 @@ def setup_scenario_conditions(db: Session, warehouse_id: str, scenario_type: str
             ))
         db.commit()
     else:
-        # Disperse existing robots to unique, non-overlapping coordinates along traversable aisle
+        # Disperse existing robots across open Aisles 2, 4, 5
         distinct_starts = [
-            (1.0, 5.0), (4.0, 5.0), (6.0, 5.0), (8.0, 5.0), (10.0, 5.0), (11.0, 5.0), (12.0, 5.0), (3.0, 5.0), (2.0, 5.0), (5.0, 5.0)
+            (1.0, 2.0), (4.0, 4.0), (6.0, 2.0), (8.0, 4.0), (9.0, 2.0), (11.0, 5.0), (12.0, 5.0), (2.0, 4.0), (5.0, 2.0), (10.0, 4.0)
         ]
         for idx, r in enumerate(existing_robots):
             r.enabled = True
@@ -1013,12 +1013,11 @@ def start_simulation(
         except Exception:
             pass
 
-    # Ensure grid cells exist for this warehouse (seed 12x5 grid if missing)
-    existing_cells = db.query(WarehouseGridCell).filter(
-        WarehouseGridCell.warehouse_id == req.warehouse_id
-    ).count()
-    if existing_cells == 0:
-        logger.info("No grid cells found for %s — seeding 12x5 grid", req.warehouse_id)
+    # Reset and seed 12x5 grid with Aisles 2, 4, 5 open
+    db.query(WarehouseGridCell).filter(WarehouseGridCell.warehouse_id == req.warehouse_id).delete(synchronize_session=False)
+    db.commit()
+    
+    logger.info("Seeding 12x5 open-aisle grid for %s", req.warehouse_id)
         _cell_types = {
             (1, 5): "RECEIVING", (2, 5): "RECEIVING",
             (11, 5): "CHARGING", (12, 5): "CHARGING",
@@ -1026,11 +1025,13 @@ def start_simulation(
         }
         for _col in range(1, 13):
             for _row in range(1, 6):
-                _ctype = _cell_types.get((_col, _row),
-                    "RACK" if _row in (1, 2, 3, 4) and _col not in (1, 2, 11, 12) else "AISLE")
+                _is_rack = (_row in (1, 3) and _col >= 2 and _col <= 11)
+                _ctype = _cell_types.get((_col, _row), "RACK" if _is_rack else "AISLE")
+                _trav = not _is_rack
+                _cost = 999.0 if _is_rack else 1.0
                 db.add(WarehouseGridCell(
                     warehouse_id=req.warehouse_id, x=_col, y=_row,
-                    cell_type=_ctype, traversable=True, cost=1.0, occupied=False
+                    cell_type=_ctype, traversable=_trav, cost=_cost, occupied=False
                 ))
         try:
             db.commit()
