@@ -75,15 +75,15 @@ class TaskUpdateSchema(BaseModel):
 # ---------------------------------------------------------------------------
 
 ALLOWED_TRANSITIONS = {
-    "QUEUED": ["PRIORITIZED", "ASSIGNED", "CANCELLED"],
-    "PRIORITIZED": ["ASSIGNED", "CANCELLED"],
-    "ASSIGNED": ["IN_PROGRESS", "PAUSED", "CANCELLED", "ASSIGNED", "FAILED"],
+    "QUEUED": ["PRIORITIZED", "ASSIGNED", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+    "PRIORITIZED": ["ASSIGNED", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+    "ASSIGNED": ["IN_PROGRESS", "COMPLETED", "PAUSED", "CANCELLED", "ASSIGNED", "FAILED"],
     "IN_PROGRESS": ["PAUSED", "COMPLETED", "FAILED", "CANCELLED"],
     "PAUSED": ["IN_PROGRESS", "COMPLETED", "FAILED", "CANCELLED"],
     "COMPLETED": [],  # Terminal state
-    "FAILED": ["REASSIGNED", "ASSIGNED", "CANCELLED"],
-    "REASSIGNED": ["ASSIGNED", "CANCELLED"],
-    "CANCELLED": []   # Terminal state
+    "FAILED": ["QUEUED", "REASSIGNED", "ASSIGNED", "CANCELLED"],
+    "REASSIGNED": ["ASSIGNED", "IN_PROGRESS", "CANCELLED"],
+    "CANCELLED": ["QUEUED"]   # Terminal state / retry
 }
 
 def transition_status(
