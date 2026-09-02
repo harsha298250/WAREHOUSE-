@@ -75,14 +75,14 @@ class TaskUpdateSchema(BaseModel):
 # ---------------------------------------------------------------------------
 
 ALLOWED_TRANSITIONS = {
-    "QUEUED": ["PRIORITIZED", "ASSIGNED", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
-    "PRIORITIZED": ["ASSIGNED", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+    "QUEUED": ["PRIORITIZED", "ASSIGNED", "CANCELLED"],
+    "PRIORITIZED": ["ASSIGNED", "CANCELLED"],
     "ASSIGNED": ["IN_PROGRESS", "COMPLETED", "PAUSED", "CANCELLED", "ASSIGNED", "FAILED"],
     "IN_PROGRESS": ["PAUSED", "COMPLETED", "FAILED", "CANCELLED"],
     "PAUSED": ["IN_PROGRESS", "COMPLETED", "FAILED", "CANCELLED"],
     "COMPLETED": [],  # Terminal state
     "FAILED": ["QUEUED", "REASSIGNED", "ASSIGNED", "CANCELLED"],
-    "REASSIGNED": ["ASSIGNED", "IN_PROGRESS", "CANCELLED"],
+    "REASSIGNED": ["ASSIGNED", "CANCELLED"],
     "CANCELLED": ["QUEUED"]   # Terminal state / retry
 }
 
@@ -1053,10 +1053,10 @@ def complete_task(task_id: int, payload: TaskCompleteSchema, db: Session = Depen
     if not t:
         raise HTTPException(404, "Task not found")
         
-    if t.status in ("QUEUED", "ASSIGNED", "PRIORITIZED"):
+    if t.status == "ASSIGNED":
         transition_status(db, t, "IN_PROGRESS", user.id, user.username, "Auto-started upon completion request")
     elif t.status not in ("IN_PROGRESS", "PAUSED"):
-        raise HTTPException(409, f"Cannot complete task in state '{t.status}'. Task must be in IN_PROGRESS state.")
+        raise HTTPException(409, f"Cannot complete task in state '{t.status}'. Task must be in ASSIGNED or IN_PROGRESS state.")
 
     if payload.completed_quantity > t.requested_quantity:
         raise HTTPException(400, f"Completed quantity ({payload.completed_quantity}) cannot exceed requested quantity ({t.requested_quantity})")
