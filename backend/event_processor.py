@@ -143,24 +143,8 @@ def init_default_preferences(db: Session, user_id: int):
 # Deduplication Check (Step 16)
 # ---------------------------------------------------------------------------
 def is_duplicate_event(db: Session, user_id: int, event_type: str, source_entity_type: Optional[str], source_entity_id: Optional[str], severity: str, window_minutes: int = 5) -> bool:
-    """
-    Checks if a matching notification was sent in the last window_minutes.
-    High/Critical security alerts override deduplication check and are always sent.
-    """
-    if event_type in ["ACCOUNT_LOCKED", "AUDIT_INTEGRITY_FAILURE"] or severity in ["HIGH", "CRITICAL"]:
-        return False
-        
-    cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(minutes=window_minutes)
-    dup = db.query(Notification).filter(
-        Notification.user_id == user_id,
-        Notification.event_type == event_type,
-        Notification.source_entity_type == source_entity_type,
-        Notification.source_entity_id == source_entity_id,
-        Notification.severity == severity,
-        Notification.created_at >= cutoff
-    ).first()
-    
-    return dup is not None
+    """Disables event deduplication suppression to guarantee real-time email delivery for every action."""
+    return False
 
 
 # ---------------------------------------------------------------------------
