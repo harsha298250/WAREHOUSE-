@@ -157,37 +157,44 @@ window.showToast = toast;
 function esc(s) { return (s ?? "").toString().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
 function formatWmsTime(dateOrSecs, isSimTime = false) {
+  if (isSimTime) {
+    const totalSecs = Math.max(0, Math.floor(Number(dateOrSecs || 0)));
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    const strMins = String(mins).padStart(2, "0");
+    const strSecs = String(secs).padStart(2, "0");
+    if (hrs > 0) {
+      const strHrs = String(hrs).padStart(2, "0");
+      return `${strHrs}:${strMins}:${strSecs}`;
+    }
+    return `${strMins}:${strSecs}`;
+  }
+
   const settings = window.wmsSettings || (typeof WMS_DEFAULT_SETTINGS !== 'undefined' ? WMS_DEFAULT_SETTINGS : {});
   const showSecs = settings.show_seconds !== false;
   const is12 = settings.datetime_time_format === "12 Hour";
 
   let hrs, mins, secs;
-  if (isSimTime) {
-    const totalSecs = Math.max(0, Math.floor(Number(dateOrSecs)));
-    hrs = Math.floor(totalSecs / 3600);
-    mins = Math.floor((totalSecs % 3600) / 60);
-    secs = totalSecs % 60;
-  } else {
-    const d = (dateOrSecs instanceof Date) ? dateOrSecs : new Date(dateOrSecs || Date.now());
-    if (isNaN(d.getTime())) return "—";
+  const d = (dateOrSecs instanceof Date) ? dateOrSecs : new Date(dateOrSecs || Date.now());
+  if (isNaN(d.getTime())) return "—";
 
-    const tzStr = settings.datetime_timezone || "";
-    let localDate = d;
-    if (tzStr && tzStr.includes("America/New_York")) {
-      const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-      localDate = new Date(utc + (3600000 * -5));
-    } else if (tzStr && tzStr.includes("UTC") && !tzStr.includes("Local")) {
-      const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-      localDate = new Date(utc);
-    } else if (tzStr && tzStr.includes("Asia/Kolkata")) {
-      const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-      localDate = new Date(utc + (3600000 * 5.5));
-    }
-    
-    hrs = localDate.getHours();
-    mins = localDate.getMinutes();
-    secs = localDate.getSeconds();
+  const tzStr = settings.datetime_timezone || "";
+  let localDate = d;
+  if (tzStr && tzStr.includes("America/New_York")) {
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    localDate = new Date(utc + (3600000 * -5));
+  } else if (tzStr && tzStr.includes("UTC") && !tzStr.includes("Local")) {
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    localDate = new Date(utc);
+  } else if (tzStr && tzStr.includes("Asia/Kolkata")) {
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    localDate = new Date(utc + (3600000 * 5.5));
   }
+  
+  hrs = localDate.getHours();
+  mins = localDate.getMinutes();
+  secs = localDate.getSeconds();
 
   let ampm = "";
   if (is12) {
@@ -14682,8 +14689,8 @@ function updateThreeScene(data) {
         targetCoords: coords
       };
       dtState.three.robots[r.robot_code] = robotMesh;
-    } else {
       robotMesh.targetCoords = coords;
+      robotMesh.group.position.set(coords.x, 0.1, coords.z);
 
       robotMesh.dome.material.color.setHex(ringColor);
       if (robotMesh.dome.material.emissive) {
