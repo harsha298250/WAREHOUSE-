@@ -781,7 +781,7 @@ def request_add_admin(
 
     target_username = payload.username.strip() if hasattr(payload, "username") and payload.username else target_email.split("@")[0]
 
-    existing = db.query(User).filter(sa.or_(User.username == target_username, User.email == target_email)).first()
+    existing = db.query(User).filter(or_(User.username == target_username, User.email == target_email)).first()
     if existing:
         raise HTTPException(status_code=400, detail=f"Account '{target_username}' ({target_email}) is already registered")
 
@@ -841,7 +841,7 @@ def confirm_add_admin(
         raise HTTPException(status_code=400, detail="Admin creation context lost. Please initiate the request again.")
 
     # Check again (might have been created between request and confirm)
-    if db.query(User).filter(sa.or_(User.username == target_username, User.email == target_email)).first():
+    if db.query(User).filter(or_(User.username == target_username, User.email == target_email)).first():
         raise HTTPException(status_code=400, detail=f"Account '{target_username}' ({target_email}) was already created.")
 
     new_user = User(
