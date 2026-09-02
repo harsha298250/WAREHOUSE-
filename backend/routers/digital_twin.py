@@ -1018,21 +1018,21 @@ def start_simulation(
     db.commit()
     
     logger.info("Seeding 12x5 open-aisle grid for %s", req.warehouse_id)
-        _cell_types = {
-            (1, 5): "RECEIVING", (2, 5): "RECEIVING",
-            (11, 5): "CHARGING", (12, 5): "CHARGING",
-            (3, 5): "PACKING", (4, 5): "PACKING",
-        }
-        for _col in range(1, 13):
-            for _row in range(1, 6):
-                _is_rack = (_row in (1, 3) and _col >= 2 and _col <= 11)
-                _ctype = _cell_types.get((_col, _row), "RACK" if _is_rack else "AISLE")
-                _trav = not _is_rack
-                _cost = 999.0 if _is_rack else 1.0
-                db.add(WarehouseGridCell(
-                    warehouse_id=req.warehouse_id, x=_col, y=_row,
-                    cell_type=_ctype, traversable=_trav, cost=_cost, occupied=False
-                ))
+    _cell_types = {
+        (1, 5): "RECEIVING", (2, 5): "RECEIVING",
+        (11, 5): "CHARGING", (12, 5): "CHARGING",
+        (3, 5): "PACKING", (4, 5): "PACKING",
+    }
+    for _col in range(1, 13):
+        for _row in range(1, 6):
+            _is_rack = (_row in (1, 3) and _col >= 2 and _col <= 11)
+            _ctype = _cell_types.get((_col, _row), "RACK" if _is_rack else "AISLE")
+            _trav = not _is_rack
+            _cost = 999.0 if _is_rack else 1.0
+            db.add(WarehouseGridCell(
+                warehouse_id=req.warehouse_id, x=_col, y=_row,
+                cell_type=_ctype, traversable=_trav, cost=_cost, occupied=False
+            ))
         try:
             db.commit()
         except Exception as eg:
