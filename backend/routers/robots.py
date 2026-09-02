@@ -298,9 +298,9 @@ def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGEST
             Robot.assigned_task_id == None,
             Robot.battery_level > 20.0
         ).all()
-        patrol_points = [(1.0, 5.0), (4.0, 5.0), (6.0, 5.0), (8.0, 5.0), (10.0, 5.0), (2.0, 2.0), (5.0, 2.0), (8.0, 2.0)]
+        patrol_points = [(1.0, 1.0), (3.0, 2.0), (5.0, 3.0), (7.0, 4.0), (9.0, 5.0), (11.0, 2.0), (2.0, 4.0), (10.0, 1.0)]
         for idx, ir in enumerate(idle_robots):
-            pt = patrol_points[(idx + int(ir.current_x)) % len(patrol_points)]
+            pt = patrol_points[(idx + int(ir.id)) % len(patrol_points)]
             if abs(ir.current_x - pt[0]) > 0.5 or abs(ir.current_y - pt[1]) > 0.5:
                 ir.target_x = pt[0]
                 ir.target_y = pt[1]
@@ -809,32 +809,27 @@ def execute_simulation_tick(db: Session, routing_strategy: str = "A_STAR_CONGEST
                     metadata=json.dumps({"wait_reason": "COLLISION_AVOIDANCE"})
                 ))
 
-                if WAIT_TICKS[r.id] > 5:
-                    transition_robot_status(db, r, "PAUSED", notes="Deadlock corridor collision protection: robot paused.")
+                if WAIT_TICKS[r.id] >= 2:
+                    # Invalidate route and force dynamic A* detour replanning around occupied cells
+                    if route:
+                        route.status = "REPLANNED"
+                        route.completed_at = datetime.now(UTC).replace(tzinfo=None)
+                        db.add(route)
+                    
                     WAIT_TICKS[r.id] = 0
-                    ledger.append_entry(db, "DEADLOCK_DETECTED", {
-                        "robot_code": r.robot_code,
-                        "task_number": task.task_number if task else "CHARGE",
-                        "reason": "CORRIDOR_DEADLOCK"
-                    })
-                    continue
-
-                if WAIT_TICKS[r.id] == 3:
-                    # Invalidate route and force dynamic replanning detouring this cell
-                    route.status = "REPLANNED"
-                    route.completed_at = datetime.now(UTC).replace(tzinfo=None)
-
+                    # Restore operational status so robot continues moving via detour
+                    if r.assigned_task_id:
+                        dest_status = "RETURNING" if (r.target_x and abs(r.current_x - r.target_x) < 0.5) else "MOVING"
+                        r.status = dest_status
+                    else:
+                        r.status = "MOVING"
+                    
                     ledger.append_entry(db, "PATH_REPLANNED", {
                         "robot_code": r.robot_code,
-                        "task_number": task.task_number if task else "CHARGE",
-                        "reason": "ROBOT_CONFLICT"
+                        "task_number": task.task_number if task else "PATROL",
+                        "reason": "DETOUR_CONGESTION_AVOIDANCE"
                     })
-                    notifications.send_change_alert("ROUTE_REPLANNED", {
-                        "robot_code": r.robot_code,
-                        "task_number": task.task_number if task else "CHARGE",
-                        "reason": "Replanned due to path congestion."
-                    })
-                continue
+                    continue
 
             # No conflict: proceed!
             if len(path_list) > 1:
