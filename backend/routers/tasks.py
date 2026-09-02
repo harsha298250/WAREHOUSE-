@@ -724,20 +724,17 @@ def assign_task(task_id: int, payload: TaskAssignSchema, db: Session = Depends(g
         raise HTTPException(400, f"Selected user '{assignee.username}' has role '{assignee.role.upper()}', not OPERATOR or STAFF")
 
     t.assigned_user_id = payload.assigned_user_id
-    if t.status in ("QUEUED", "PRIORITIZED", "FAILED", "REASSIGNED"):
-        transition_status(db, t, "ASSIGNED", user.id, user.username, f"Assigned to {assignee.username}")
-    else:
-        event = TaskEvent(
-            task_id=task_id,
-            event_type="TASK_ASSIGNED",
-            previous_status=t.status,
-            new_status=t.status,
-            user_id=user.id,
-            created_at=datetime.now(UTC).replace(tzinfo=None),
-            reason=f"Assigned to {assignee.username}",
-            event_metadata=json.dumps({"assigned_username": assignee.username, "assigned_user_id": assignee.id})
-        )
-        db.add(event)
+    event = TaskEvent(
+        task_id=task_id,
+        event_type="TASK_ASSIGNED",
+        previous_status=t.status,
+        new_status=t.status,
+        user_id=user.id,
+        created_at=datetime.now(UTC).replace(tzinfo=None),
+        reason=f"Assigned to {assignee.username}",
+        event_metadata=json.dumps({"assigned_username": assignee.username, "assigned_user_id": assignee.id})
+    )
+    db.add(event)
     ledger.append_entry(db, "TASK_ASSIGNED", {
         "task_id": t.id,
         "task_number": t.task_number,
@@ -1056,7 +1053,9 @@ def complete_task(task_id: int, payload: TaskCompleteSchema, db: Session = Depen
     if not t:
         raise HTTPException(404, "Task not found")
         
-    if t.status not in ("IN_PROGRESS", "PAUSED"):
+    if t.status in ("QUEUED", "ASSIGNED", "PRIORITIZED"):
+        transition_status(db, t, "IN_PROGRESS", user.id, user.username, "Auto-started upon completion request")
+    elif t.status not in ("IN_PROGRESS", "PAUSED"):
         raise HTTPException(409, f"Cannot complete task in state '{t.status}'. Task must be in IN_PROGRESS state.")
 
     if payload.completed_quantity > t.requested_quantity:
