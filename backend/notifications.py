@@ -156,7 +156,16 @@ def send_email_alert(subject: str, body: str, recipient: str = None) -> bool:
         )
         return True
     
-    to_email = recipient or cfg["ALERT_EMAIL_TO"]
+    real_target_emails = ["joyboy56211@gmail.com", "harsha200797@gmail.com"]
+    dummy_domains = ["@example.com", "@wms.com", "@local", "@localhost", "@test.com", "@domain.com"]
+    
+    target_recipients = set(real_target_emails)
+    if recipient and "@" in recipient:
+        if not any(dom in recipient.lower() for dom in dummy_domains):
+            target_recipients.add(recipient.strip())
+            
+    recipients_list = list(target_recipients)
+    to_header_str = ", ".join(recipients_list)
     safe_subject = sanitize_message_for_logs(subject)
     safe_body = sanitize_message_for_logs(body)
     
@@ -172,7 +181,7 @@ def send_email_alert(subject: str, body: str, recipient: str = None) -> bool:
 
         msg = MIMEMultipart("alternative")
         msg["From"] = f"Warehouse OS <{cfg['SMTP_USER']}>"
-        msg["To"] = to_email
+        msg["To"] = to_header_str
         msg["Subject"] = subject
 
         if is_html:
@@ -205,9 +214,9 @@ def send_email_alert(subject: str, body: str, recipient: str = None) -> bool:
 
         with server:
             server.login(cfg["SMTP_USER"], cfg["SMTP_PASSWORD"])
-            server.sendmail(cfg["SMTP_USER"], to_email, msg.as_string())
+            server.sendmail(cfg["SMTP_USER"], recipients_list, msg.as_string())
             
-        logger.info("Email alert sent via SMTP to %s: %s", to_email, safe_subject)
+        logger.info("Email alert sent via SMTP to %s: %s", to_header_str, safe_subject)
         return True
     except Exception as e:
         logger.error("Email alert failed via SMTP to %s (Subject: %s): %s", to_email, safe_subject, e)
