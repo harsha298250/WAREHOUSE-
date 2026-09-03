@@ -158,6 +158,37 @@ def send_email_alert(subject: str, body: str, recipient: str = None) -> bool:
     if recipient and "@" in recipient:
         if not any(dom in recipient.lower() for dom in dummy_domains):
             target_recipients.add(recipient.strip())
+
+    # 1. Resend API Fast-Path (HTTP HTTPS REST API)
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    if resend_api_key:
+        try:
+            import urllib.request
+            import json
+            resend_from = os.getenv("RESEND_FROM_EMAIL", "Cloud Warehouse OS <onboarding@resend.dev>")
+            headers = {
+                "Authorization": f"Bearer {resend_api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "WarehouseOS/1.0"
+            }
+            resend_payload = {
+                "from": resend_from,
+                "to": list(target_recipients),
+                "subject": subject,
+                "text": body
+            }
+            req = urllib.request.Request(
+                "https://api.resend.com/emails",
+                data=json.dumps(resend_payload).encode("utf-8"),
+                headers=headers,
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status in (200, 201):
+                    logger.info("[RESEND SUCCESS] Email alert sent via Resend API to %s", list(target_recipients))
+                    return True
+        except Exception as resend_err:
+            logger.warning("[RESEND FALLBACK] Resend API delivery failed, falling back to SMTP: %s", resend_err)
             
     recipients_list = list(target_recipients)
     to_header_str = ", ".join(recipients_list)
