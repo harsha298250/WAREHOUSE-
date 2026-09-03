@@ -244,7 +244,7 @@ def send_email_alert(subject: str, body: str, recipient: str = None) -> bool:
         logger.info("Email alert sent via SMTP to %s: %s", to_header_str, safe_subject)
         return True
     except Exception as e:
-        logger.error("Email alert failed via SMTP to %s (Subject: %s): %s", to_email, safe_subject, e)
+        logger.error("Email alert failed via SMTP to %s (Subject: %s): %s", to_header_str, safe_subject, e)
         return False
 
 
